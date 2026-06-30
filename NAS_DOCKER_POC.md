@@ -5,7 +5,7 @@
 ## 分支分工
 
 - `upstream-main`
-  - 對應原作者 GitHub repo 的 `origin/main`。
+  - 對應原作者 GitHub repo 的 `upstream/main`。
   - 用來查看原始狀態、比對 upstream 更新。
   - 不在這個分支放 NAS、Docker、POC 或公司接手修改。
 
@@ -61,10 +61,20 @@ docker save caretaiwan:latest -o docker/caretaiwan.tar
 
 ```bash
 git switch upstream-main
-git fetch origin
-git merge --ff-only origin/main
+git fetch upstream
+git merge --ff-only upstream/main
 git switch nas-docker-poc
 git merge upstream-main
+```
+
+## Git Remote
+
+- `upstream`：原作者 repo，僅用來追蹤原始專案更新。
+- `origin`：保留給中揚資訊自己的 Git repo。建立公司 repo 後再設定：
+
+```bash
+git remote add origin <company-repo-url>
+git push -u origin nas-docker-poc
 ```
 
 ## 注意事項
