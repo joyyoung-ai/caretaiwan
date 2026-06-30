@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { getRole } from "@/lib/role";
+import RoleSwitcher from "@/components/RoleSwitcher";
+import { getRole, type Role } from "@/lib/role";
 import { useT } from "@/lib/i18n";
 import { KeyRound } from "lucide-react";
 import { RecordTypeIcon, Info, type RecordType } from "@/components/icons";
@@ -41,6 +42,7 @@ export default function Home() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [pairedCount, setPairedCount] = useState<number | null>(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [role, setRole] = useState<Role | null | "loading">("loading");
   const t = useT();
 
   // v56: 避免 render 直接呼叫 Date.now()（React 19 视为 impure + hydration mismatch 風險）
@@ -84,10 +86,18 @@ export default function Home() {
 
   // 角色不對就重導到家屬端
   useEffect(() => {
-    if (getRole() === "family") router.replace("/family");
+    const syncRole = () => {
+      const currentRole = getRole();
+      setRole(currentRole);
+      if (currentRole === "family") router.replace("/family");
+    };
+    syncRole();
+    window.addEventListener("app-role-changed", syncRole);
+    return () => window.removeEventListener("app-role-changed", syncRole);
   }, [router]);
 
   useEffect(() => {
+    if (role !== "caregiver") return;
     try {
       const all = JSON.parse(localStorage.getItem("records") || "[]") as Rec[];
       setRecent(all.slice(-3).reverse());
@@ -115,7 +125,7 @@ export default function Home() {
         }
       })
       .catch(() => setPairedCount(0));
-  }, []);
+  }, [role]);
 
   // Onboarding：看護端流程
   //   pairedCount === 0 → 輸入配對碼（家屬產的）
@@ -141,6 +151,22 @@ export default function Home() {
     setOnboardingDismissed(true);
   };
 
+  if (role !== "caregiver") {
+    return (
+      <main className="flex flex-col flex-1 items-center justify-center px-6 pb-24 text-center">
+        <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center shadow-card mb-4">
+          <Sparkles className="w-8 h-8 text-blue-600 dark:text-blue-300" strokeWidth={2.2} />
+        </div>
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+          {t.home.appName}
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+          請先選擇你要使用的身份
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main className="flex flex-col flex-1 pb-40">
       {/* Header */}
@@ -163,6 +189,15 @@ export default function Home() {
           <ThemeToggle />
         </div>
       </header>
+
+      <div className="px-5 mb-3">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
+          <div className="text-sm font-bold text-slate-900 dark:text-white mb-2">
+            POC 測試身份
+          </div>
+          <RoleSwitcher />
+        </div>
+      </div>
 
       {/* Onboarding hint — adapts to user's progress */}
       {onboardingStep && (

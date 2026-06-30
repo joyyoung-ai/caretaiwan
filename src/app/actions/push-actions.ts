@@ -6,6 +6,7 @@ import { getPairingsByPaired } from "@/lib/pairing";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { logAudit } from "@/lib/audit";
 import { verifyPhotoOwnership } from "@/lib/record-photos";
+import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
 
 type RecordType =
   | "temp"
@@ -121,8 +122,16 @@ export async function pushRecordToFamily(input: {
     }
   }
   if (input.photoPath && photoOwned) {
-    const sbAdmin = getSupabaseAdmin();
-    if (sbAdmin) {
+    const localSignedUrl = createLocalSignedPhotoUrl(input.photoPath, 60 * 60);
+    if (localSignedUrl) {
+      messages.push({
+        type: "image",
+        originalContentUrl: localSignedUrl,
+        previewImageUrl: localSignedUrl,
+      });
+    } else {
+      const sbAdmin = getSupabaseAdmin();
+      if (sbAdmin) {
       const { data: signed, error: signErr } = await sbAdmin.storage
         .from("record-photos")
         .createSignedUrl(input.photoPath, 60 * 60);
@@ -134,6 +143,7 @@ export async function pushRecordToFamily(input: {
         });
       }
       // 簽不出來就只送文字訊息,不要因為照片掛掉整則 push 失敗
+      }
     }
   }
 
@@ -184,8 +194,16 @@ export async function pushRecordToFamily(input: {
 
     // v55: 群組推播也走相同 photoOwned gate（已在 1-on-1 段驗過、這裡複用）
     if (input.photoPath && includePhotoInGroup && photoOwned) {
-      const sbAdmin = getSupabaseAdmin();
-      if (sbAdmin) {
+      const localSignedUrl = createLocalSignedPhotoUrl(input.photoPath, 60 * 60);
+      if (localSignedUrl) {
+        groupMessages.push({
+          type: "image",
+          originalContentUrl: localSignedUrl,
+          previewImageUrl: localSignedUrl,
+        });
+      } else {
+        const sbAdmin = getSupabaseAdmin();
+        if (sbAdmin) {
         const { data: signed, error: signErr } = await sbAdmin.storage
           .from("record-photos")
           .createSignedUrl(input.photoPath, 60 * 60);
@@ -195,6 +213,7 @@ export async function pushRecordToFamily(input: {
             originalContentUrl: signed.signedUrl,
             previewImageUrl: signed.signedUrl,
           });
+        }
         }
       }
     }

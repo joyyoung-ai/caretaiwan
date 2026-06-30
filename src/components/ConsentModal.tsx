@@ -66,6 +66,7 @@ export default function ConsentModal() {
       }),
     }).catch(() => {});
     setNeedsConsent(false);
+    window.dispatchEvent(new Event("app-consent-changed"));
   };
 
   const markScrolled = (id: SectionId) => {

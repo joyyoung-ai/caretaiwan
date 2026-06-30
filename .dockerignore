@@ -1,0 +1,9 @@
+.git
+.next
+.npm-cache
+node_modules
+npm-debug.log*
+Dockerfile
+docker/caretaiwan.tar
+docker/.env.production
+docker/*.log

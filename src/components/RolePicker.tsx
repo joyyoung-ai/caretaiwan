@@ -16,21 +16,31 @@ export default function RolePicker() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // 必須先同意條款才會問角色
-    const consented = localStorage.getItem(CONSENT_KEY);
-    if (!consented) {
-      setShow(false);
-      return;
-    }
-    if (getRole()) {
-      setShow(false);
-      return;
-    }
-    setShow(true);
+    const sync = () => {
+      // 必須先同意條款才會問角色
+      const consented = localStorage.getItem(CONSENT_KEY);
+      if (!consented) {
+        setShow(false);
+        return;
+      }
+      if (getRole()) {
+        setShow(false);
+        return;
+      }
+      setShow(true);
+    };
+    sync();
+    window.addEventListener("app-consent-changed", sync);
+    window.addEventListener("app-role-changed", sync);
+    return () => {
+      window.removeEventListener("app-consent-changed", sync);
+      window.removeEventListener("app-role-changed", sync);
+    };
   }, []);
 
   const pick = (role: "caregiver" | "family") => {
     saveRole(role);
+    window.dispatchEvent(new Event("app-role-changed"));
     setShow(false);
     if (role === "family") router.push("/family");
     else router.push("/");

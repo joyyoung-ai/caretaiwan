@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import RoleSwitcher from "@/components/RoleSwitcher";
 import { Info } from "@/components/icons";
 import { loginWithLine } from "@/app/actions/auth-actions";
 import { getRole } from "@/lib/role";
@@ -145,6 +146,15 @@ export default function FamilyHome() {
                 </div>
                 <div className="text-xs text-slate-500">已登入</div>
               </div>
+            </div>
+          </div>
+
+          <div className="px-5 mb-3">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
+              <div className="text-sm font-bold text-slate-900 dark:text-white mb-2">
+                POC 測試身份
+              </div>
+              <RoleSwitcher />
             </div>
           </div>
 

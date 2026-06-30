@@ -4,6 +4,15 @@
 
 🌐 **English** ｜ [繁體中文](./README.zh-TW.md)
 
+> [!NOTE]
+> ## 由中揚資訊股份有限公司接手維護的分支
+>
+> 這個分支現由 **中揚資訊股份有限公司** 接手維護。原專案由另一位作者在 GitHub 上開源；原作者已說明專案精神、社會問題脈絡，以及停止維護的原因。以下保留原作者的第一人稱敘事，因為它說明了這個專案為什麼存在、服務誰，以及哪些邊界不能輕率跨越。
+>
+> CareTaiwan 原本的精神不是單純做一個「照護紀錄 App」，而是為台灣外籍家庭看護設計一個低摩擦、在地優先、由看護主動控制分享的工具：快速紀錄、LINE 家屬溝通、不追蹤使用者、重視資料共有權，並且在風險評估後刻意不提供未經專業審查的醫療建議。原作者遇到的困難也必須被記住：個人兼職維護的能量有限、資安修補、個資法合規、使用者支援、營運成本、醫療責任風險，以及在權力不對等環境中直接接觸看護做研究的困難。
+>
+> 分支接手說明、原作者脈絡與後續維護承諾請見 [FORK_NOTICE.md](./FORK_NOTICE.md)。
+
 > [!IMPORTANT]
 > ## 🗄️ Archived & open-sourced (June 2026)
 >
@@ -16,10 +25,11 @@
 >
 > 這原本是我一個人利用業餘時間獨立開發的專案，曾運行於 `caretaiwan.app`。**線上服務已停止營運**——身為半職、獨自維護的開發者，我無法長期負擔持續的營運與合規成本（安全性修補、個資法／PDPA 遵循、使用者支援）。專案當時仍在朋友測試階段，**沒有任何真實使用者的資料受到影響**。
 >
-> 原始碼以 **AGPL-3.0** 授權開源，作為一份參考實作與作品集——歡迎閱讀、學習，或自行部署。**本專案已不再維護，亦不提供任何技術支援。** `caretaiwan.app` 網域將不再續約，到期後失效。
+> 原始碼以 **MIT** 授權開源，作為一份參考實作與作品集——歡迎閱讀、學習，或自行部署。**本專案已不再維護，亦不提供任何技術支援。** `caretaiwan.app` 網域將不再續約，到期後失效。
 
 📄 **Security audit**: [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
 📅 **Built**: 2026-04 / Solo, ~1 week elapsed · **Archived**: 2026-06
+🧭 **分支接手說明**: [FORK_NOTICE.md](./FORK_NOTICE.md)
 🎮 **Live demo**: **<https://caretaiwan-demo.vercel.app>** — a self-contained, click-through prototype (mock data, no backend) showing both the caregiver and family sides. The hosted app is gone; this is how it worked. Source in [`/demo`](./demo).
 
 ---

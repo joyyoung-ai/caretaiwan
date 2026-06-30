@@ -22,7 +22,10 @@ export default function BottomNav() {
   const t = useT();
 
   useEffect(() => {
-    setRole(getRole());
+    const syncRole = () => setRole(getRole());
+    syncRole();
+    window.addEventListener("app-role-changed", syncRole);
+    return () => window.removeEventListener("app-role-changed", syncRole);
   }, [pathname]);
 
   const CAREGIVER_ITEMS: Item[] = [
@@ -40,7 +43,8 @@ export default function BottomNav() {
     { href: "/help", Icon: LifeBuoy, label: "我需要協助", danger: true },
   ];
 
-  // 在角色未確定前用看護端 nav（避免 hydration 不對）
+  if (!role) return null;
+
   const items = role === "family" ? FAMILY_ITEMS : CAREGIVER_ITEMS;
 
   const isActive = (href: string) => {

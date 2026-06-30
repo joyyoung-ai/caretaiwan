@@ -1,0 +1,20 @@
+services:
+  caretaiwan:
+    image: caretaiwan:latest
+    container_name: caretaiwan
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      AUTH_URL: "https://demo3.cosmosdesign.tw"
+      NEXTAUTH_URL: "https://demo3.cosmosdesign.tw"
+      PUBLIC_APP_URL: "https://demo3.cosmosdesign.tw"
+      LOCAL_PHOTO_STORAGE_DIR: "/app/photo-storage"
+    ports:
+      - "3033:3000"
+    volumes:
+      - ./photo-storage:/app/photo-storage

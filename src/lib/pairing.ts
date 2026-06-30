@@ -19,6 +19,7 @@ export function generatePairingCode(length = 6): string {
 
 // 配對碼有效時間：24 小時內必須完成配對
 const PAIRING_TTL_MS = 24 * 60 * 60 * 1000;
+const POC_ALLOW_SELF_PAIRING = process.env.POC_ALLOW_SELF_PAIRING === "true";
 
 export type Pairing = {
   elder_id: string;
@@ -143,14 +144,29 @@ export async function bindFamily(
   if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
 
   const code = pairingCode.toUpperCase().trim();
+  const existing = await findPairingByCode(code);
+  if (!existing) return { ok: false, error: "ALREADY_PAIRED_OR_EXPIRED" };
+  if (existing.owner_line_user_id === familyLineUserId && !POC_ALLOW_SELF_PAIRING) {
+    return { ok: false, error: "SELF_PAIRING_NOT_ALLOWED" };
+  }
+  if (existing.paired_line_user_id) {
+    return { ok: false, error: "ALREADY_PAIRED_OR_EXPIRED" };
+  }
+
   // Conditional update — Postgres-level guard so two concurrent requests can't both bind
-  const { data, error } = await sb
+  let query = sb
     .from("elder_pairings")
     .update({
       paired_line_user_id: familyLineUserId,
       paired_at: new Date().toISOString(),
     })
-    .eq("pairing_code", code)
+    .eq("pairing_code", code);
+
+  if (!POC_ALLOW_SELF_PAIRING) {
+    query = query.neq("owner_line_user_id", familyLineUserId); // 家屬不能用同一 LINE 帳號把自己綁成看護
+  }
+
+  const { data, error } = await query
     .is("paired_line_user_id", null) // 防綁架：必須仍是未配對狀態
     .gt("expires_at", new Date().toISOString()) // 過期不能配對
     .select()

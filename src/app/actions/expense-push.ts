@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { logAudit } from "@/lib/audit";
 import { CATEGORY_META, type ExpenseCategory } from "@/lib/expense";
 import { verifyPhotoOwnership } from "@/lib/record-photos";
+import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
 
 export async function pushExpenseToFamily(input: {
   expenseId: number;
@@ -48,8 +49,16 @@ export async function pushExpenseToFamily(input: {
       purpose: "expense",
     });
     if (owned) {
-      const sb = getSupabaseAdmin();
-      if (sb) {
+      const localSignedUrl = createLocalSignedPhotoUrl(input.photoPath, 60 * 60);
+      if (localSignedUrl) {
+        messages.push({
+          type: "image",
+          originalContentUrl: localSignedUrl,
+          previewImageUrl: localSignedUrl,
+        });
+      } else {
+        const sb = getSupabaseAdmin();
+        if (sb) {
         const { data: signed, error } = await sb.storage
           .from("record-photos")
           .createSignedUrl(input.photoPath, 60 * 60);
@@ -59,6 +68,7 @@ export async function pushExpenseToFamily(input: {
             originalContentUrl: signed.signedUrl,
             previewImageUrl: signed.signedUrl,
           });
+        }
         }
       }
     } else {

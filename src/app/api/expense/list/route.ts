@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { listExpensesForCard } from "@/lib/expense";
 import { isCloudEnabled, getSupabaseAdmin } from "@/lib/supabase-server";
 import { checkSameOriginGet } from "@/lib/origin-check";
+import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
 
 export const runtime = "nodejs";
 
@@ -47,10 +48,13 @@ export async function GET(req: Request) {
           .eq("purpose", "expense")
           .maybeSingle();
         if (photoMeta) {
-          const { data } = await sb.storage
-            .from("record-photos")
-            .createSignedUrl(e.photo_path, 60 * 60);
-          photoUrl = data?.signedUrl ?? null;
+          photoUrl = createLocalSignedPhotoUrl(e.photo_path, 60 * 60);
+          if (!photoUrl) {
+            const { data } = await sb.storage
+              .from("record-photos")
+              .createSignedUrl(e.photo_path, 60 * 60);
+            photoUrl = data?.signedUrl ?? null;
+          }
         }
       }
       return { ...e, photoUrl };

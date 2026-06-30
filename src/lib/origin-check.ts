@@ -34,6 +34,7 @@ function isAllowedHost(host: string | null): boolean {
   // strip port if any
   const h = host.split(":")[0].toLowerCase();
   if (PROD_HOSTS.has(h)) return true;
+  if (previewExtraHosts().has(h)) return true;
   if (IS_PRODUCTION) {
     // production 不再無條件接 *.vercel.app / localhost
     return false;

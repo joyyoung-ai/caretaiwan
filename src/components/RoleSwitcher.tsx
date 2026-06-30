@@ -15,6 +15,7 @@ export default function RoleSwitcher() {
 
   const switchTo = (role: Role) => {
     setRole(role);
+    window.dispatchEvent(new Event("app-role-changed"));
     setCurrent(role);
     router.push(role === "family" ? "/family" : "/");
   };

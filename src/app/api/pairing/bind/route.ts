@@ -66,6 +66,8 @@ export async function POST(req: Request) {
     const userMsg =
       result.error === "ALREADY_PAIRED_OR_EXPIRED"
         ? "配對碼已被使用或已過期，請家屬重新產生新碼"
+        : result.error === "SELF_PAIRING_NOT_ALLOWED"
+        ? "家屬和看護不能使用同一個 LINE 帳號配對。請讓看護用自己的 LINE 帳號登入後再輸入配對碼。"
         : "配對失敗";
     return NextResponse.json({ error: userMsg }, { status: 400 });
   }
