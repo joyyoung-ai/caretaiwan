@@ -3,12 +3,6 @@
 //
 import { NextResponse } from "next/server";
 
-const LEGACY_PROD_HOSTS = [
-  "caretaiwan.app",
-  "www.caretaiwan.app",
-  "caretaiwan.vercel.app",
-];
-
 type OriginEnv = Partial<
   Record<
     | "NODE_ENV"
@@ -46,7 +40,7 @@ function isProductionEnv(env: OriginEnv = process.env): boolean {
 }
 
 function productionHosts(env: OriginEnv = process.env): Set<string> {
-  const set = new Set(LEGACY_PROD_HOSTS);
+  const set = new Set<string>();
   const publicAppHost = normalizeHost(env.PUBLIC_APP_URL);
   if (publicAppHost) set.add(publicAppHost);
   for (const host of hostsFromCsv(env.PRODUCTION_ALLOWED_HOSTS)) {
