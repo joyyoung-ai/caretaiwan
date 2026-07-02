@@ -16,18 +16,18 @@
 
 ## 3. Helper tests and lint PR
 
-- [ ] 3.1 Add or confirm helper tests for pairing code TTL.
-- [ ] 3.2 Add or confirm helper tests for self-pairing prevention.
-- [ ] 3.3 Add or confirm helper tests for configured production hosts, rejected cross-origin requests, and direct GET behavior.
-- [ ] 3.4 Add or confirm helper tests for cron bearer parsing, timing-safe compare behavior, and LINE user ID reference generation.
-- [ ] 3.5 Clean up lint warnings in the touched scope so `npm run lint` has no warning output.
+- [x] 3.1 Add or confirm helper tests for pairing code TTL.
+- [x] 3.2 Add or confirm helper tests for self-pairing prevention.
+- [x] 3.3 Add or confirm helper tests for configured production hosts, rejected cross-origin requests, and direct GET behavior.
+- [x] 3.4 Add or confirm helper tests for cron bearer parsing, timing-safe compare behavior, and LINE user ID reference generation.
+- [x] 3.5 Clean up lint warnings in the touched scope so `npm run lint` has no warning output.
 
 ## 4. Documentation and release verification
 
-- [ ] 4.1 Update `docs/releases/CHANGELOG.md` for implementation PRs without describing unimplemented work as complete.
+- [x] 4.1 Update `docs/releases/CHANGELOG.md` for implementation PRs without describing unimplemented work as complete.
 - [ ] 4.2 Update `docs/engineering/TESTING.md`, `docs/security/SECURITY.md`, or deployment docs if implementation behavior changes those documents.
-- [ ] 4.3 Verify product boundaries: no medical advice, diagnosis, triage, treatment, dosage, urgency judgment, calendar feature, schema migration, UI refactor, deployment rearchitecture, or CareTaiwan positioning change.
-- [ ] 4.4 Run `npm run docs:check`.
-- [ ] 4.5 Run `npm run test` if the branch includes or confirms test coverage.
-- [ ] 4.6 Run `npm run lint`.
-- [ ] 4.7 Run `npm run build`.
+- [x] 4.3 Verify product boundaries: no medical advice, diagnosis, triage, treatment, dosage, urgency judgment, calendar feature, schema migration, UI refactor, deployment rearchitecture, or CareTaiwan positioning change.
+- [x] 4.4 Run `npm run docs:check`.
+- [x] 4.5 Run `npm run test` if the branch includes or confirms test coverage.
+- [x] 4.6 Run `npm run lint`.
+- [x] 4.7 Run `npm run build`.
