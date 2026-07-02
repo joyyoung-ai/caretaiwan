@@ -47,13 +47,13 @@ CareTaiwan 歡迎 issue、文件修正與小範圍 PR。這個專案處理照護
 
 ## Commit 格式
 
-建議使用簡單的 conventional commit：
+Commit message 請使用繁體中文，讓維護者在 git history 裡可以直接看懂改動目的。可以保留簡短類型前綴，但前綴也應使用中文：
 
-- `feat: add care event draft schema`
-- `fix: redact line user id from cron response`
-- `docs: add project vision`
-- `chore: update deploy env example`
-- `security: tighten webhook validation`
+- `功能：新增照護事件草案 schema`
+- `修正：遮蔽資料保留 cron response 的 LINE user ID`
+- `文件：新增專案願景`
+- `維護：更新部署 env 範例`
+- `資安：收緊 webhook 驗簽流程`
 
 一個 commit 應該能說清楚一件事。不要把 bug fix、formatting、文件搬移與新功能混在同一個 commit。
 

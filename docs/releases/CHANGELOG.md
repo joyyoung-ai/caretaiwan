@@ -19,6 +19,12 @@
 - `AGENTS.md` 增加 OpenSpec / Superpowers 使用邊界，避免把協作工具當成 runtime dependency。
 - `docs/README.md` 在 Engineering 區塊加入 AI agent workflow 文件連結。
 
+### Security
+
+- 資料保留 cron response 改由 helper 統一輸出去識別化的 `lineUserRef`，warn / delete / dry-run sample 不回傳完整 LINE user ID。
+- 資料保留 cron delete stage 明確維持先刪 `cloud_backups`、成功後才刪相關 `elder_pairings`；pairing 刪除失敗時以去識別化 partial failure 回報，不輸出 raw DB error。
+- cron bearer token parser 收緊為只接受單一 Bearer token，並保留固定長度 digest 搭配 timing-safe compare 的驗證方式。
+
 ## v1.0.0 - 2026-07-01
 
 ### Added
