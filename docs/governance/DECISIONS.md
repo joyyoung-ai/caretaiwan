@@ -74,6 +74,33 @@ Review date：2026-09-30
 
 這不是為了多一個欄位，而是讓程式層面能區分一般日程與醫療相關日程，避免未來提醒文案越寫越像醫療指示。
 
+## ADR-0008：暫時保留 CareTaiwan 作為開源專案名稱
+
+狀態：Proposed
+Owner：Product Owner（待指定）
+Review date：2026-09-30
+
+中揚資訊接手原 CareTaiwan 開源專案後，正式服務品牌與 GitHub repository 名稱尚未定案。現有 README、Project Vision、Roadmap 與接手說明已使用 CareTaiwan 作為開源專案名稱。
+
+短期保留 CareTaiwan 作為開源 repository / project name。正式服務品牌可在 production 上線前另行決定，不必和開源 repo 名稱完全相同。
+
+理由：
+
+- 保留原作者脈絡與搜尋辨識度。
+- 避免在治理文件尚未穩定前大量改名。
+- GitHub repository name 後續仍可修改。
+- 正式服務名稱可以依營運、法務、LINE channel、domain 與客戶溝通需求另行決定。
+
+影響：
+
+- README、AGENTS、PROJECT_VISION、FORK_NOTICE 與 Roadmap 暫時維持 CareTaiwan。
+- 若未來 rebrand，需另開 ADR，並同步更新 package metadata、Docker image、LINE channel 命名、deployment docs、privacy / terms 與 domain。
+
+替代方案：
+
+- 立即改成中揚資訊自有品牌名稱。
+- 使用中性 repo 名稱，例如 `caregiver-collab-tw`。
+
 ## ADR 模板
 
 ```text
