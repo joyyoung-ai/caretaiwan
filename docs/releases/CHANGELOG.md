@@ -10,6 +10,7 @@
 
 - `docs/engineering/AI_AGENT_WORKFLOW.md`：說明 OpenSpec、Superpowers 與 Codex 的文件化協作流程；不代表 OpenSpec 已初始化或 Superpowers 已安裝。
 - `docs/governance/DECISIONS.md` 新增 ADR-0008，記錄短期保留 CareTaiwan 作為開源專案名稱。
+- 初始化 OpenSpec 設定與 Codex OpenSpec skills；目前尚未建立 active change proposal。
 
 ### Changed
 
