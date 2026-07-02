@@ -16,6 +16,11 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
 import { pushMessage, isLineBotEnabled } from "@/lib/line-bot";
 import { logAudit } from "@/lib/audit";
+import {
+  extractBearerToken,
+  lineUserRef,
+  timingSafeSecretEqual,
+} from "@/lib/cron-security";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // cron 處理可能要久一點
@@ -46,8 +51,8 @@ export async function GET(req: Request) {
     );
   }
   const authHeader = req.headers.get("authorization") ?? "";
-  const bearer = authHeader.replace(/^Bearer\s+/i, "");
-  if (bearer !== secret) {
+  const bearer = extractBearerToken(authHeader);
+  if (!bearer || !timingSafeSecretEqual(bearer, secret)) {
     return unauthorized();
   }
 
@@ -91,10 +96,11 @@ async function runWarnStage(
     .limit(MAX_BATCH_SIZE);
 
   if (error) {
-    return NextResponse.json({ error: "DB_ERROR", detail: error.message }, { status: 500 });
+    console.error("[data-retention] warn query failed", error.message);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
-  const results: Array<{ lineUserId: string; warned: boolean; reason?: string }> = [];
+  const results: Array<{ lineUserRef: string; warned: boolean; reason?: string }> = [];
 
   for (const c of candidates ?? []) {
     // 查最近 35 天有沒有已警告過 (避免每天重發)
@@ -108,7 +114,7 @@ async function runWarnStage(
       .limit(1)
       .maybeSingle();
     if (prev) {
-      results.push({ lineUserId: c.line_user_id, warned: false, reason: "ALREADY_WARNED" });
+      results.push({ lineUserRef: lineUserRef(c.line_user_id), warned: false, reason: "ALREADY_WARNED" });
       continue;
     }
 
@@ -118,7 +124,7 @@ async function runWarnStage(
     const daysLeft = Math.max(0, Math.ceil((deleteAt - Date.now()) / (24 * 60 * 60 * 1000)));
 
     if (dryRun) {
-      results.push({ lineUserId: c.line_user_id, warned: false, reason: "DRY_RUN" });
+      results.push({ lineUserRef: lineUserRef(c.line_user_id), warned: false, reason: "DRY_RUN" });
       continue;
     }
 
@@ -139,7 +145,7 @@ async function runWarnStage(
       metadata: { daysLeft, lineBotEnabled: isLineBotEnabled() },
     });
 
-    results.push({ lineUserId: c.line_user_id, warned });
+    results.push({ lineUserRef: lineUserRef(c.line_user_id), warned });
   }
 
   logAudit({
@@ -155,7 +161,7 @@ async function runWarnStage(
     dryRun,
     processed: results.length,
     candidates: results.length,
-    results: results.slice(0, 10), // 只回前 10 筆 sample
+    results: results.slice(0, 10), // 只回前 10 筆去識別化 sample
   });
 }
 
@@ -174,59 +180,84 @@ async function runDeleteStage(
     .limit(MAX_BATCH_SIZE);
 
   if (error) {
-    return NextResponse.json({ error: "DB_ERROR", detail: error.message }, { status: 500 });
+    console.error("[data-retention] delete query failed", error.message);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
   const results: Array<{
-    lineUserId: string;
+    lineUserRef: string;
     deleted: boolean;
     pairingsDeleted?: number;
     reason?: string;
   }> = [];
 
   for (const c of candidates ?? []) {
+    const ref = lineUserRef(c.line_user_id);
     if (dryRun) {
-      results.push({ lineUserId: c.line_user_id, deleted: false, reason: "DRY_RUN" });
+      results.push({ lineUserRef: ref, deleted: false, reason: "DRY_RUN" });
       continue;
     }
 
-    // 刪 elder_pairings 中 owner 或 paired 是這個 user 的
-    // 拆兩次 query (不用 .or() 字串拼接 -> 防 PostgREST filter injection)
-    const { count: ownerCount } = await sb
-      .from("elder_pairings")
-      .delete({ count: "exact" })
-      .eq("owner_line_user_id", c.line_user_id);
-    const { count: pairedCount } = await sb
-      .from("elder_pairings")
-      .delete({ count: "exact" })
-      .eq("paired_line_user_id", c.line_user_id);
-    const pairCount = (ownerCount ?? 0) + (pairedCount ?? 0);
-
-    // 刪 cloud_backups
+    // 先刪 cloud_backups。若備份刪除失敗，不先動配對資料，避免留下孤立備份。
     const { error: cbErr } = await sb
       .from("cloud_backups")
       .delete()
       .eq("line_user_id", c.line_user_id);
 
-    const ok = !cbErr;
+    if (cbErr) {
+      console.error("[data-retention] backup delete failed", cbErr.message);
+      logAudit({
+        action: "DATA_AUTO_DELETE",
+        actorLineUserId: c.line_user_id,
+        resourceType: "cloud_backup",
+        resourceId: c.line_user_id,
+        status: "fail",
+        metadata: {
+          cloudBackupDeleted: false,
+          lastUpdate: c.updated_at,
+          reason: "DB_ERROR",
+        },
+      });
+
+      results.push({ lineUserRef: ref, deleted: false, reason: "DB_ERROR" });
+      continue;
+    }
+
+    // 再刪 elder_pairings 中 owner 或 paired 是這個 user 的。
+    // 拆兩次 query，不用 .or() 字串拼接，避免 PostgREST filter injection。
+    const { count: ownerCount, error: ownerErr } = await sb
+      .from("elder_pairings")
+      .delete({ count: "exact" })
+      .eq("owner_line_user_id", c.line_user_id);
+    const { count: pairedCount, error: pairedErr } = await sb
+      .from("elder_pairings")
+      .delete({ count: "exact" })
+      .eq("paired_line_user_id", c.line_user_id);
+    const pairCount = (ownerCount ?? 0) + (pairedCount ?? 0);
+    const pairingErr = ownerErr ?? pairedErr;
+    if (pairingErr) {
+      console.error("[data-retention] pairing delete failed", pairingErr.message);
+    }
 
     logAudit({
       action: "DATA_AUTO_DELETE",
       actorLineUserId: c.line_user_id,
       resourceType: "cloud_backup",
       resourceId: c.line_user_id,
-      status: ok ? "ok" : "fail",
+      status: pairingErr ? "fail" : "ok",
       metadata: {
+        cloudBackupDeleted: true,
         pairingsDeleted: pairCount ?? 0,
         lastUpdate: c.updated_at,
-        reason: cbErr?.message,
+        reason: pairingErr ? "PAIRING_DELETE_FAILED" : undefined,
       },
     });
 
     results.push({
-      lineUserId: c.line_user_id,
-      deleted: ok,
+      lineUserRef: ref,
+      deleted: !pairingErr,
       pairingsDeleted: pairCount ?? 0,
+      reason: pairingErr ? "PAIRING_DELETE_FAILED" : undefined,
     });
   }
 

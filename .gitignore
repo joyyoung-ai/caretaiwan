@@ -36,6 +36,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!/.env.example
 !/docker/.env.production.example
 
 # vercel
@@ -49,6 +50,9 @@ next-env.d.ts
 
 # claude code local settings (per-machine permission allowlist)
 .claude/settings.local.json
+
+# local-only agent notes
+AGENTS.local.md
 
 # personal marketing / outreach docs (exclude before open-sourcing)
 OUTREACH_TADA.md

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Info } from "@/components/icons";
 import { loginWithLine } from "@/app/actions/auth-actions";
 import { getRole } from "@/lib/role";
 import { setActivePairedElder } from "@/lib/elder";
@@ -63,7 +62,7 @@ export default function CaregiverCardPage() {
   }, [router]);
 
   // 把第一筆配對的老人寫入本地快取，供 /record 推播使用
-  const persistFirstPaired = (items: PairedElder[]) => {
+  const persistFirstPaired = useCallback((items: PairedElder[]) => {
     if (items.length === 0) {
       setActivePairedElder(null);
       return;
@@ -71,11 +70,11 @@ export default function CaregiverCardPage() {
     const first = items[0];
     const name = first.card?.name || first.displayName || "老人";
     setActivePairedElder({ id: first.elderId, name });
-  };
+  }, []);
 
   // 單一 round-trip:用 /api/family/paired 同時得知登入狀態 + 配對清單
   // 401 = 未登入,200 = 登入(payload 含配對列表)
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch("/api/family/paired");
       if (res.status === 401) {
@@ -94,11 +93,11 @@ export default function CaregiverCardPage() {
     } catch {
       setView("noPair");
     }
-  };
+  }, [persistFirstPaired]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const refresh = () => {
     load();

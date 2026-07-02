@@ -1,0 +1,67 @@
+# 已知限制
+
+日期：2026-07-01
+
+這份文件整理目前已知限制。列在這裡的項目不一定是 bug。有些是刻意不做，有些是還沒到實作階段，有些需要法律、資安或醫療專業先補齊。
+
+## 產品邊界
+
+CareTaiwan 目前不提供：
+
+- 醫療判斷。
+- 醫療分流。
+- 診斷或治療建議。
+- 用藥劑量建議。
+- 醫療器材功能。
+- EMR / HIS。
+- HL7 / FHIR。
+- 醫院正式串接。
+- 長照 ERP。
+- 排班系統。
+- 薪資、扣款或勞資爭議判定。
+
+這些不是短期 bug。若要改變範圍，先新增 ADR。
+
+## 法規與認證限制
+
+目前沒有：
+
+- 醫療器材認證。
+- ISO 27001 認證。
+- HIPAA 合規宣告。
+- 第三方滲透測試報告。
+- 正式 DPA 簽署清單。
+- 法律專業審閱完成的隱私權政策與服務條款。
+
+文件可以引用 ISO 27001 的管控精神，但不得宣稱已取得認證。
+
+## 技術限制
+
+目前狀態：
+
+- 已建立第一批 helper tests，但 API route、LINE webhook、photo ownership 與 E2E 測試尚未建立。
+- `npm run lint` 可通過，已無 warning。
+- `supabase-schema.sql` 是 idempotent schema，不是完整 migration series。
+- Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。
+- 正式 VM runbook 尚未完整落地。
+- 資料庫自管或 managed service 尚未做最終決策。
+
+## 推播與提醒限制
+
+- LINE 推播不是保證送達。
+- 使用者關閉通知、封鎖 Bot、網路不穩或 LINE 服務異常，都可能造成提醒失敗。
+- 回診、吃藥、拿藥、復健等提醒只能作為一般日程提醒，不代表醫療指示。
+
+## 資料刪除限制
+
+使用者要求刪除資料時，live database / storage 應執行刪除。已打包的歷史備份原則上不直接拆包修改，而是記錄刪除請求，並在備份到期時自然覆蓋。正式環境需要在隱私權政策與 runbook 寫清楚。
+
+## 開發流程限制
+
+- GitHub team 尚未正式建立；CODEOWNERS 目前是草案，正式公開前仍要確認實際 owner。
+- Security contact 已指定為 `services@joyyoung.com.tw`，但 GitHub private vulnerability reporting 尚未確認啟用。
+- Release 流程尚未自動化。
+- CI/CD 測試閘門尚未建立；目前測試可用 `npm run test` 在本機執行。
+- Branch protection 尚未設定。
+
+這些是治理待辦，不是產品功能。

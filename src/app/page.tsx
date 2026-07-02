@@ -22,7 +22,7 @@ import {
   BookOpen,
   type LucideIcon,
 } from "lucide-react";
-import { getActiveElder, getStore, setActivePairedElder } from "@/lib/elder";
+import { getActiveElder, setActivePairedElder } from "@/lib/elder";
 import type { Elder } from "@/lib/elder";
 
 type Rec = {
@@ -193,7 +193,7 @@ export default function Home() {
       <div className="px-5 mb-3">
         <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
           <div className="text-sm font-bold text-slate-900 dark:text-white mb-2">
-            POC 測試身份
+            使用身份
           </div>
           <RoleSwitcher />
         </div>

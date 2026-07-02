@@ -1,0 +1,8 @@
+# 正式 GitHub organization / team 建立前，先不要啟用假的 owner。
+# 建立後可改成：
+#
+# * @<org>/<team>
+# /docs/ @<org>/<docs-team>
+# /src/app/api/ @<org>/<backend-team>
+# /src/lib/ @<org>/<backend-team>
+# /docker/ @<org>/<infra-team>

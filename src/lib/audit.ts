@@ -94,16 +94,16 @@ const PII_KEYS = new Set([
   "note",
   "message",
   "text",
-  "elderName",
-  "displayName",
+  "eldername",
+  "displayname",
   "doctor",
   "hospital",
   "value",
-  "itemName",
-  "verifyNote",
+  "itemname",
+  "verifynote",
 ]);
 
-function sanitizeMetadata(
+export function sanitizeMetadata(
   meta: Record<string, unknown> | undefined
 ): Record<string, unknown> | null {
   if (!meta) return null;

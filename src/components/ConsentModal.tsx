@@ -107,7 +107,6 @@ export default function ConsentModal() {
         {/* Body — scrollable */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
           <Accordion
-            id="privacy"
             label="隱私權政策"
             Icon={Lock}
             open={openSection === "privacy"}
@@ -121,7 +120,6 @@ export default function ConsentModal() {
           </Accordion>
 
           <Accordion
-            id="terms"
             label="服務條款"
             Icon={FileText}
             open={openSection === "terms"}
@@ -215,7 +213,6 @@ export default function ConsentModal() {
 }
 
 function Accordion({
-  id,
   label,
   Icon,
   open,
@@ -224,7 +221,6 @@ function Accordion({
   done,
   children,
 }: {
-  id: SectionId;
   label: string;
   Icon: typeof Lock;
   open: boolean;

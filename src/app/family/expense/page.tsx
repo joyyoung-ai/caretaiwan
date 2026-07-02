@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { getStore, type Elder } from "@/lib/elder";
 import { getRole } from "@/lib/role";
 

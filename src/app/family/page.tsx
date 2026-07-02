@@ -152,7 +152,7 @@ export default function FamilyHome() {
           <div className="px-5 mb-3">
             <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
               <div className="text-sm font-bold text-slate-900 dark:text-white mb-2">
-                POC 測試身份
+                使用身份
               </div>
               <RoleSwitcher />
             </div>

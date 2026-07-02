@@ -5,36 +5,60 @@
 🌐 **English** ｜ [繁體中文](./README.zh-TW.md)
 
 > [!NOTE]
-> ## 由中揚資訊股份有限公司接手維護的分支
+> ## Current fork status / 目前分支狀態
 >
-> 這個分支現由 **中揚資訊股份有限公司** 接手維護。原專案由另一位作者在 GitHub 上開源；原作者已說明專案精神、社會問題脈絡，以及停止維護的原因。以下保留原作者的第一人稱敘事，因為它說明了這個專案為什麼存在、服務誰，以及哪些邊界不能輕率跨越。
+> This fork is maintained by **中揚資訊股份有限公司**. The maintained fork keeps the original author's research context, but its current maintenance status is separate from the original live service.
 >
-> CareTaiwan 原本的精神不是單純做一個「照護紀錄 App」，而是為台灣外籍家庭看護設計一個低摩擦、在地優先、由看護主動控制分享的工具：快速紀錄、LINE 家屬溝通、不追蹤使用者、重視資料共有權，並且在風險評估後刻意不提供未經專業審查的醫療建議。原作者遇到的困難也必須被記住：個人兼職維護的能量有限、資安修補、個資法合規、使用者支援、營運成本、醫療責任風險，以及在權力不對等環境中直接接觸看護做研究的困難。
+> CareTaiwan is an assistive care-collaboration tool between foreign family caregivers and families in Taiwan. It is not an EMR, HIS, medical device, long-term care ERP, scheduling/payroll system, or medical-triage tool. Before production use, read [Known Limitations](./docs/governance/KNOWN_LIMITATIONS.md).
 >
-> 分支接手說明、原作者脈絡與後續維護承諾請見 [FORK_NOTICE.md](./FORK_NOTICE.md)。
+> 中揚資訊接手後，會把這個原型往可維運、可稽核、可合規的方向整理。接手說明請見 [FORK_NOTICE.md](./docs/governance/FORK_NOTICE.md)。
 
 > [!IMPORTANT]
-> ## 🗄️ Archived & open-sourced (June 2026)
+> ## Original upstream status / 原始上游狀態
 >
-> This started as a solo side-project that ran at `caretaiwan.app`. **The live service has been shut down** — as a part-time solo maintainer I couldn't sustain the ongoing operational and compliance load (security patching, PDPA / 個資法 compliance, user support). It was still in friend-testing, so **no real user data was affected**.
+> The original live service at `caretaiwan.app` was shut down in June 2026. The original author released the source under the MIT license after deciding that long-term operations, compliance, security patching, and user support were beyond a solo side project.
 >
-> The source is released under the **MIT license** as a reference implementation and a portfolio piece — read it, learn from it, self-host it. **It is no longer maintained and comes with no support.** The `caretaiwan.app` domain will be allowed to lapse and will stop resolving.
+> This status applies to the original upstream service, not to this maintained fork.
 
-> [!IMPORTANT]
-> ## 🗄️ 已封存並開源（2026 年 6 月）
+> [!NOTE]
+> ## Original author note / 原作者保留說明
 >
-> 這原本是我一個人利用業餘時間獨立開發的專案，曾運行於 `caretaiwan.app`。**線上服務已停止營運**——身為半職、獨自維護的開發者，我無法長期負擔持續的營運與合規成本（安全性修補、個資法／PDPA 遵循、使用者支援）。專案當時仍在朋友測試階段，**沒有任何真實使用者的資料受到影響**。
+> The original author described this as a solo side project and portfolio/reference implementation. The original service had only reached friend-testing, and the author stated that no real user data was affected when the service shut down.
 >
-> 原始碼以 **MIT** 授權開源，作為一份參考實作與作品集——歡迎閱讀、學習，或自行部署。**本專案已不再維護，亦不提供任何技術支援。** `caretaiwan.app` 網域將不再續約，到期後失效。
+> 下面保留原作者的第一人稱敘事，目的是讓讀者理解這個專案為什麼存在、服務誰，以及哪些邊界不能輕率跨越。
 
-📄 **Security audit**: [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
+📄 **Security audit**: [SECURITY_AUDIT.md](./docs/security/SECURITY_AUDIT.md)
 📅 **Built**: 2026-04 / Solo, ~1 week elapsed · **Archived**: 2026-06
-🧭 **分支接手說明**: [FORK_NOTICE.md](./FORK_NOTICE.md)
+🧭 **分支接手說明**: [FORK_NOTICE.md](./docs/governance/FORK_NOTICE.md)
 🎮 **Live demo**: **<https://caretaiwan-demo.vercel.app>** — a self-contained, click-through prototype (mock data, no backend) showing both the caregiver and family sides. The hosted app is gone; this is how it worked. Source in [`/demo`](./demo).
+
+## Maintained Fork Quick Start
+
+- **What this fork is**: a care-collaboration tool for foreign family caregivers and families in Taiwan.
+- **What this fork is not**: EMR, HIS, medical device, long-term care ERP, scheduling/payroll system, or medical-triage tool.
+- **Local setup**: run `npm ci`, copy `.env.example` to `.env.local`, fill test-only secrets, then run `npm run dev`.
+- **Production direction**: VM / Docker, provider-neutral. See [DEPLOY.md](./docs/operations/DEPLOY.md) and [RUNBOOK.md](./docs/operations/RUNBOOK.md).
+- **Known limits**: read [KNOWN_LIMITATIONS.md](./docs/governance/KNOWN_LIMITATIONS.md) before filing a bug.
+- **Security and support**: use [SECURITY.md](./SECURITY.md) for vulnerability reporting and [SUPPORT.md](./SUPPORT.md) for support boundaries.
+
+## Repository Governance
+
+中揚資訊接手後的治理文件放在 [`docs/`](./docs/README.md)：
+
+- [專案願景](./docs/governance/PROJECT_VISION.md)：產品定位、優先順序與不做的事。
+- [已知限制](./docs/governance/KNOWN_LIMITATIONS.md)：哪些限制不是 bug。
+- [Roadmap](./docs/product/ROADMAP.md)：後續產品方向。
+- [Contributing](./docs/governance/CONTRIBUTING.md)：Issue、PR、branch、migration 與 review 規則。
+- [Decisions](./docs/governance/DECISIONS.md)：架構與產品決策紀錄。
+- [Maintainers](./docs/governance/MAINTAINERS.md)：維護責任與聯絡方式。
 
 ---
 
-## About the Author
+## Original Author Context
+
+The following sections are preserved from the original author. They explain the research, product decisions, and stopping point of the original prototype. Current maintenance rules live in [`docs/`](./docs/README.md).
+
+### About the Author
 
 I'm a graphic designer (7-8 years professional experience) — **not a traditional engineer**. This project is what becomes possible when a designer with strong product thinking pairs with AI development tools (Claude Code) and gives themselves time to research deeply.
 
@@ -51,7 +75,7 @@ Then I ran a structured security audit against OWASP + Taiwan's PDPA (個資法)
 
 **Scope decision**: An earlier version included a 50-scenario medical triage library with named-source citations. I removed it after threat-modeling the legal exposure: a graphic designer (me) shipping medical advice via AI tools, even with disclaimers, sits in a risk profile where one negative outcome → 50-300K NTD lawsuit + permanent name-search hit. The communication/logging layer is genuinely useful without that exposure. **Knowing what NOT to ship is part of the skill set.** The medical content research lives in git history and the user's research memos, available for an NGO partner who can carry the legal weight properly.
 
-Currently in active conversation with Taiwan Alzheimer's Disease Association about partnership — TADA's role would be promoting the tool to their family-caregiver network and integrating their existing services (失智關懷專線 0800-474-580, 愛的手鍊), not endorsing medical content I authored.
+During the original author stage, the author explored possible NGO partnership paths. No current endorsement or partnership is implied by this maintained fork.
 
 ---
 
@@ -122,11 +146,17 @@ These shaped every product decision below.
 - LINE userId never exposed to client JS (no XSS exfil path)
 - **Scroll-gated dual consent flow** — first-time users must expand both Privacy and Terms accordions and scroll each to the bottom before the "I agree" button enables. Versioned in localStorage so policy bumps re-prompt.
 
-Full audit report: [SECURITY_AUDIT.md](./SECURITY_AUDIT.md). 15 findings, 11 fixed, 4 deliberately deferred with documented threat-model reasoning.
+Full audit report: [SECURITY_AUDIT.md](./docs/security/SECURITY_AUDIT.md). 15 findings, 11 fixed, 4 deliberately deferred with documented threat-model reasoning.
 
 ---
 
-## Tech Stack
+## Maintained Fork Architecture
+
+For the maintained fork, see [docs/engineering/ARCHITECTURE.md](./docs/engineering/ARCHITECTURE.md). Production deployment is planned around VM / Docker and does not depend on a specific cloud provider.
+
+The sections below describe the original prototype implementation and are preserved for historical context.
+
+## Original Prototype Tech Stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -135,7 +165,7 @@ Full audit report: [SECURITY_AUDIT.md](./SECURITY_AUDIT.md). 15 findings, 11 fix
 | Database | Supabase (Postgres + REST) | Free tier covers prototyping; SQL is honest about schema |
 | Push | LINE Messaging API | Lower friction than push notifications which iOS PWAs barely support |
 | Styling | Tailwind 4 + Lucide React | No design system framework needed at this scale |
-| Hosting | Vercel | Zero-config Next.js deploys |
+| Hosting | Vercel | Original prototype hosting |
 | PWA | Hand-written Service Worker | No third-party PWA plugin — clear control of cache strategy |
 
 ### What I deliberately didn't use
@@ -197,7 +227,9 @@ This decision is itself a portfolio signal: knowing what NOT to build is more va
 
 ---
 
-## Architecture (10-second tour)
+## Original Prototype Architecture (10-second tour)
+
+The original author deployed the prototype on Vercel. The maintained fork's deployment direction is VM / Docker; see [docs/operations/DEPLOY.md](./docs/operations/DEPLOY.md).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -288,16 +320,18 @@ cp .env.example .env.local
 # Dev
 npm run dev
 
-# Build / lint / typecheck
+# Docs / build / lint
+npm run docs:check
+npm run test
 npm run build
 npm run lint
 ```
 
 ---
 
-## Sources & Acknowledgments
+## Historical Research Sources
 
-Medical content draws from publicly available materials. All scenarios cite their source. **Nothing in the app is original medical advice — it's curated and re-formatted from authoritative Taiwan healthcare sources, pending professional review.**
+The original prototype included medical scenario research based on public materials. Those scenarios are not shipped in the maintained fork. The maintained app does not provide diagnosis, triage, treatment advice, dosage advice, or medical urgency judgment. The sources below are preserved only to explain the original research background.
 
 - 臺北市政府《外籍家庭看護工照顧手冊》三語版（中英／中越／中印 2022）
 - 高雄長庚 × 高雄市政府衛生局《外籍移工的認知症（失智症）照護手冊》三語版
@@ -322,7 +356,7 @@ copyright notice. No strings attached.
 
 Sample data and screenshots are illustrative, not real patient information.
 
-If you're an NGO or healthcare organization that could carry this forward responsibly — please reach out. I'd rather hand it to people with the institutional capacity to do compliance properly than have it fade as a portfolio piece.
+The original author left a handoff invitation for organizations with the capacity to carry compliance and operations. For this maintained fork, use GitHub Issues or the maintainer process in [MAINTAINERS.md](./docs/governance/MAINTAINERS.md).
 
 ---
 

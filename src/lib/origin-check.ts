@@ -1,47 +1,82 @@
 // Same-origin guard for API routes (CSRF defense beyond SameSite cookie)
 // Supports both POST (state-changing) and GET (PII read) routes.
 //
-// v55 變更（codex MEDIUM-2）:
-//  - production 只接 caretaiwan.app / www.caretaiwan.app / caretaiwan.vercel.app
-//  - preview / dev 走 env 白名單（NEXT_PUBLIC_VERCEL_ENV !== 'production' 時生效）
-//  - 避免「任何 *.vercel.app」這條過寬規則（其他 attacker preview 也算自家）
 import { NextResponse } from "next/server";
 
-const PROD_HOSTS = new Set([
+const LEGACY_PROD_HOSTS = [
   "caretaiwan.app",
   "www.caretaiwan.app",
   "caretaiwan.vercel.app",
-]);
+];
 
-const IS_PRODUCTION =
-  (process.env.VERCEL_ENV ?? process.env.NODE_ENV) === "production";
+type OriginEnv = Partial<
+  Record<
+    | "NODE_ENV"
+    | "VERCEL_ENV"
+    | "VERCEL_URL"
+    | "PREVIEW_ALLOWED_HOSTS"
+    | "PUBLIC_APP_URL"
+    | "PRODUCTION_ALLOWED_HOSTS",
+    string
+  >
+>;
 
-// preview / dev 模式才允許的額外 host（從 env 取、可 comma-sep）
-function previewExtraHosts(): Set<string> {
-  const raw = process.env.PREVIEW_ALLOWED_HOSTS ?? "";
-  const set = new Set<string>();
-  for (const h of raw.split(",").map((s) => s.trim()).filter(Boolean)) {
-    set.add(h.toLowerCase());
+function normalizeHost(host: string | null | undefined): string | null {
+  if (!host) return null;
+  const trimmed = host.trim().toLowerCase();
+  if (!trimmed) return null;
+
+  try {
+    return new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`).hostname;
+  } catch {
+    return trimmed.split(":")[0] || null;
   }
-  // Vercel auto-injects current deployment URL
-  const vurl = process.env.VERCEL_URL;
-  if (vurl) set.add(vurl.toLowerCase());
+}
+
+function hostsFromCsv(raw: string | undefined): Set<string> {
+  const set = new Set<string>();
+  for (const host of (raw ?? "").split(",").map((s) => normalizeHost(s))) {
+    if (host) set.add(host);
+  }
   return set;
 }
 
-function isAllowedHost(host: string | null): boolean {
-  if (!host) return false;
-  // strip port if any
-  const h = host.split(":")[0].toLowerCase();
-  if (PROD_HOSTS.has(h)) return true;
-  if (previewExtraHosts().has(h)) return true;
-  if (IS_PRODUCTION) {
-    // production 不再無條件接 *.vercel.app / localhost
+function isProductionEnv(env: OriginEnv = process.env): boolean {
+  return (env.VERCEL_ENV ?? env.NODE_ENV) === "production";
+}
+
+function productionHosts(env: OriginEnv = process.env): Set<string> {
+  const set = new Set(LEGACY_PROD_HOSTS);
+  const publicAppHost = normalizeHost(env.PUBLIC_APP_URL);
+  if (publicAppHost) set.add(publicAppHost);
+  for (const host of hostsFromCsv(env.PRODUCTION_ALLOWED_HOSTS)) {
+    set.add(host);
+  }
+  return set;
+}
+
+function previewExtraHosts(env: OriginEnv = process.env): Set<string> {
+  const set = hostsFromCsv(env.PREVIEW_ALLOWED_HOSTS);
+  // Vercel auto-injects current deployment URL
+  const vercelHost = normalizeHost(env.VERCEL_URL);
+  if (vercelHost) set.add(vercelHost);
+  return set;
+}
+
+export function isAllowedHost(host: string | null, env: OriginEnv = process.env): boolean {
+  const h = normalizeHost(host);
+  if (!h) return false;
+
+  if (productionHosts(env).has(h)) return true;
+  if (isProductionEnv(env)) {
+    // production 不接 localhost、任意 *.vercel.app 或 preview allowlist。
+    // 正式網域請用 PUBLIC_APP_URL 或 PRODUCTION_ALLOWED_HOSTS 設定。
     return false;
   }
+
   // dev / preview only
   if (h === "localhost" || h === "127.0.0.1") return true;
-  if (previewExtraHosts().has(h)) return true;
+  if (previewExtraHosts(env).has(h)) return true;
   return false;
 }
 

@@ -152,7 +152,7 @@ export default function BackupPage() {
       const data = await res.json();
       if (res.ok) showMsg(true, "已上傳到雲端");
       else showMsg(false, `失敗:${data.error || res.status}`);
-    } catch (e) {
+    } catch {
       showMsg(false, "網路錯誤");
     } finally {
       setBusy(false);
@@ -183,7 +183,7 @@ export default function BackupPage() {
       } else {
         showMsg(false, `還原失敗:${result.message}`);
       }
-    } catch (e) {
+    } catch {
       showMsg(false, "網路錯誤");
     } finally {
       setBusy(false);
@@ -265,6 +265,8 @@ export default function BackupPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
                 {session.picture && (
+                  // LINE profile images are external user avatars; keep them unoptimized and out of Next image config.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={session.picture}
                     alt=""

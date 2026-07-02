@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ChevronLeft,
-  IdCard,
   NotebookPen,
   Send,
   Cloud,

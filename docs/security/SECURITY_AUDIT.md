@@ -1,5 +1,7 @@
 # 資安審計報告
 
+> 中揚資訊接手後的資安基準、威脅模型與事件處理草案請看 [SECURITY.md](./SECURITY.md)。本檔保留原作者階段的審計紀錄與修補脈絡。
+
 **日期**：2026-04-27
 **範圍**：儲存資料 + API + 認證 + 環境變數 + HTTP headers
 **框架**：OWASP Top 10 + 個資法第 11 條對照
@@ -67,6 +69,8 @@ alter table push_logs add column if not exists record_type text;
 ```
 
 或直接重跑整份 `supabase-schema.sql`（migration 已內建在裡面，多次執行安全）。
+
+> 以下 Phase B 內容為原作者於 2026-04 的評估，金額、供應商與優先順序不代表中揚資訊正式導入計畫。
 
 ## Phase B 進度（2026-04-27 更新）
 
