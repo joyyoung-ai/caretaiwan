@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -26,7 +27,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getActiveElder, setActivePairedElder } from "@/lib/elder";
-import type { Elder } from "@/lib/elder";
 
 type Rec = {
   type: RecordType;
@@ -36,16 +36,71 @@ type Rec = {
   shared: boolean;
 };
 
+type ActiveElderSummary = {
+  id: string;
+  name: string;
+};
+
+type CareEventItem = {
+  id: number;
+  type: string;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  note: string | null;
+  status: string;
+};
+
+type LeaveItem = {
+  id: number;
+  reason: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+};
+
+const LEAVE_REASON_LABEL: Record<string, string> = {
+  personal: "私人事務",
+  health: "身體不適",
+  family: "家庭因素",
+  documents: "證件或行政事項",
+  other: "其他",
+};
+
+function toLocalDateTimeValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatEventTime(value: string): string {
+  return new Date(value).toLocaleString(undefined, {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function Home() {
   const router = useRouter();
   const [recent, setRecent] = useState<Rec[]>([]);
   const [todayCount, setTodayCount] = useState(0);
   const [todayShared, setTodayShared] = useState(0);
-  const [elder, setElder] = useState<Elder | null>(null);
+  const [elder, setElder] = useState<ActiveElderSummary | null>(null);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pairedCount, setPairedCount] = useState<number | null>(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [role, setRole] = useState<Role | null | "loading">("loading");
+  const [calendarRangeDays, setCalendarRangeDays] = useState<7 | 30>(7);
+  const [careEvents, setCareEvents] = useState<CareEventItem[]>([]);
+  const [leaveItems, setLeaveItems] = useState<LeaveItem[]>([]);
+  const [careCalendarMessage, setCareCalendarMessage] = useState("");
+  const [leaveMessage, setLeaveMessage] = useState("");
+  const [leaveReason, setLeaveReason] = useState("personal");
+  const [leaveStartsAt, setLeaveStartsAt] = useState(() => toLocalDateTimeValue(new Date(Date.now() + 24 * 60 * 60 * 1000)));
+  const [leaveEndsAt, setLeaveEndsAt] = useState(() => toLocalDateTimeValue(new Date(Date.now() + 25 * 60 * 60 * 1000)));
+  const [leaveNote, setLeaveNote] = useState("");
   const t = useT();
 
   // v56: 避免 render 直接呼叫 Date.now()（React 19 视为 impure + hydration mismatch 風險）
@@ -122,13 +177,76 @@ export default function Home() {
         if (items.length > 0) {
           const first = items[0];
           const name = first.card?.name || first.displayName || "老人";
-          setActivePairedElder({ id: first.elderId, name });
+          const pairedElder = { id: first.elderId, name };
+          setActivePairedElder(pairedElder);
+          setElder(pairedElder);
         } else {
           setActivePairedElder(null);
         }
       })
       .catch(() => setPairedCount(0));
   }, [role]);
+
+  useEffect(() => {
+    if (role !== "caregiver" || !elder?.id) return;
+    setCareCalendarMessage("");
+    fetch(`/api/care-events/list?elderId=${encodeURIComponent(elder.id)}&rangeDays=${calendarRangeDays}`)
+      .then((r) => r.json().then((d) => ({ ok: r.ok, status: r.status, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setCareEvents([]);
+          setCareCalendarMessage(data.error || "照護行程暫時無法載入");
+          return;
+        }
+        setCareEvents(data.events ?? []);
+      })
+      .catch(() => {
+        setCareEvents([]);
+        setCareCalendarMessage("照護行程暫時無法載入");
+      });
+  }, [role, elder?.id, calendarRangeDays]);
+
+  useEffect(() => {
+    if (role !== "caregiver" || !elder?.id) return;
+    fetch(`/api/caregiver-leave/list?elderId=${encodeURIComponent(elder.id)}`)
+      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setLeaveItems([]);
+          return;
+        }
+        setLeaveItems(data.leaves ?? []);
+      })
+      .catch(() => setLeaveItems([]));
+  }, [role, elder?.id]);
+
+  const submitLeaveRequest = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLeaveMessage("");
+    if (!elder?.id) {
+      setLeaveMessage("請先完成長者配對");
+      return;
+    }
+    const response = await fetch("/api/caregiver-leave/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        elderId: elder.id,
+        reason: leaveReason,
+        startsAt: new Date(leaveStartsAt).toISOString(),
+        endsAt: new Date(leaveEndsAt).toISOString(),
+        note: leaveNote,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setLeaveMessage(data.error || "請假紀錄送出失敗");
+      return;
+    }
+    setLeaveMessage("請假紀錄已送出");
+    setLeaveNote("");
+    setLeaveItems((items) => (data.leave ? [data.leave, ...items] : items));
+  };
 
   // Onboarding：看護端流程
   //   pairedCount === 0 → 輸入配對碼（家屬產的）
@@ -255,23 +373,54 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950 p-3">
-              <div className="text-xs text-emerald-700 dark:text-emerald-300">
-                {t.careCalendar.next7Days}
+          <div className="grid grid-cols-2 gap-2 mt-4" aria-label="照護行程範圍">
+            <button
+              type="button"
+              onClick={() => setCalendarRangeDays(7)}
+              className={`h-12 rounded-2xl text-sm font-bold ${
+                calendarRangeDays === 7
+                  ? "bg-emerald-600 text-white"
+                  : "bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200"
+              }`}
+            >
+              未來 7 天
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarRangeDays(30)}
+              className={`h-12 rounded-2xl text-sm font-bold ${
+                calendarRangeDays === 30
+                  ? "bg-emerald-600 text-white"
+                  : "bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200"
+              }`}
+            >
+              未來 30 天
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {careEvents.length === 0 ? (
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-3 text-sm text-slate-600 dark:text-slate-300">
+                {careCalendarMessage || "目前沒有即將到來的照護行程"}
               </div>
-              <div className="text-sm font-bold text-emerald-950 dark:text-emerald-100 mt-1">
-                回診、復健、家訪
-              </div>
-            </div>
-            <div className="rounded-2xl bg-amber-50 dark:bg-amber-950 p-3">
-              <div className="text-xs text-amber-700 dark:text-amber-300">
-                {t.caregiverLeave.title}
-              </div>
-              <div className="text-sm font-bold text-amber-950 dark:text-amber-100 mt-1">
-                {t.caregiverLeave.submit}
-              </div>
-            </div>
+            ) : (
+              careEvents.map((item) => (
+                <div key={item.id} className="rounded-2xl bg-emerald-50 dark:bg-emerald-950 p-3">
+                  <div className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
+                    {item.title}
+                  </div>
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                    {formatEventTime(item.starts_at)}
+                    {item.location ? ` · ${item.location}` : ""}
+                  </div>
+                  {item.note && (
+                    <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-1 line-clamp-2">
+                      {item.note}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <div className="mt-4 flex items-start gap-2 rounded-2xl bg-slate-50 dark:bg-slate-800 p-3">
@@ -298,6 +447,81 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          <form onSubmit={submitLeaveRequest} className="mt-4 space-y-3">
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">請假原因</span>
+              <select
+                value={leaveReason}
+                onChange={(event) => setLeaveReason(event.target.value)}
+                className="mt-1 w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm"
+              >
+                {Object.entries(LEAVE_REASON_LABEL).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">開始時間</span>
+                <input
+                  type="datetime-local"
+                  value={leaveStartsAt}
+                  onChange={(event) => setLeaveStartsAt(event.target.value)}
+                  className="mt-1 w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">結束時間</span>
+                <input
+                  type="datetime-local"
+                  value={leaveEndsAt}
+                  onChange={(event) => setLeaveEndsAt(event.target.value)}
+                  className="mt-1 w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm"
+                />
+              </label>
+            </div>
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">補充說明</span>
+              <textarea
+                value={leaveNote}
+                onChange={(event) => setLeaveNote(event.target.value)}
+                rows={2}
+                className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+              />
+            </label>
+            <button
+              type="submit"
+              className="w-full h-12 rounded-2xl bg-orange-600 text-white text-sm font-bold active:bg-orange-700 disabled:bg-slate-300"
+            >
+              {t.caregiverLeave.submit}
+            </button>
+            {leaveMessage && (
+              <p className="text-xs text-slate-600 dark:text-slate-300" role="status">
+                {leaveMessage}
+              </p>
+            )}
+          </form>
+
+          {leaveItems.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {leaveItems.slice(0, 3).map((item) => (
+                <div key={item.id} className="rounded-2xl bg-orange-50 dark:bg-orange-950 p-3">
+                  <div className="text-sm font-bold text-orange-950 dark:text-orange-100">
+                    {LEAVE_REASON_LABEL[item.reason] ?? "其他"}
+                  </div>
+                  <div className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                    {formatEventTime(item.starts_at)} - {formatEventTime(item.ends_at)}
+                  </div>
+                  <div className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                    {item.status === "acknowledged" ? "家屬已收到" : "已送出，等待家屬回覆"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 

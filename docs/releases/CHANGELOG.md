@@ -23,8 +23,10 @@
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。
 - 新增 v1.1.0 照護行程 schema draft，涵蓋 `care_events`、`caregiver_leave_requests`、retention 與 rollback notes。
 - 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
-- 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已確認。
-- 看護端與家屬端首頁新增照護行程 / 請假紀錄入口與非醫療、LINE reminder inactive 文案。
+- 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已收到。
+- 看護端與家屬端首頁新增照護行程 / 請假紀錄最小流程：看護可切換 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程並標記請假紀錄已收到。
+- 照護行程 UI 保留非醫療與 LINE reminder inactive 文案，提醒 runtime 尚未啟用。
+- 請假紀錄文案改用「已收到」語氣，不把流程寫成考勤、審核、薪資或排班工具。
 
 ### Changed
 

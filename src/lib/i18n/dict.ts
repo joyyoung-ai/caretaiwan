@@ -100,7 +100,7 @@ const DICT_ZH = {
   caregiverLeave: {
     title: "請假紀錄",
     submit: "送出請假紀錄",
-    acknowledged: "已確認",
+    acknowledged: "已收到",
     helper: "這裡只記錄請假時間與原因，不處理薪資、扣款或排班。",
     note: "補充說明",
   },
