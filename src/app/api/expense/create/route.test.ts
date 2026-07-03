@@ -129,4 +129,25 @@ describe("POST /api/expense/create", () => {
     expect(verifyPhotoOwnershipMock).not.toHaveBeenCalled();
     expect(createExpenseMock).not.toHaveBeenCalled();
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1" }));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in caregiver before creating expenses", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1" }));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(rateLimitAsyncMock).not.toHaveBeenCalled();
+    expect(createExpenseMock).not.toHaveBeenCalled();
+  });
 });

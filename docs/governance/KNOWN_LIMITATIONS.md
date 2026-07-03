@@ -1,6 +1,6 @@
 # 已知限制
 
-日期：2026-07-01
+日期：2026-07-03
 
 這份文件整理目前已知限制。列在這裡的項目不一定是 bug。有些是刻意不做，有些是還沒到實作階段，有些需要法律、資安或醫療專業先補齊。
 
@@ -39,7 +39,7 @@ CareTaiwan 目前不提供：
 
 目前狀態：
 
-- 已建立第一批 helper tests，但 API route、LINE webhook、photo ownership 與 E2E 測試尚未建立。
+- 已建立第一批 helper tests，也已開始補 API route 邊界測試。LINE webhook security paths、photo ownership metadata、cloud upload / download / delete ownership and failure paths、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、photo signed token route、family paired ownership and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、session response shape、expense create / list / verify ownership、expense list photo signed URL gate 與 data-retention cron auth / config / redaction 都已有 Vitest coverage。Production HTTP smoke test 已建立。瀏覽器級 E2E 測試尚未建立。
 - `npm run lint` 可通過，已無 warning。
 - `supabase-schema.sql` 是 idempotent schema，不是完整 migration series。
 - Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。

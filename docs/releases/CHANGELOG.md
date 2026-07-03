@@ -10,6 +10,10 @@
 
 - `docs/engineering/AI_AGENT_WORKFLOW.md`：說明 OpenSpec、Superpowers 與 Codex 的文件化協作流程。
 - `docs/governance/DECISIONS.md` 新增 ADR-0008，記錄短期保留 CareTaiwan 作為開源專案名稱。
+- 新增 route handler regression tests：cloud upload / download / delete ownership、data-retention cron response redaction、photo upload pairing guard、photo signed token route、family paired ownership query、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、expense list photo signed URL metadata gate、expense verify validation。
+- 補 route handler 錯誤路徑測試：cloud upload malformed / oversized / DB failure、cloud delete partial DB failure、photo upload invalid bytes / metadata rollback、family paired DB failure、expense list failure、data-retention cron auth / config failure。
+- 補 representative cloud disabled / unauthenticated gate tests，並新增 session route response shape 測試，避免回傳 LINE user ID。
+- 新增 `npm run test:smoke` production HTTP smoke test，啟動 `next start` 後檢查核心頁面、session API 與安全 headers。
 - 初始化 OpenSpec 設定與 Codex OpenSpec skills。
 - 新增 OpenSpec change proposal `v1-0-1-runtime-safety`，用來管理 v1.0.1 第一批 runtime safety 修補；本次只新增 proposal，不包含 runtime code 變更。
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。
