@@ -7,7 +7,7 @@ v1.1.0 先做最小可審查範圍：照護行程與看護請假紀錄。它要�
 ## What Changes
 
 - 新增照護行程能力：
-  - 家屬可為已配對長者建立、修改、取消照護行程。
+  - 家屬與看護可共同管理已配對長者的照護行程。
   - 看護可查看與自己配對長者相關的未來 7 天 / 30 天行程。
   - 行程類型先限制為回診、復健、拿藥、檢查、家訪、其他。
   - 醫療相關行程必須有 `is_medical_related` 或等效欄位，UI 與 LINE reminder 文案要標示「此為一般日程提醒，非醫療指示」。
@@ -20,8 +20,8 @@ v1.1.0 先做最小可審查範圍：照護行程與看護請假紀錄。它要�
   - `caregiver_leave_requests`。
   - migration 必須有回滾策略，且資料保留、刪除權、可讀寫角色要寫清楚。
 - 新增 LINE reminder 的設計邊界：
-  - reminder 可做行程前提醒，但不得被描述成保證送達。
-  - reminder 失敗要可理解、可記錄，不得輸出完整 PII。
+  - LINE reminder runtime 先不納入 v1.1.0。
+  - 本輪只保留 reminder 欄位與 UI 說明，等排程、重試與失敗處理確認後再做。
 - 更新相關文件：
   - changelog、testing、security / known limitations、operations 或 privacy / terms 影響說明。
 
@@ -52,7 +52,7 @@ v1.1.0 先做最小可審查範圍：照護行程與看護請假紀錄。它要�
   - new or updated API routes under `src/app/api/*`
   - caregiver-facing pages such as `src/app/page.tsx` or a dedicated calendar route
   - family-facing pages for event creation and leave acknowledgement
-  - LINE reminder / push code only after reminder rules are explicitly designed
+  - LINE reminder / push code is deferred until reminder rules are explicitly designed
 - Affected data and security boundaries:
   - future care schedules, locations, notes, medical-related flags
   - caregiver leave reasons and notes

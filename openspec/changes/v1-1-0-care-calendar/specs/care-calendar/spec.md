@@ -1,18 +1,26 @@
 ## ADDED Requirements
 
-### Requirement: Family can manage paired elder care events
-The system SHALL allow a signed-in family owner to create, update, and cancel care events only for elders they own through `elder_pairings.owner_line_user_id`.
+### Requirement: Family and caregiver can manage paired elder care events
+The system SHALL allow a signed-in family owner or paired caregiver to create, update, and cancel care events only for elders they are connected to through `elder_pairings`.
 
 #### Scenario: Family creates a care event for owned elder
 - **WHEN** a signed-in family owner submits a valid care event for an elder they own
+- **THEN** the system creates the event with that `elder_id`, the owner LINE user ID, the creator LINE user ID, event type, time range, status, and medical-related flag
+
+#### Scenario: Caregiver creates a care event for paired elder
+- **WHEN** a signed-in caregiver submits a valid care event for an elder paired to them
 - **THEN** the system creates the event with that `elder_id`, the owner LINE user ID, the creator LINE user ID, event type, time range, status, and medical-related flag
 
 #### Scenario: Family cannot create an event for unowned elder
 - **WHEN** a signed-in family owner submits a care event for an elder they do not own
 - **THEN** the system rejects the request without creating an event
 
-#### Scenario: Family cancels an owned care event
-- **WHEN** a signed-in family owner cancels an event for an elder they own
+#### Scenario: Unpaired caregiver cannot create an event
+- **WHEN** a signed-in caregiver submits a care event for an elder not paired to them
+- **THEN** the system rejects the request without creating an event
+
+#### Scenario: Connected user cancels a care event
+- **WHEN** a signed-in family owner or paired caregiver cancels an event for a connected elder
 - **THEN** the system marks the event as cancelled without deleting audit-relevant history
 
 ### Requirement: Caregiver can view paired elder future care events
@@ -56,16 +64,16 @@ The system SHALL treat medical-related care events as general schedule reminders
 - **WHEN** an event type is `medical_appointment`, `rehab`, `medication_pickup`, or `exam`
 - **THEN** the system does not rank urgency, recommend treatment, recommend dosage, or instruct the user to seek emergency care
 
-### Requirement: Care event reminders are not guaranteed delivery
-The system SHALL present LINE reminders as best-effort assistance and SHALL NOT describe reminders as guaranteed delivery.
+### Requirement: Care event reminder runtime is deferred
+The system SHALL NOT send LINE reminder runtime notifications as part of v1.1.0. Reminder-related fields may exist as inert data and UI copy SHALL make clear that active LINE reminders are not enabled yet.
 
-#### Scenario: Reminder copy avoids delivery guarantees
-- **WHEN** a care event reminder is shown in UI or sent through LINE
-- **THEN** the copy does not state or imply guaranteed delivery
+#### Scenario: Reminder fields do not trigger LINE push
+- **WHEN** a care event has `remind_at` or an equivalent reminder field
+- **THEN** v1.1.0 does not schedule, retry, or send a LINE reminder
 
-#### Scenario: Reminder failure is visible without PII leakage
-- **WHEN** a reminder attempt fails
-- **THEN** the system records a failure state suitable for troubleshooting without exposing raw LINE user IDs, free-text medical notes, photo URLs, or raw provider error text in public responses
+#### Scenario: Reminder UI states runtime is inactive
+- **WHEN** reminder-related UI text is shown in v1.1.0
+- **THEN** the copy states or implies that active LINE reminder delivery is not enabled yet and does not promise delivery
 
 ### Requirement: Care event data has retention and deletion boundaries
 The system SHALL document retention, deletion, readable roles, writable roles, and right-to-erasure behavior before production use of care events.

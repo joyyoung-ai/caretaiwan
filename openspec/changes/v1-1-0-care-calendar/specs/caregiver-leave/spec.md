@@ -42,7 +42,11 @@ The system SHALL treat caregiver leave as a record and notification flow, not as
 - **THEN** the copy describes request and acknowledgement status without framing the caregiver as being monitored or disciplined
 
 ### Requirement: Leave request fields and statuses are constrained
-The system SHALL restrict leave request statuses to the supported first-version set and validate time ranges.
+The system SHALL restrict leave request statuses to the supported first-version set, validate time ranges, and support both fixed reason options and free-text notes.
+
+#### Scenario: Fixed reason option and free-text note are accepted
+- **WHEN** a caregiver submits a valid leave request with a supported fixed reason option and an optional free-text note
+- **THEN** the system stores both fields without treating them as payroll, deduction, or labor-dispute data
 
 #### Scenario: Valid leave request time range is accepted
 - **WHEN** a caregiver submits a leave request where `ends_at` is after `starts_at`
@@ -57,8 +61,8 @@ The system SHALL restrict leave request statuses to the supported first-version 
 - **THEN** the system rejects the request without changing the leave request
 
 ### Requirement: Leave request data has retention and deletion boundaries
-The system SHALL document retention, deletion, readable roles, writable roles, and right-to-erasure behavior before production use of caregiver leave requests.
+The system SHALL document retention, deletion, readable roles, writable roles, and right-to-erasure behavior before production use of caregiver leave requests. Leave request retention SHALL follow care record retention unless a later data governance change overrides it.
 
 #### Scenario: Production readiness review checks leave data policy
 - **WHEN** maintainers review the implementation for production readiness
-- **THEN** docs describe leave request retention, deletion handling, backup handling, readable roles, writable roles, and whether audit metadata is redacted
+- **THEN** docs describe leave request retention matching care records, deletion handling, backup handling, readable roles, writable roles, and whether audit metadata is redacted

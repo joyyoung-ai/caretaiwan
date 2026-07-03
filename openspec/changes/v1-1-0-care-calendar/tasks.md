@@ -1,22 +1,24 @@
-## 1. Scope and review gates
+## 1. Confirmed scope gates
 
-- [ ] 1.1 Confirm whether v1.1.0 is "family creates, caregiver views" or "family and caregiver jointly manage care events"; update `design.md` open questions after the decision.
-- [ ] 1.2 Confirm whether LINE reminder runtime is included in v1.1.0 or deferred to a follow-up change.
-- [ ] 1.3 Confirm database migration route: create formal `supabase/migrations/` series or keep a short-term idempotent schema draft until production DB strategy is selected.
-- [ ] 1.4 Review medical-related copy with product owner: it must remain a general schedule reminder and not become medical advice.
-- [ ] 1.5 Review leave request copy with product owner: it must not frame caregivers as monitored or disciplined.
+- [x] 1.1 Confirm v1.1.0 uses "family and caregiver jointly manage care events".
+- [x] 1.2 Confirm LINE reminder runtime is deferred and not included in v1.1.0.
+- [x] 1.3 Confirm formal migration waits until production database strategy is decided.
+- [x] 1.4 Confirm leave reason uses fixed options plus free-text notes.
+- [x] 1.5 Confirm care event and leave request retention follows care records.
+- [ ] 1.6 Review medical-related copy with product owner: it must remain a general schedule reminder and not become medical advice.
+- [ ] 1.7 Review leave request copy with product owner: it must not frame caregivers as monitored or disciplined.
 
 ## 2. Data model and migration
 
-- [ ] 2.1 Add `care_events` schema with elder ownership fields, event type, medical-related flag, title, time range, location, note, reminder fields, status, timestamps, indexes, and rollback notes.
-- [ ] 2.2 Add `caregiver_leave_requests` schema with elder ownership fields, caregiver and owner LINE user IDs, time range, reason, note, status, timestamps, indexes, and rollback notes.
-- [ ] 2.3 Document retention, deletion, readable roles, writable roles, backup handling, and right-to-erasure behavior for both new tables.
-- [ ] 2.4 Verify the schema in a disposable database before production use.
+- [ ] 2.1 Draft `care_events` schema with elder ownership fields, event type, medical-related flag, title, time range, location, note, inert reminder fields, status, timestamps, indexes, and rollback notes.
+- [ ] 2.2 Draft `caregiver_leave_requests` schema with elder ownership fields, caregiver and owner LINE user IDs, time range, fixed reason option, free-text note, status, timestamps, indexes, and rollback notes.
+- [ ] 2.3 Document retention, deletion, readable roles, writable roles, backup handling, and right-to-erasure behavior for both new tables; retention follows care records.
+- [ ] 2.4 After production database strategy is decided, turn the schema draft into a formal migration series and verify it in a disposable database before production use.
 
 ## 3. Care event API and tests
 
-- [ ] 3.1 Add failing tests for family owner creating, updating, and cancelling care events for owned elders.
-- [ ] 3.2 Add failing tests for rejecting unowned elder care event access, anonymous access, unsupported event types, unsupported statuses, and invalid time ranges.
+- [ ] 3.1 Add failing tests for family owner and paired caregiver creating, updating, and cancelling care events for paired elders.
+- [ ] 3.2 Add failing tests for rejecting unpaired care event access, anonymous access, unsupported event types, unsupported statuses, and invalid time ranges.
 - [ ] 3.3 Add failing tests for caregiver 7-day and 30-day event reads scoped to paired elders only.
 - [ ] 3.4 Implement care event helpers and API routes with application-level ownership checks.
 - [ ] 3.5 Ensure public responses and audit metadata do not expose raw LINE user IDs, free-text medical notes, raw DB errors, or unrelated elder data.
@@ -40,10 +42,10 @@
 
 ## 6. LINE reminder slice
 
-- [ ] 6.1 If reminder runtime is approved for v1.1.0, define scheduler trigger, reminder window, recipient rules, retry behavior, and failure states before implementation.
-- [ ] 6.2 Add tests for reminder eligibility, medical-related disclaimer copy, non-guaranteed delivery copy, failure logging, and PII redaction.
-- [ ] 6.3 Implement reminder sending only after tests and reminder rules are approved.
-- [ ] 6.4 If reminder runtime is deferred, keep `remind_at` or equivalent data fields inert and document that reminders are not active yet.
+- [ ] 6.1 Keep `remind_at` or equivalent data fields inert in v1.1.0.
+- [ ] 6.2 Document that LINE reminder runtime is deferred and reminders are not active yet.
+- [ ] 6.3 Do not implement scheduler, retry, LINE push, or reminder failure logging in v1.1.0.
+- [ ] 6.4 Open a follow-up change before implementing reminder runtime.
 
 ## 7. Documentation and release verification
 
