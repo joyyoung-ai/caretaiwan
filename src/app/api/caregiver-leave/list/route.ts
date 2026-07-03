@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { isCloudEnabled } from "@/lib/supabase-server";
-import { listLeaveRequestsForElder } from "@/lib/caregiver-leave";
+import { listLeaveRequestsForElder, toLeaveRequestResponse } from "@/lib/caregiver-leave";
 
 export const runtime = "nodejs";
 
@@ -25,5 +25,5 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "查詢失敗" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, leaves: result.leaves ?? [] });
+  return NextResponse.json({ ok: true, leaves: (result.leaves ?? []).map(toLeaveRequestResponse) });
 }

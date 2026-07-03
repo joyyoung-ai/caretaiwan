@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { isCloudEnabled } from "@/lib/supabase-server";
-import { listCareEventsForElder } from "@/lib/care-calendar";
+import { listCareEventsForElder, toCareEventResponse } from "@/lib/care-calendar";
 
 export const runtime = "nodejs";
 
@@ -27,5 +27,5 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "查詢失敗" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, events: result.events ?? [] });
+  return NextResponse.json({ ok: true, events: (result.events ?? []).map(toCareEventResponse) });
 }

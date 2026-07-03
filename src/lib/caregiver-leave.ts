@@ -29,6 +29,11 @@ export type CaregiverLeaveRequest = {
   updated_at: string;
 };
 
+export type CaregiverLeaveRequestResponse = Omit<
+  CaregiverLeaveRequest,
+  "caregiver_line_user_id" | "owner_line_user_id"
+>;
+
 function cleanText(raw: unknown, max: number): string | null {
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim();
@@ -74,6 +79,21 @@ export function parseLeaveRequestInput(
       startsAt,
       endsAt,
     },
+  };
+}
+
+export function toLeaveRequestResponse(leave: CaregiverLeaveRequest): CaregiverLeaveRequestResponse {
+  return {
+    id: leave.id,
+    elder_id: leave.elder_id,
+    reason: leave.reason,
+    note: leave.note,
+    starts_at: leave.starts_at,
+    ends_at: leave.ends_at,
+    status: leave.status,
+    acknowledged_at: leave.acknowledged_at,
+    created_at: leave.created_at,
+    updated_at: leave.updated_at,
   };
 }
 

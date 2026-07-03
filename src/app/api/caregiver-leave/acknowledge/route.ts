@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { isCloudEnabled } from "@/lib/supabase-server";
-import { acknowledgeLeaveRequest } from "@/lib/caregiver-leave";
+import { acknowledgeLeaveRequest, toLeaveRequestResponse } from "@/lib/caregiver-leave";
 
 export const runtime = "nodejs";
 
@@ -29,5 +29,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "確認失敗" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, leave: result.leave });
+  return NextResponse.json({ ok: true, leave: result.leave ? toLeaveRequestResponse(result.leave) : null });
 }

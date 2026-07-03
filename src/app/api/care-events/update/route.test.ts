@@ -11,6 +11,18 @@ vi.mock("@/lib/supabase-server", () => ({ isCloudEnabled: vi.fn() }));
 vi.mock("@/lib/care-calendar", () => ({
   updateCareEvent: vi.fn(),
   isCareEventStatus: vi.fn((status: unknown) => ["scheduled", "done", "cancelled"].includes(String(status))),
+  toCareEventResponse: vi.fn((event: Record<string, unknown>) => {
+    const {
+      owner_line_user_id: _ownerLineUserId,
+      created_by_line_user_id: _createdByLineUserId,
+      updated_by_line_user_id: _updatedByLineUserId,
+      ...safe
+    } = event;
+    void _ownerLineUserId;
+    void _createdByLineUserId;
+    void _updatedByLineUserId;
+    return safe;
+  }),
 }));
 
 const authMock = vi.mocked(auth);
@@ -32,14 +44,36 @@ describe("POST /api/care-events/update", () => {
     checkSameOriginMock.mockReturnValue(null);
     isCloudEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
-    updateCareEventMock.mockResolvedValue({ ok: true, event: { id: 1, status: "cancelled" } } as never);
+    updateCareEventMock.mockResolvedValue({
+      ok: true,
+      event: {
+        id: 1,
+        elder_id: "elder-1",
+        owner_line_user_id: "family-1",
+        created_by_line_user_id: "family-1",
+        updated_by_line_user_id: "caregiver-1",
+        title: "回診",
+        type: "medical_appointment",
+        is_medical_related: true,
+        starts_at: "2026-08-01T01:00:00.000Z",
+        ends_at: null,
+        location: null,
+        note: null,
+        remind_at: null,
+        status: "cancelled",
+        created_at: "2026-07-03T01:00:00.000Z",
+        updated_at: "2026-07-03T01:00:00.000Z",
+      },
+    } as never);
   });
 
   it("allows a paired caregiver to cancel an event", async () => {
     const res = await POST(request({ eventId: 1, status: "cancelled" }));
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true, event: { id: 1, status: "cancelled" } });
+    const body = await res.json();
+    expect(body.event.status).toBe("cancelled");
+    expect(JSON.stringify(body)).not.toContain("line_user_id");
     expect(updateCareEventMock).toHaveBeenCalledWith({
       eventId: 1,
       actorLineUserId: "caregiver-1",
@@ -52,6 +86,28 @@ describe("POST /api/care-events/update", () => {
 
     expect(res.status).toBe(400);
     await expect(res.json()).resolves.toEqual({ error: "狀態不支援" });
+    expect(updateCareEventMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid date strings before updating", async () => {
+    const res = await POST(request({ eventId: 1, startsAt: "not-a-date" }));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: "時間格式錯誤" });
+    expect(updateCareEventMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects reversed time ranges before updating", async () => {
+    const res = await POST(
+      request({
+        eventId: 1,
+        startsAt: "2026-08-01T05:00:00.000Z",
+        endsAt: "2026-08-01T01:00:00.000Z",
+      })
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: "結束時間必須晚於開始時間" });
     expect(updateCareEventMock).not.toHaveBeenCalled();
   });
 

@@ -13,6 +13,16 @@ vi.mock("@/lib/caregiver-leave", () => {
   return {
     createLeaveRequest: vi.fn(),
     findLeavePairingForCaregiver: vi.fn(),
+    toLeaveRequestResponse: vi.fn((leave: Record<string, unknown>) => {
+      const {
+        caregiver_line_user_id: _caregiverLineUserId,
+        owner_line_user_id: _ownerLineUserId,
+        ...safe
+      } = leave;
+      void _caregiverLineUserId;
+      void _ownerLineUserId;
+      return safe;
+    }),
     parseLeaveRequestInput: vi.fn((body: Record<string, unknown>) => {
       if (!reasons.has(String(body.reason))) return { ok: false, error: "REASON_INVALID" };
       return {
@@ -51,7 +61,23 @@ describe("POST /api/caregiver-leave/create", () => {
     isCloudEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     findLeavePairingForCaregiverMock.mockResolvedValue({ ok: true, ownerLineUserId: "family-1" } as never);
-    createLeaveRequestMock.mockResolvedValue({ ok: true, leave: { id: 1 } } as never);
+    createLeaveRequestMock.mockResolvedValue({
+      ok: true,
+      leave: {
+        id: 1,
+        elder_id: "elder-1",
+        caregiver_line_user_id: "caregiver-1",
+        owner_line_user_id: "family-1",
+        reason: "documents",
+        note: "要去辦證件",
+        starts_at: "2026-08-01T01:00:00.000Z",
+        ends_at: "2026-08-01T05:00:00.000Z",
+        status: "pending",
+        acknowledged_at: null,
+        created_at: "2026-07-03T01:00:00.000Z",
+        updated_at: "2026-07-03T01:00:00.000Z",
+      },
+    } as never);
   });
 
   it("allows a paired caregiver to create a leave request", async () => {
@@ -66,7 +92,20 @@ describe("POST /api/caregiver-leave/create", () => {
     );
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true, leave: { id: 1 } });
+    const body = await res.json();
+    expect(body.leave).toEqual({
+      id: 1,
+      elder_id: "elder-1",
+      reason: "documents",
+      note: "要去辦證件",
+      starts_at: "2026-08-01T01:00:00.000Z",
+      ends_at: "2026-08-01T05:00:00.000Z",
+      status: "pending",
+      acknowledged_at: null,
+      created_at: "2026-07-03T01:00:00.000Z",
+      updated_at: "2026-07-03T01:00:00.000Z",
+    });
+    expect(JSON.stringify(body)).not.toContain("line_user_id");
     expect(createLeaveRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         elderId: "elder-1",

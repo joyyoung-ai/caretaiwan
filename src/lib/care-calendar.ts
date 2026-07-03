@@ -45,6 +45,11 @@ export type CareEvent = {
   updated_at: string;
 };
 
+export type CareEventResponse = Omit<
+  CareEvent,
+  "owner_line_user_id" | "created_by_line_user_id" | "updated_by_line_user_id"
+>;
+
 function cleanText(raw: unknown, max: number): string | null {
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim();
@@ -99,6 +104,24 @@ export function parseCareEventInput(
       note: cleanText(raw.note, 500),
       remindAt: cleanIso(raw.remindAt) ?? null,
     },
+  };
+}
+
+export function toCareEventResponse(event: CareEvent): CareEventResponse {
+  return {
+    id: event.id,
+    elder_id: event.elder_id,
+    type: event.type,
+    is_medical_related: event.is_medical_related,
+    title: event.title,
+    starts_at: event.starts_at,
+    ends_at: event.ends_at,
+    location: event.location,
+    note: event.note,
+    remind_at: event.remind_at,
+    status: event.status,
+    created_at: event.created_at,
+    updated_at: event.updated_at,
   };
 }
 
@@ -201,7 +224,7 @@ export async function updateCareEvent(input: {
 
   const { data: event, error: lookupError } = await sb
     .from("care_events")
-    .select("id, elder_id")
+    .select("id, elder_id, starts_at, ends_at")
     .eq("id", input.eventId)
     .maybeSingle();
 
@@ -210,6 +233,16 @@ export async function updateCareEvent(input: {
 
   const pairing = await findCareEventPairing(event.elder_id, input.actorLineUserId);
   if (!pairing.ok) return { ok: false, error: pairing.error };
+
+  const mergedStartsAt = input.startsAt ?? event.starts_at;
+  const mergedEndsAt = input.endsAt === undefined ? event.ends_at : input.endsAt;
+  if (
+    mergedStartsAt &&
+    mergedEndsAt &&
+    new Date(mergedEndsAt).getTime() <= new Date(mergedStartsAt).getTime()
+  ) {
+    return { ok: false, error: "TIME_RANGE_INVALID" };
+  }
 
   const patch: Record<string, unknown> = {
     updated_by_line_user_id: input.actorLineUserId,

@@ -15,6 +15,18 @@ vi.mock("@/lib/care-calendar", () => {
   return {
     createCareEvent: vi.fn(),
     findCareEventPairing: vi.fn(),
+    toCareEventResponse: vi.fn((event: Record<string, unknown>) => {
+      const {
+        owner_line_user_id: _ownerLineUserId,
+        created_by_line_user_id: _createdByLineUserId,
+        updated_by_line_user_id: _updatedByLineUserId,
+        ...safe
+      } = event;
+      void _ownerLineUserId;
+      void _createdByLineUserId;
+      void _updatedByLineUserId;
+      return safe;
+    }),
     parseCareEventInput: vi.fn((body: Record<string, unknown>) => {
       if (!eventTypes.has(String(body.type))) return { ok: false, error: "TYPE_INVALID" };
       return {
@@ -61,7 +73,27 @@ describe("POST /api/care-events/create", () => {
       ownerLineUserId: "family-1",
       role: "caregiver",
     } as never);
-    createCareEventMock.mockResolvedValue({ ok: true, event: { id: 1 } } as never);
+    createCareEventMock.mockResolvedValue({
+      ok: true,
+      event: {
+        id: 1,
+        elder_id: "elder-1",
+        owner_line_user_id: "family-1",
+        created_by_line_user_id: "caregiver-1",
+        updated_by_line_user_id: "caregiver-1",
+        title: "回診",
+        type: "medical_appointment",
+        is_medical_related: true,
+        starts_at: "2026-08-01T01:00:00.000Z",
+        ends_at: null,
+        location: null,
+        note: null,
+        remind_at: "2026-07-31T01:00:00.000Z",
+        status: "scheduled",
+        created_at: "2026-07-03T01:00:00.000Z",
+        updated_at: "2026-07-03T01:00:00.000Z",
+      },
+    } as never);
   });
 
   it("allows a paired caregiver to create a care event without activating reminder runtime", async () => {
@@ -76,7 +108,26 @@ describe("POST /api/care-events/create", () => {
     );
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true, event: { id: 1 }, reminderActive: false });
+    const body = await res.json();
+    expect(body).toEqual({
+      ok: true,
+      event: {
+        id: 1,
+        elder_id: "elder-1",
+        title: "回診",
+        type: "medical_appointment",
+        is_medical_related: true,
+        starts_at: "2026-08-01T01:00:00.000Z",
+        ends_at: null,
+        location: null,
+        note: null,
+        remind_at: "2026-07-31T01:00:00.000Z",
+        status: "scheduled",
+        created_at: "2026-07-03T01:00:00.000Z",
+        updated_at: "2026-07-03T01:00:00.000Z",
+      },
+      reminderActive: false,
+    });
     expect(createCareEventMock).toHaveBeenCalledWith(
       expect.objectContaining({
         elderId: "elder-1",
@@ -85,6 +136,7 @@ describe("POST /api/care-events/create", () => {
         remindAt: "2026-07-31T01:00:00.000Z",
       })
     );
+    expect(JSON.stringify(body)).not.toContain("line_user_id");
   });
 
   it("rejects unpaired users before creating an event", async () => {

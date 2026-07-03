@@ -3,7 +3,12 @@ import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { getActorIp, logAudit } from "@/lib/audit";
 import { isCloudEnabled } from "@/lib/supabase-server";
-import { createLeaveRequest, findLeavePairingForCaregiver, parseLeaveRequestInput } from "@/lib/caregiver-leave";
+import {
+  createLeaveRequest,
+  findLeavePairingForCaregiver,
+  parseLeaveRequestInput,
+  toLeaveRequestResponse,
+} from "@/lib/caregiver-leave";
 
 export const runtime = "nodejs";
 
@@ -67,5 +72,5 @@ export async function POST(req: Request) {
     metadata: { reason: parsed.value.reason },
   });
 
-  return NextResponse.json({ ok: true, leave: result.leave });
+  return NextResponse.json({ ok: true, leave: toLeaveRequestResponse(result.leave) });
 }

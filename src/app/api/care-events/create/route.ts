@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { getActorIp, logAudit } from "@/lib/audit";
 import { isCloudEnabled } from "@/lib/supabase-server";
-import { createCareEvent, findCareEventPairing, parseCareEventInput } from "@/lib/care-calendar";
+import { createCareEvent, findCareEventPairing, parseCareEventInput, toCareEventResponse } from "@/lib/care-calendar";
 
 export const runtime = "nodejs";
 
@@ -65,5 +65,5 @@ export async function POST(req: Request) {
     metadata: { eventType: parsed.value.type, isMedicalRelated: parsed.value.isMedicalRelated },
   });
 
-  return NextResponse.json({ ok: true, event: result.event, reminderActive: false });
+  return NextResponse.json({ ok: true, event: toCareEventResponse(result.event), reminderActive: false });
 }
