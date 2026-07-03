@@ -39,7 +39,7 @@ CareTaiwan 目前不提供：
 
 目前狀態：
 
-- 已建立第一批 helper tests，也已開始補 API route 邊界測試。LINE webhook security paths、photo ownership metadata、cloud upload / download / delete ownership and failure paths、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、photo signed token route、family paired ownership and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、session response shape、expense create / list / verify ownership、expense list photo signed URL gate 與 data-retention cron auth / config / redaction 都已有 Vitest coverage。Production HTTP smoke test 已建立。瀏覽器級 E2E 測試尚未建立。
+- 已建立第一批 helper tests、API route 邊界測試、production HTTP smoke test 與 Playwright E2E smoke。LINE webhook security paths、photo ownership metadata、cloud upload / download / delete ownership and failure paths、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、photo signed token route、family paired ownership and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、session response shape、expense create / list / verify ownership、expense list photo signed URL gate 與 data-retention cron auth / config / redaction 都已有 Vitest coverage。瀏覽器級 E2E 目前只覆蓋公開頁、首頁 shell 與 session API redaction，核心登入後流程仍要逐步補上。
 - `npm run lint` 可通過，已無 warning。
 - `supabase-schema.sql` 是 idempotent schema，不是完整 migration series。
 - Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。
@@ -61,7 +61,7 @@ CareTaiwan 目前不提供：
 - GitHub team 尚未正式建立；CODEOWNERS 目前是草案，正式公開前仍要確認實際 owner。
 - Security contact 已指定為 `services@joyyoung.com.tw`，但 GitHub private vulnerability reporting 尚未確認啟用。
 - Release 流程尚未自動化。
-- CI/CD 測試閘門尚未建立；目前測試可用 `npm run test` 在本機執行。
+- CI/CD 測試閘門已建立於 `.github/workflows/ci.yml`，會執行 dependency audit、lint、docs check、Vitest、build、production smoke 與 Playwright E2E。Branch protection 尚未設定前，仍要靠維護者確認 PR 必須通過 CI 才能合併。
 - Branch protection 尚未設定。
 
 這些是治理待辦，不是產品功能。

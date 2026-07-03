@@ -28,6 +28,7 @@
 
 - [operations/DEPLOY.md](./operations/DEPLOY.md)：正式 VM / Docker 部署參考。
 - [operations/FAMILY_SIDE_SETUP.md](./operations/FAMILY_SIDE_SETUP.md)：LINE Bot 與家屬端配對設定參考。
+- [operations/PRODUCTION_READINESS.md](./operations/PRODUCTION_READINESS.md)：試辦或正式導入前的基礎工作清單。
 - [operations/RUNBOOK.md](./operations/RUNBOOK.md)：正式維運 runbook 骨架。
 
 ## Security
