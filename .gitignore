@@ -25,6 +25,7 @@
 # local deployment artifacts
 /.npm-cache/
 /docker/*.tar
+/.worktrees/
 
 # misc
 .DS_Store
