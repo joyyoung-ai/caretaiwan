@@ -22,6 +22,7 @@
 - [engineering/AI_AGENT_WORKFLOW.md](./engineering/AI_AGENT_WORKFLOW.md)：OpenSpec、Superpowers 與 Codex 的協作流程。
 - [engineering/SYSTEM_ARCHITECTURE_PLAN.md](./engineering/SYSTEM_ARCHITECTURE_PLAN.md)：接手初期的系統架構整理。
 - [engineering/BUGFIX_PLAN.md](./engineering/BUGFIX_PLAN.md)：工程待辦與風險分級。
+- [engineering/CARE_CALENDAR_SCHEMA.md](./engineering/CARE_CALENDAR_SCHEMA.md)：v1.1.0 照護行程與看護請假資料模型草案。
 - [engineering/TESTING.md](./engineering/TESTING.md)：測試策略與第一批測試目標。
 
 ## Operations
