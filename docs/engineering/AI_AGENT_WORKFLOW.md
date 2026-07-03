@@ -2,7 +2,9 @@
 
 日期：2026-07-02
 
-這份文件說明 CareTaiwan 如何把 OpenSpec、Superpowers 與 Codex 放進同一套協作流程。這是 workflow 文件，不是 runtime dependency 設定。本文不代表 OpenSpec 已初始化，也不代表 Superpowers 已安裝。
+這份文件說明 CareTaiwan 如何把 OpenSpec、Superpowers 與 Codex 放進同一套協作流程。這是 workflow 文件，不是 runtime dependency 設定。
+
+OpenSpec 已完成 repository 初始化，設定在 `openspec/config.yaml`，Codex skills 位於 `.codex/skills/openspec-*`。Superpowers 仍是維護者本機或 Codex plugin 設定，不是 CareTaiwan runtime dependency。
 
 ## Tool Roles
 
@@ -15,7 +17,7 @@
 
 OpenSpec 與 Superpowers 不應加入 `package.json`、`package-lock.json` 或任何 CareTaiwan runtime dependency。
 
-安裝、plugin 啟用與本機設定由維護者在自己的開發環境處理。未經維護者明確要求，不要執行 install、`openspec init`，也不要假設 repo 已經有 `openspec/` 目錄。
+OpenSpec 已初始化。未經維護者明確要求，不要重新執行 `openspec init`、不要安裝 runtime dependency，也不要修改 `package.json` 或 `package-lock.json`。Superpowers 的安裝與啟用由維護者在 Codex App / CLI 或本機環境處理。
 
 OpenSpec 初始化後，應先檢查產生的檔案，再決定哪些規格資料可以 commit。規格、proposal、design、tasks 通常可以進 repo；cache、本機設定、私人 note、含本機絕對路徑的內容不應提交。
 

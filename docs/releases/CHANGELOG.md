@@ -8,12 +8,22 @@
 
 ### Added
 
-- `docs/engineering/AI_AGENT_WORKFLOW.md`：說明 OpenSpec、Superpowers 與 Codex 的文件化協作流程；不代表 OpenSpec 已初始化或 Superpowers 已安裝。
+- `docs/engineering/AI_AGENT_WORKFLOW.md`：說明 OpenSpec、Superpowers 與 Codex 的文件化協作流程。
+- `docs/governance/DECISIONS.md` 新增 ADR-0008，記錄短期保留 CareTaiwan 作為開源專案名稱。
+- 初始化 OpenSpec 設定與 Codex OpenSpec skills。
+- 新增 OpenSpec change proposal `v1-0-1-runtime-safety`，用來管理 v1.0.1 第一批 runtime safety 修補；本次只新增 proposal，不包含 runtime code 變更。
+- 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。
 
 ### Changed
 
 - `AGENTS.md` 增加 OpenSpec / Superpowers 使用邊界，避免把協作工具當成 runtime dependency。
 - `docs/README.md` 在 Engineering 區塊加入 AI agent workflow 文件連結。
+
+### Security
+
+- 資料保留 cron response 改由 helper 統一輸出去識別化的 `lineUserRef`，warn / delete / dry-run sample 不回傳完整 LINE user ID。
+- 資料保留 cron delete stage 明確維持先刪 `cloud_backups`、成功後才刪相關 `elder_pairings`；pairing 刪除失敗時以去識別化 partial failure 回報，不輸出 raw DB error。
+- cron bearer token parser 收緊為只接受單一 Bearer token，並保留固定長度 digest 搭配 timing-safe compare 的驗證方式。
 
 ## v1.0.0 - 2026-07-01
 
