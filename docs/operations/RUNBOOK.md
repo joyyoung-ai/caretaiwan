@@ -46,6 +46,7 @@
 
 - 保留上一版 image tag。
 - 回滾前先確認 migration 是否可回退。
+- 照護行程 / 看護請假正式 migration 尚未建立；未來若落地新表，回滾前應先停用相關 API route / UI 入口，再評估 drop 新表，不得影響既有 `elder_pairings`、照護紀錄、照片、備份或核帳資料。
 - 回滾後檢查 health check、LINE webhook、登入與配對流程。
 
 ## Health Check
@@ -108,11 +109,13 @@
 - cron secret 正確。
 - cron response 不輸出完整 LINE user ID。
 - 失敗時有 log，但不含未遮蔽 PII。
+- v1.1.0 照護行程的 `remind_at` 不應由 cron 或 LINE push 處理；若未來啟用 reminder runtime，需先新增排程、重試、失敗紀錄與使用者提示 runbook。
 
 ## User Data Deletion Request
 
 - live database / storage 執行刪除。
 - audit log 記錄刪除請求與處理狀態。
+- 照護行程與看護請假資料保留期限跟照護紀錄一致，刪除請求要涵蓋 live database、備份與 audit metadata。
 - 歷史備份不直接拆包修改；依保留期到期覆蓋。
 - 若法律或合約要求不同做法，以正式法務文件為準。
 

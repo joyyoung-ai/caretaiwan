@@ -145,10 +145,16 @@ OpenSpec change 已建立在 `openspec/changes/v1-1-0-care-calendar/`。目前�
 - 正式資料庫 migration 等 VM 自管 Postgres / managed Supabase 決策後再落地。
 - 行程與請假資料保留期限先跟照護紀錄一致。
 
-已決策但尚未實作：
+已決策並已完成第一批 foundation：
 
-1. v1.1.0 採家屬與看護共同管理行程。
-2. LINE reminder runtime 先不納入。
-3. migration 等正式資料庫策略決策後再落。
-4. 請假原因採固定選項與自由文字並存。
-5. 行程與請假資料保留期限跟照護紀錄一致。
+1. v1.1.0 採家屬與看護共同管理行程，API 已允許家屬與已配對看護建立、查詢、更新與取消同一位長者的照護行程。
+2. LINE reminder runtime 先不納入；目前只保留 `remind_at` 欄位與 UI 說明，不排程、不重試、不送 LINE push。
+3. migration 等正式資料庫策略決策後再落；目前只有 `docs/engineering/CARE_CALENDAR_SCHEMA.md` schema 草案。
+4. 請假原因採固定選項與自由文字並存，看護可建立請假紀錄，家屬可查看並標記已確認。
+5. 行程與請假資料保留期限跟照護紀錄一致，刪除請求要涵蓋 live database、備份與 audit metadata。
+
+尚未完成：
+
+- 正式行程管理頁、請假表單頁與家屬確認頁仍未完整落地；目前首頁只放最小入口與邊界文案。
+- 產品負責人仍需人工確認醫療相關提醒文案與請假文案。
+- 正式 migration、資料庫驗證與 rollback 操作要等 production DB 策略決策後再做。

@@ -55,6 +55,7 @@ GitHub private vulnerability reporting 尚未確認啟用前，`services@joyyoun
 - LINE webhook 要先驗簽。
 - public response、client log、LINE push log、audit metadata 預設不放完整 PII。
 - 新增資料表要說明保留期限、刪除流程、可讀寫角色與 right-to-erasure。
+- 照護行程與看護請假資料要視為敏感資料；public response、audit metadata 與錯誤訊息不得輸出 raw LINE user ID、raw DB error、無關長者資料或未遮蔽的自由文字醫療備註。
 
 ## OWASP 對照
 
@@ -80,6 +81,8 @@ GitHub private vulnerability reporting 尚未確認啟用前，`services@joyyoun
 - 本機開發誤用 production token 或真實備份。
 - 歷史備份保留時間過長，導致刪除請求失效。
 - 醫療提醒文案被誤解成醫療指示。
+- 照護行程的 `remind_at` 欄位被誤解為已啟用 LINE reminder runtime。
+- 請假紀錄被誤用為排班、扣款、薪資或勞資爭議判定工具。
 
 目前先用 application-level checks 管控 ownership。若公開營運，應逐步評估 RLS、scoped JWT 或 database RPC。
 

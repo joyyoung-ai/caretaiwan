@@ -21,6 +21,10 @@
 - 初始化 OpenSpec 設定與 Codex OpenSpec skills。
 - 新增 OpenSpec change proposal `v1-0-1-runtime-safety`，用來管理 v1.0.1 第一批 runtime safety 修補；本次只新增 proposal，不包含 runtime code 變更。
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。
+- 新增 v1.1.0 照護行程 schema draft，涵蓋 `care_events`、`caregiver_leave_requests`、retention 與 rollback notes。
+- 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
+- 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已確認。
+- 看護端與家屬端首頁新增照護行程 / 請假紀錄入口與非醫療、LINE reminder inactive 文案。
 
 ### Changed
 
@@ -28,6 +32,7 @@
 - `docs/README.md` 在 Engineering 區塊加入 AI agent workflow 文件連結。
 - 確認 v1.0.1 第一批 helper tests 已覆蓋 pairing code TTL、禁止自己配對、origin checks 與 cron security helper；`npm run lint` 目前維持無 warning。
 - Production origin allowlist 改為只接受 `PUBLIC_APP_URL` 與 `PRODUCTION_ALLOWED_HOSTS` 明確設定的 host；localhost、preview host 與 Vercel host 不再於 production 自動放行。
+- Roadmap 與使用者需求文件更新 v1.1.0 範圍：共同管理行程、請假原因固定選項加自由文字、正式 migration 延後、LINE reminder runtime 延後。
 
 ### Security
 

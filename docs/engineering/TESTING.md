@@ -4,7 +4,7 @@
 
 ## Current Status
 
-已建立第一批 Vitest helper tests，也補強 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、cloud upload / download / delete ownership and failure paths、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、health keep-alive route、consent audit route、expense create / list / verify ownership、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run test:e2e` 會以 Playwright 啟動 standalone production server，跑桌機與 mobile Chromium 的瀏覽器級 smoke。`npm run lint` 目前可無 warning 通過。
+已建立第一批 Vitest helper tests，也補強 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、cloud upload / download / delete ownership and failure paths、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、health keep-alive route、consent audit route、expense create / list / verify ownership、care event helper / create / list / update、caregiver leave helper / create / list / acknowledge、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run test:e2e` 會以 Playwright 啟動 standalone production server，跑桌機與 mobile Chromium 的瀏覽器級 smoke，並確認照護行程、請假紀錄與 LINE reminder inactive copy 在首頁 shell 可見。`npm run lint` 目前可無 warning 通過。
 
 本輪已重新跑過 `npm run test`、`npm run test:smoke`、`npm run lint`、`npm run build`、`npm run docs:check` 與 `git diff --check`。第一批 helper tests、route tests、smoke test 和 lint 狀態可作為 v1.0.1 runtime safety 收尾依據。
 
@@ -34,6 +34,14 @@
 - `src/app/api/expense/create/route.test.ts`（已建立）
 - `src/app/api/expense/list/route.test.ts`（已建立）
 - `src/app/api/expense/verify/route.test.ts`（已建立）
+- `src/lib/care-calendar.test.ts`（已建立）
+- `src/app/api/care-events/create/route.test.ts`（已建立）
+- `src/app/api/care-events/list/route.test.ts`（已建立）
+- `src/app/api/care-events/update/route.test.ts`（已建立）
+- `src/lib/caregiver-leave.test.ts`（已建立）
+- `src/app/api/caregiver-leave/create/route.test.ts`（已建立）
+- `src/app/api/caregiver-leave/list/route.test.ts`（已建立）
+- `src/app/api/caregiver-leave/acknowledge/route.test.ts`（已建立）
 - `src/app/api/family/paired/route.test.ts`（已建立）
 - `src/app/api/line/webhook/route.test.ts`（已建立）
 - `src/app/api/pairing/bind/route.test.ts`（已建立）
@@ -86,6 +94,10 @@
 - Playwright E2E：以 standalone production server 驗證看護端首頁 shell、主要導覽、about / privacy / terms 公開頁，以及 session API redaction。
 - expense verify 需要 disputed reason，並用登入家屬 id 執行核帳。
 - LINE webhook disabled / signature / malformed JSON security paths。
+- care event helpers 驗證固定類型、醫療相關旗標、時間範圍與欄位 trim。
+- care event routes 驗證登入、paired elder ownership、建立、7 / 30 天查詢、更新與取消。
+- caregiver leave helpers 驗證固定原因、自由文字備註與時間範圍。
+- caregiver leave routes 驗證只有已配對看護可建立、家屬 / 看護可查詢、只有家屬 owner 可確認。
 
 第二批 route handler 已涵蓋：
 
