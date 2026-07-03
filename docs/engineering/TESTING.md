@@ -4,11 +4,11 @@
 
 ## Current Status
 
-已建立第一批 Vitest helper tests，也開始補 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、cloud upload / download / delete ownership and failure paths、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、expense create / list / verify ownership、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run lint` 目前可無 warning 通過。
+已建立第一批 Vitest helper tests，也補強 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、cloud upload / download / delete ownership and failure paths、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、health keep-alive route、consent audit route、expense create / list / verify ownership、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run test:e2e` 會以 Playwright 啟動 standalone production server，跑桌機與 mobile Chromium 的瀏覽器級 smoke。`npm run lint` 目前可無 warning 通過。
 
 本輪已重新跑過 `npm run test`、`npm run test:smoke`、`npm run lint`、`npm run build`、`npm run docs:check` 與 `git diff --check`。第一批 helper tests、route tests、smoke test 和 lint 狀態可作為 v1.0.1 runtime safety 收尾依據。
 
-正式建置 Docker image 前，應透過 CI pipeline 強制執行 lint 與自動化測試。測試失敗不得產生 production image。
+正式建置 Docker image 前，GitHub Actions CI gate 會強制執行 lint、docs check、自動化測試、production build、production smoke 與 Playwright E2E。測試失敗不得產生 production image。
 
 ## Proposed Tool
 
@@ -47,6 +47,10 @@
 - `src/app/api/photo/upload/route.test.ts`（已建立）
 - `src/app/api/session/route.test.ts`（已建立）
 - `scripts/smoke-test.mjs`（已建立）
+- `scripts/start-e2e-server.mjs`（已建立）
+- `playwright.config.ts`（已建立）
+- `tests/e2e/app-smoke.spec.ts`（已建立）
+- `.github/workflows/ci.yml`（已建立）
 
 ## First Test Targets
 
@@ -78,7 +82,8 @@
 - pairing status 只用登入家屬 owner id 查詢，且不回傳過期群組碼。
 - photo signed token route 的 success / invalid-token response。
 - session route 只回傳登入狀態、name、picture，不回傳 LINE user ID。
-- production smoke test：啟動 `next start` 後檢查核心頁面、session API 與安全 headers。
+- production smoke test：啟動 production server 後檢查核心頁面、session API 與安全 headers。
+- Playwright E2E：以 standalone production server 驗證看護端首頁 shell、主要導覽、about / privacy / terms 公開頁，以及 session API redaction。
 - expense verify 需要 disputed reason，並用登入家屬 id 執行核帳。
 - LINE webhook disabled / signature / malformed JSON security paths。
 
@@ -103,7 +108,7 @@
 下一批再補：
 
 - 其餘 route 的 disabled cloud / unauthenticated / DB failure matrix。
-- 若要做瀏覽器級 E2E，再評估是否引入 Playwright。
+- 瀏覽器級 E2E 已引入 Playwright，第一批先保護不依賴 LINE OAuth 或 production Supabase 的公開頁與 shell rendering。
 
 ## Required Before v1.0.1
 
@@ -135,6 +140,8 @@ v1.0.1 不應只停在「測試策略已寫」。截至 2026-07-02，下列 help
 - session response shape。
 - expense list failure、expense verify ownership and disputed-note validation。
 - LINE webhook disabled、signature verification 與 malformed JSON handling。
+- health route disabled cloud / missing admin client / DB error / exception handling。
+- consent route anonymous audit、signed-in actor audit、revocation audit 與 CSRF gate。
 
 ## Test Command
 
@@ -151,13 +158,25 @@ npm run build
 npm run test:smoke
 ```
 
-建議 CI pipeline 更新為：
+Playwright E2E 需要先完成 build，會啟動 standalone production server 到 `127.0.0.1:3100`：
 
 ```bash
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
+CI pipeline 目前執行：
+
+```bash
+npm ci
+npx playwright install --with-deps chromium
 npm run lint
+npm run docs:check
 npm run test
 npm run build
 npm run test:smoke
+npm run test:e2e
 ```
 
 ## Documentation Check

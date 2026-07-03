@@ -13,7 +13,10 @@
 - 新增 route handler regression tests：cloud upload / download / delete ownership、data-retention cron response redaction、photo upload pairing guard、photo signed token route、family paired ownership query、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、expense list photo signed URL metadata gate、expense verify validation。
 - 補 route handler 錯誤路徑測試：cloud upload malformed / oversized / DB failure、cloud delete partial DB failure、photo upload invalid bytes / metadata rollback、family paired DB failure、expense list failure、data-retention cron auth / config failure。
 - 補 representative cloud disabled / unauthenticated gate tests，並新增 session route response shape 測試，避免回傳 LINE user ID。
+- 補齊其餘 route 的 disabled cloud / unauthenticated / DB failure matrix，新增 health route 與 consent route tests。
 - 新增 `npm run test:smoke` production HTTP smoke test，啟動 `next start` 後檢查核心頁面、session API 與安全 headers。
+- 引入 Playwright，新增 `npm run test:e2e` 瀏覽器級 smoke，覆蓋桌機與 mobile Chromium 的首頁 shell、公開 legal/about 頁與 session API redaction。
+- 新增 GitHub Actions CI gate，於 push / pull request 執行 lint、docs check、Vitest、build、production smoke 與 Playwright E2E。
 - 初始化 OpenSpec 設定與 Codex OpenSpec skills。
 - 新增 OpenSpec change proposal `v1-0-1-runtime-safety`，用來管理 v1.0.1 第一批 runtime safety 修補；本次只新增 proposal，不包含 runtime code 變更。
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。

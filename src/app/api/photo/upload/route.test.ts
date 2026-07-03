@@ -161,4 +161,42 @@ describe("POST /api/photo/upload", () => {
     await expect(res.json()).resolves.toEqual({ error: "儲存失敗" });
     expect(deleteLocalPhotoMock).toHaveBeenCalledWith(expect.stringMatching(/^[a-f0-9-]+\.png$/));
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await POST(formRequest("elder-1"));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in caregiver before uploading photos", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await POST(formRequest("elder-1"));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(rateLimitAsyncMock).not.toHaveBeenCalled();
+    expect(getPairingsByPairedMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a generic storage error when Supabase upload fails", async () => {
+    getPairingsByPairedMock.mockResolvedValue([{ elder_id: "elder-1" }] as never);
+    getSupabaseAdminMock.mockReturnValue({
+      storage: {
+        from: vi.fn(() => ({
+          upload: vi.fn().mockResolvedValue({ error: { message: "raw storage failure" } }),
+        })),
+      },
+    } as never);
+
+    const res = await POST(formRequest("elder-1"));
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({ error: "儲存失敗" });
+    expect(insertPhotoMetadataMock).not.toHaveBeenCalled();
+  });
 });

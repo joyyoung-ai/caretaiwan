@@ -87,4 +87,22 @@ describe("GET /api/cloud/download", () => {
     await expect(res.json()).resolves.toEqual({ error: "未登入" });
     expect(getSupabaseAdminMock).not.toHaveBeenCalled();
   });
+
+  it("returns a generic server error when backup lookup fails", async () => {
+    getSupabaseAdminMock.mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: "raw backup lookup failure" },
+        }),
+      })),
+    } as never);
+
+    const res = await GET(request());
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
+  });
 });

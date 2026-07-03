@@ -67,4 +67,33 @@ describe("POST /api/pairing/group-code", () => {
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ ok: true, alreadyBound: true });
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1" }));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in family user before creating group codes", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1" }));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(ensureGroupPairingCodeMock).not.toHaveBeenCalled();
+  });
+
+  it("maps group code DB failures to a generic user-facing error", async () => {
+    ensureGroupPairingCodeMock.mockResolvedValue({ ok: false, error: "raw database failure" } as never);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1" }));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
+  });
 });

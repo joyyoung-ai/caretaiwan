@@ -87,4 +87,24 @@ describe("POST /api/cloud/delete", () => {
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await POST(request());
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in LINE user before deleting cloud data", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await POST(request());
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+  });
 });

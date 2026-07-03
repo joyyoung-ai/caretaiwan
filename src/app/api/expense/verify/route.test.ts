@@ -97,4 +97,13 @@ describe("POST /api/expense/verify", () => {
     await expect(res.json()).resolves.toEqual({ error: "未登入" });
     expect(verifyExpenseMock).not.toHaveBeenCalled();
   });
+
+  it("returns a generic user-facing error when verification fails", async () => {
+    verifyExpenseMock.mockResolvedValue({ ok: false, error: "raw verify failure" } as never);
+
+    const res = await POST(jsonRequest({ expenseId: 123, status: "confirmed" }));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: "核帳失敗" });
+  });
 });

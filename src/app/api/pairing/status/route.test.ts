@@ -101,4 +101,13 @@ describe("GET /api/pairing/status", () => {
     await expect(res.json()).resolves.toEqual({ error: "未登入" });
     expect(getPairingByElderAndOwnerMock).not.toHaveBeenCalled();
   });
+
+  it("returns an empty status when no pairing exists for the signed-in owner", async () => {
+    getPairingByElderAndOwnerMock.mockResolvedValue(null as never);
+
+    const res = await GET(request());
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ ok: true, exists: false });
+  });
 });

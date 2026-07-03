@@ -14,7 +14,7 @@
 
 - Build：`npm run build` 可在 Next.js 16.2.6 通過。
 - Lint：`npm run lint` 可通過，已無 warning。
-- 測試：已建立第一批 Vitest helper tests，也已開始補 API route 邊界測試；E2E 測試尚未建立。
+- 測試：已建立 Vitest helper tests、API route 邊界測試、production HTTP smoke test 與 Playwright E2E smoke。
 - Memory index：`Users-mark-Documents-caretaiwan-repo`。大量搬移文件或新增主要功能後，要重新索引。
 - 工作樹：除本次文件修改外，已經有其他未提交變更。後續改功能時要先看清楚，不要混在一起。
 
@@ -91,10 +91,10 @@
 
 2. 擴充自動化測試。
    - 優先測試：
-     - 其餘 route 的 disabled cloud / unauthenticated / DB failure matrix。
-     - 若要做瀏覽器級 E2E，再評估是否引入 Playwright。
-   - 已完成：pairing code TTL、禁止 self-pairing、origin checks、cron security helper、rate limiter fallback、Upstash error fallback、photo magic-byte detection、audit metadata redaction、photo ownership metadata checks、cloud upload / download / delete ownership and failure checks、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership and DB failure、pairing bind / ensure / unbind route checks、group-code / group-photo / group-unbind route checks、pairing status owner query、photo signed token route、session response shape、production HTTP smoke test、expense create / list / verify route checks、data-retention cron auth / config / redaction checks 與 LINE webhook security-path tests。
-   - 現況：第一批純 helper tests 已補到可保護主要安全 helper，route handler 測試也已覆蓋主要高風險讀寫路徑與一批錯誤路徑。另有 production HTTP smoke test 檢查核心頁面、session API 與安全 headers。下一步補更完整的 failure matrix；瀏覽器級 E2E 需要先決定是否引入 Playwright。測試策略整理在 `TESTING.md`。
+     - 擴大瀏覽器級 E2E 到核心互動流程，但仍應避免依賴真 LINE OAuth 或 production Supabase。
+     - 依後續 bug / code review 補特定 route 的 regression tests。
+   - 已完成：pairing code TTL、禁止 self-pairing、origin checks、cron security helper、rate limiter fallback、Upstash error fallback、photo magic-byte detection、audit metadata redaction、photo ownership metadata checks、cloud upload / download / delete ownership and failure checks、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership and DB failure、pairing bind / ensure / unbind route checks、group-code / group-photo / group-unbind route checks、pairing status owner query、photo signed token route、session response shape、health route、consent route、production HTTP smoke test、Playwright E2E smoke、expense create / list / verify route checks、data-retention cron auth / config / redaction checks 與 LINE webhook security-path tests。
+   - 現況：helper tests 已可保護主要安全 helper，route handler 測試已覆蓋主要高風險讀寫路徑、錯誤路徑與 gate matrix。另有 production HTTP smoke test 檢查核心頁面、session API 與安全 headers，Playwright E2E 以桌機與 mobile Chromium 驗證公開頁與首頁 shell。測試策略整理在 `TESTING.md`。
 
 3. 整理正式 VM 部署設定。
    - 需要正式 VM、測試環境、本機開發三種設定輪廓。
@@ -131,10 +131,10 @@
 
 ## Technical Debt
 
-- 自動化測試已有第一批 helper tests，包含 pairing、origin check、cron security、rate limiter、photo magic-byte、audit metadata redaction 與 photo ownership。Route handler 測試已補 cloud upload / download / delete、data-retention cron、photo upload、photo signed token、family paired、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status、session、expense create / list / verify 與 LINE webhook，並開始補錯誤路徑與 gate matrix。Production HTTP smoke test 已可用。接下來補更完整的 failure matrix；瀏覽器級 E2E 需先決定是否引入 Playwright。測試目標見 `TESTING.md`。
+- 自動化測試已有 helper tests，包含 pairing、origin check、cron security、rate limiter、photo magic-byte、audit metadata redaction 與 photo ownership。Route handler 測試已補 cloud upload / download / delete、data-retention cron、photo upload、photo signed token、family paired、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status、session、health、consent、expense create / list / verify 與 LINE webhook，並補強錯誤路徑與 gate matrix。Production HTTP smoke test 與 Playwright E2E 已可用。測試目標見 `TESTING.md`。
 - migration series 尚未建立。`supabase-schema.sql` 仍是 idempotent schema。
 - Supabase RLS 尚未完成，目前仰賴 service-role + application checks。
-- CI/CD 測試閘門尚未建立，Docker image 建置前仍缺強制測試。
+- CI/CD 測試閘門已建立於 `.github/workflows/ci.yml`，會執行 lint、docs check、Vitest、build、production smoke 與 Playwright E2E。
 - `/privacy`、`/terms`、ConsentModal 尚未切成中揚資訊正式法律主體版本。
 
 ## Deferred
@@ -165,6 +165,7 @@
 - `npm run lint`
 - `npm run build`
 - `npm run test:smoke`
+- `npm run test:e2e`
 - 手動檢查 login、pairing、photo upload、expense creation、family expense review、LINE webhook mock events。
 - Supabase SQL 先套用到 disposable project，再進 production。
 - 大量變更後重新整理本機索引；本機指令放在 `AGENTS.local.md`，不要提交公開 repo。

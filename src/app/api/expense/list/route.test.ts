@@ -111,4 +111,24 @@ describe("GET /api/expense/list", () => {
     await expect(res.json()).resolves.toEqual({ error: "查詢失敗" });
     expect(getSupabaseAdminMock).not.toHaveBeenCalled();
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await GET(request());
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in viewer before listing expenses", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await GET(request());
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(listExpensesForCardMock).not.toHaveBeenCalled();
+  });
 });

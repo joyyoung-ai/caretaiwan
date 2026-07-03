@@ -8,9 +8,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:e2e": "node scripts/start-e2e-server.mjs",
     "lint": "eslint",
     "docs:check": "node scripts/check-markdown-links.mjs",
     "test:smoke": "node scripts/smoke-test.mjs",
+    "test:e2e": "playwright test",
     "test": "vitest run"
   },
   "dependencies": {
@@ -23,6 +25,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

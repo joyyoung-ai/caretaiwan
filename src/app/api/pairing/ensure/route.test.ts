@@ -70,4 +70,33 @@ describe("POST /api/pairing/ensure", () => {
     await expect(res.json()).resolves.toEqual({ ok: true, code: "ABCD23", paired: false });
     expect(ensurePairingMock).toHaveBeenCalledWith("elder-1", "family-1", "阿公");
   });
+
+  it("returns 503 when cloud services are disabled", async () => {
+    isCloudEnabledMock.mockReturnValue(false);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1", displayName: "阿公" }));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in family user before creating a pairing code", async () => {
+    authMock.mockResolvedValue(null as never);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1", displayName: "阿公" }));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({ error: "未登入" });
+    expect(ensurePairingMock).not.toHaveBeenCalled();
+  });
+
+  it("maps pairing creation failures to a generic server error", async () => {
+    ensurePairingMock.mockResolvedValue({ ok: false, error: "raw pairing failure" } as never);
+
+    const res = await POST(jsonRequest({ elderId: "elder-1", displayName: "阿公" }));
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
+  });
 });
