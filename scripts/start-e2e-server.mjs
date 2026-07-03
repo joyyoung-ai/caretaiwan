@@ -15,10 +15,35 @@ function copyIfExists(from, to) {
   fs.cpSync(from, to, { recursive: true });
 }
 
+function findStandaloneServer(standaloneRoot) {
+  const direct = path.join(standaloneRoot, "server.js");
+  if (fs.existsSync(direct)) return direct;
+
+  const stack = [standaloneRoot];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "node_modules") stack.push(fullPath);
+        continue;
+      }
+      if (entry.name === "server.js") return fullPath;
+    }
+  }
+
+  throw new Error(`Cannot find standalone server under ${standaloneRoot}`);
+}
+
+const standaloneRoot = path.join(root, ".next", "standalone");
+const serverPath = findStandaloneServer(standaloneRoot);
+const serverDir = path.dirname(serverPath);
+
 copyIfExists(
   path.join(root, ".next", "static"),
-  path.join(root, ".next", "standalone", ".next", "static")
+  path.join(serverDir, ".next", "static")
 );
-copyIfExists(path.join(root, "public"), path.join(root, ".next", "standalone", "public"));
+copyIfExists(path.join(root, "public"), path.join(serverDir, "public"));
 
-await import(path.join(root, ".next", "standalone", "server.js"));
+await import(serverPath);

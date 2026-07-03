@@ -9,6 +9,8 @@ import {
   ArrowRight,
   Plus,
   Cloud,
+  CalendarDays,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -199,6 +201,43 @@ export default function FamilyHome() {
                 <ArrowRight className="w-5 h-5 text-slate-400 shrink-0" strokeWidth={2.2} />
               </Link>
             )}
+          </div>
+
+          <div className="px-5 mt-5">
+            <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3">
+              照護行程
+            </h2>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-950 rounded-2xl">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-5 h-5 text-emerald-600 dark:text-emerald-300" strokeWidth={2.2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-emerald-950 dark:text-emerald-100">
+                    家屬與看護共同管理行程
+                  </div>
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
+                    回診、復健、家訪等日程先集中在這裡
+                  </div>
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                    LINE 提醒尚未啟用
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-950 rounded-2xl">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shrink-0">
+                  <ClipboardList className="w-5 h-5 text-orange-600 dark:text-orange-300" strokeWidth={2.2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-orange-950 dark:text-orange-100">
+                    請假紀錄
+                  </div>
+                  <div className="text-xs text-orange-700 dark:text-orange-300 mt-0.5">
+                    看護提出後，家屬可在這裡確認；不處理薪資、扣款或排班。
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Quick actions */}

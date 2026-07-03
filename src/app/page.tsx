@@ -20,6 +20,9 @@ import {
   ArrowRight,
   Sparkles,
   BookOpen,
+  BellOff,
+  CalendarDays,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { getActiveElder, setActivePairedElder } from "@/lib/elder";
@@ -235,6 +238,68 @@ export default function Home() {
           </Link>
         </div>
       )}
+
+      <div className="px-5 mb-3">
+        <section className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0">
+              <CalendarDays className="w-6 h-6 text-emerald-600 dark:text-emerald-300" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {t.careCalendar.title}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                {t.careCalendar.medicalNotice}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950 p-3">
+              <div className="text-xs text-emerald-700 dark:text-emerald-300">
+                {t.careCalendar.next7Days}
+              </div>
+              <div className="text-sm font-bold text-emerald-950 dark:text-emerald-100 mt-1">
+                回診、復健、家訪
+              </div>
+            </div>
+            <div className="rounded-2xl bg-amber-50 dark:bg-amber-950 p-3">
+              <div className="text-xs text-amber-700 dark:text-amber-300">
+                {t.caregiverLeave.title}
+              </div>
+              <div className="text-sm font-bold text-amber-950 dark:text-amber-100 mt-1">
+                {t.caregiverLeave.submit}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-start gap-2 rounded-2xl bg-slate-50 dark:bg-slate-800 p-3">
+            <BellOff className="w-4 h-4 text-slate-500 dark:text-slate-300 mt-0.5 shrink-0" strokeWidth={2.2} />
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {t.careCalendar.reminderInactive}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="px-5 mb-3">
+        <section className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-card">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-orange-50 dark:bg-orange-950 flex items-center justify-center shrink-0">
+              <ClipboardList className="w-6 h-6 text-orange-600 dark:text-orange-300" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {t.caregiverLeave.title}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                {t.caregiverLeave.helper}
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* Quick actions — primary tile is record */}
       <div className="px-5 mt-2">
