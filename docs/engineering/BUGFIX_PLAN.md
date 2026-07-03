@@ -73,7 +73,7 @@
 - 資料保留 cron response 不再回傳完整 LINE user ID，改回傳 `lineUserRef` 短 hash。
 - 資料保留 cron bearer token 比對改為固定 hash 後使用 `crypto.timingSafeEqual`。
 - 資料保留 cron delete stage 改為先刪 `cloud_backups`，成功後才刪 `elder_pairings`；若 pairing 刪除失敗，response 與 audit metadata 會記錄 partial failure，不輸出 DB error 原文。
-- Origin allowlist 改為可由 `PUBLIC_APP_URL` 與 `PRODUCTION_ALLOWED_HOSTS` 驅動，保留 legacy host 作為歷史相容。
+- Origin allowlist 改為由 `PUBLIC_APP_URL` 與 `PRODUCTION_ALLOWED_HOSTS` 驅動；production 不再自動放行 legacy host、localhost、preview host 或未設定的 Vercel host。
 - 已導入 Vitest，並建立 pairing TTL、self-pairing、origin checks、cron security helper tests。
 - 既有 lint warning 已清除，`npm run lint` 目前無 warning。
 

@@ -34,6 +34,7 @@ cp docker/.env.production.example docker/.env.production
 
 - `PUBLIC_APP_URL`：正式對外網址，例如 `https://example.com`。
 - `PRODUCTION_ALLOWED_HOSTS`：正式環境額外允許的 host，逗號分隔；沒有額外網域時可留空。
+- Production origin allowlist 只接受上述正式 host 設定；localhost、preview host、Vercel host 或舊 `caretaiwan.app` 網域都不會自動放行，除非明確列入正式設定。
 - `AUTH_SECRET`：正式環境專用，不可沿用開發值。
 - `LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET`：LINE Login。
 - `LINE_BOT_CHANNEL_SECRET` / `LINE_BOT_CHANNEL_ACCESS_TOKEN`：LINE Messaging API。

@@ -27,6 +27,16 @@ describe("origin host allowlist", () => {
     expect(isAllowedHost("care.internal.example.com", env)).toBe(true);
   });
 
+  it("rejects legacy production hosts unless they are explicitly configured", () => {
+    const env = {
+      NODE_ENV: "production",
+    };
+
+    expect(isAllowedHost("caretaiwan.app", env)).toBe(false);
+    expect(isAllowedHost("www.caretaiwan.app", env)).toBe(false);
+    expect(isAllowedHost("caretaiwan.vercel.app", env)).toBe(false);
+  });
+
   it("rejects localhost and preview hosts in production", () => {
     const env = {
       NODE_ENV: "production",
@@ -37,6 +47,18 @@ describe("origin host allowlist", () => {
     expect(isAllowedHost("localhost:3000", env)).toBe(false);
     expect(isAllowedHost("preview.example.com", env)).toBe(false);
     expect(isAllowedHost("evil.example.com", env)).toBe(false);
+  });
+
+  it("does not allow production Vercel hosts unless explicitly configured", () => {
+    const env = {
+      VERCEL_ENV: "production",
+      PUBLIC_APP_URL: "https://care.example.com",
+      VERCEL_URL: "care-preview.vercel.app",
+      PREVIEW_ALLOWED_HOSTS: "preview.example.com",
+    };
+
+    expect(isAllowedHost("care-preview.vercel.app", env)).toBe(false);
+    expect(isAllowedHost("preview.example.com", env)).toBe(false);
   });
 
   it("allows localhost and preview hosts outside production", () => {
