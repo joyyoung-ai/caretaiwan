@@ -57,6 +57,9 @@ export async function POST(req: Request) {
 
   if (!result.ok) {
     if (result.error === "NOT_PAIRED") return NextResponse.json({ error: "未配對此卡" }, { status: 403 });
+    if (result.error === "TIME_RANGE_INVALID") {
+      return NextResponse.json({ error: "結束時間必須晚於開始時間" }, { status: 400 });
+    }
     return NextResponse.json({ error: "更新失敗" }, { status: 500 });
   }
 

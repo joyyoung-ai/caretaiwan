@@ -111,6 +111,15 @@ describe("POST /api/care-events/update", () => {
     expect(updateCareEventMock).not.toHaveBeenCalled();
   });
 
+  it("maps helper time range failures to a validation response", async () => {
+    updateCareEventMock.mockResolvedValue({ ok: false, error: "TIME_RANGE_INVALID" } as never);
+
+    const res = await POST(request({ eventId: 1, endsAt: "2026-08-01T01:00:00.000Z" }));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: "結束時間必須晚於開始時間" });
+  });
+
   it("rejects unpaired users without exposing event details", async () => {
     updateCareEventMock.mockResolvedValue({ ok: false, error: "NOT_PAIRED" } as never);
 
