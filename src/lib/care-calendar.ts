@@ -125,3 +125,111 @@ export async function findCareEventPairing(
   }
   return { ok: false, error: "NOT_PAIRED" };
 }
+
+export async function createCareEvent(
+  input: ParsedCareEventInput & {
+    actorLineUserId: string;
+    ownerLineUserId: string;
+  }
+): Promise<{ ok: boolean; event?: CareEvent; error?: string }> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+
+  const { data, error } = await sb
+    .from("care_events")
+    .insert({
+      elder_id: input.elderId,
+      owner_line_user_id: input.ownerLineUserId,
+      created_by_line_user_id: input.actorLineUserId,
+      updated_by_line_user_id: input.actorLineUserId,
+      type: input.type,
+      is_medical_related: input.isMedicalRelated,
+      title: input.title,
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      location: input.location,
+      note: input.note,
+      remind_at: input.remindAt,
+      status: "scheduled",
+    })
+    .select()
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "DB_ERROR" };
+  if (!data) return { ok: false, error: "INSERT_FAILED" };
+  return { ok: true, event: data };
+}
+
+export async function listCareEventsForElder(
+  elderId: string,
+  actorLineUserId: string,
+  rangeDays = 7
+): Promise<{ ok: boolean; events?: CareEvent[]; error?: string }> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+
+  const pairing = await findCareEventPairing(elderId, actorLineUserId);
+  if (!pairing.ok) return { ok: false, error: pairing.error };
+
+  const now = new Date();
+  const end = new Date(now.getTime() + Math.min(Math.max(rangeDays, 1), 30) * 24 * 60 * 60 * 1000);
+  const { data, error } = await sb
+    .from("care_events")
+    .select("*")
+    .eq("elder_id", elderId)
+    .neq("status", "cancelled")
+    .gte("starts_at", now.toISOString())
+    .lte("starts_at", end.toISOString())
+    .order("starts_at", { ascending: true });
+
+  if (error) return { ok: false, error: "DB_ERROR" };
+  return { ok: true, events: data ?? [] };
+}
+
+export async function updateCareEvent(input: {
+  eventId: number;
+  actorLineUserId: string;
+  title?: string;
+  startsAt?: string;
+  endsAt?: string | null;
+  location?: string | null;
+  note?: string | null;
+  status?: CareEventStatus;
+}): Promise<{ ok: boolean; event?: CareEvent; error?: string }> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+
+  const { data: event, error: lookupError } = await sb
+    .from("care_events")
+    .select("id, elder_id")
+    .eq("id", input.eventId)
+    .maybeSingle();
+
+  if (lookupError) return { ok: false, error: "DB_ERROR" };
+  if (!event) return { ok: false, error: "NOT_FOUND" };
+
+  const pairing = await findCareEventPairing(event.elder_id, input.actorLineUserId);
+  if (!pairing.ok) return { ok: false, error: pairing.error };
+
+  const patch: Record<string, unknown> = {
+    updated_by_line_user_id: input.actorLineUserId,
+    updated_at: new Date().toISOString(),
+  };
+  if (input.title !== undefined) patch.title = input.title.slice(0, 100);
+  if (input.startsAt !== undefined) patch.starts_at = input.startsAt;
+  if (input.endsAt !== undefined) patch.ends_at = input.endsAt;
+  if (input.location !== undefined) patch.location = input.location?.slice(0, 200) ?? null;
+  if (input.note !== undefined) patch.note = input.note?.slice(0, 500) ?? null;
+  if (input.status !== undefined) patch.status = input.status;
+
+  const { data, error } = await sb
+    .from("care_events")
+    .update(patch)
+    .eq("id", input.eventId)
+    .select()
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "DB_ERROR" };
+  if (!data) return { ok: false, error: "UPDATE_FAILED" };
+  return { ok: true, event: data };
+}
