@@ -17,6 +17,7 @@
 - 新增 `npm run test:smoke` production HTTP smoke test，啟動 `next start` 後檢查核心頁面、session API 與安全 headers。
 - 引入 Playwright，新增 `npm run test:e2e` 瀏覽器級 smoke，覆蓋桌機與 mobile Chromium 的首頁 shell、公開 legal/about 頁與 session API redaction。
 - 新增 GitHub Actions CI gate，於 push / pull request 執行 lint、docs check、Vitest、build、production smoke 與 Playwright E2E。
+- 新增 `npm run audit` dependency security gate，並以安全升級與 `postcss` override 清除目前 npm audit vulnerabilities。
 - 初始化 OpenSpec 設定與 Codex OpenSpec skills。
 - 新增 OpenSpec change proposal `v1-0-1-runtime-safety`，用來管理 v1.0.1 第一批 runtime safety 修補；本次只新增 proposal，不包含 runtime code 變更。
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。

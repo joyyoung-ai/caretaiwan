@@ -8,7 +8,7 @@
 
 本輪已重新跑過 `npm run test`、`npm run test:smoke`、`npm run lint`、`npm run build`、`npm run docs:check` 與 `git diff --check`。第一批 helper tests、route tests、smoke test 和 lint 狀態可作為 v1.0.1 runtime safety 收尾依據。
 
-正式建置 Docker image 前，GitHub Actions CI gate 會強制執行 lint、docs check、自動化測試、production build、production smoke 與 Playwright E2E。測試失敗不得產生 production image。
+正式建置 Docker image 前，GitHub Actions CI gate 會強制執行 dependency audit、lint、docs check、自動化測試、production build、production smoke 與 Playwright E2E。測試失敗不得產生 production image。
 
 ## Proposed Tool
 
@@ -171,6 +171,7 @@ CI pipeline 目前執行：
 ```bash
 npm ci
 npx playwright install --with-deps chromium
+npm run audit
 npm run lint
 npm run docs:check
 npm run test
