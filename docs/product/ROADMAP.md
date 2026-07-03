@@ -47,24 +47,28 @@
 
 目標：讓看護提前知道後續安排。
 
-- 家屬端新增、修改、取消照護行程。
+- 家屬與看護共同管理已配對長者的照護行程。
 - 看護端查看未來 7 天 / 30 天行程。
-- `care_events` 資料模型。
+- `care_events` 資料模型草案與 API foundation。
+- 看護提出請假紀錄，家屬查看並標記已確認。
+- 請假原因支援固定選項與自由文字備註。
 - `is_medical_related` 欄位與提醒免責文字。
-- LINE 提醒規則與失敗處理。
+- `remind_at` 先保留為 inert 欄位；LINE 提醒 runtime 延後到 v1.2.0 或後續 change。
 
 完成標準：
 
-- `care_events` migration 完成並有回滾策略。
+- `care_events` 與 `caregiver_leave_requests` schema 草案完成；正式 migration 等 production DB 策略決定後再落。
 - 權限測試涵蓋家屬建立、看護查看、未配對不可讀。
 - `is_medical_related` 提醒文案通過產品邊界檢查。
-- LINE reminder 失敗不會被表達成保證送達。
+- 首頁先提供照護行程與請假紀錄入口，完整表單頁可接續實作。
+- UI 明確說明 LINE 提醒尚未啟用，不表達成保證送達。
 
 不納入：
 
 - 醫院掛號串接。
 - 醫療急迫性判斷。
 - Google Calendar / Apple Calendar 雙向同步。
+- 排班、薪資、扣款或勞資爭議判定。
 
 ## v1.2.0：照護提醒
 

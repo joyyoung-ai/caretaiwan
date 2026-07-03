@@ -12,6 +12,9 @@ test("renders the caregiver home shell and primary navigation", async ({ page })
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "看護助手" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "照護行程" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "請假紀錄" })).toBeVisible();
+  await expect(page.getByText("LINE 提醒尚未啟用")).toBeVisible();
   await expect(page.locator('a[href="/about"]')).toBeVisible();
   await expect(page.getByRole("navigation").getByText("首頁")).toBeVisible();
   await expect(page.getByRole("navigation").getByText("醫護卡")).toBeVisible();

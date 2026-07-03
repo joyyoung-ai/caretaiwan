@@ -42,6 +42,8 @@ CareTaiwan 目前不提供：
 - 已建立第一批 helper tests、API route 邊界測試、production HTTP smoke test 與 Playwright E2E smoke。LINE webhook security paths、photo ownership metadata、cloud upload / download / delete ownership and failure paths、representative cloud disabled / unauthenticated gates、photo upload pairing guard / invalid bytes / metadata rollback、photo signed token route、family paired ownership and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、session response shape、expense create / list / verify ownership、expense list photo signed URL gate 與 data-retention cron auth / config / redaction 都已有 Vitest coverage。瀏覽器級 E2E 目前只覆蓋公開頁、首頁 shell 與 session API redaction，核心登入後流程仍要逐步補上。
 - `npm run lint` 可通過，已無 warning。
 - `supabase-schema.sql` 是 idempotent schema，不是完整 migration series。
+- v1.1.0 照護行程與看護請假目前只有 schema draft、API foundation 與首頁入口；正式 migration 要等 production DB 策略決策後再落。
+- 照護行程與請假紀錄完整表單頁尚未完成，目前不提供完整日曆格、拖拉、週期性事件、批次編輯或跨日曆同步。
 - Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。
 - 正式 VM runbook 尚未完整落地。
 - 資料庫自管或 managed service 尚未做最終決策。
@@ -51,6 +53,7 @@ CareTaiwan 目前不提供：
 - LINE 推播不是保證送達。
 - 使用者關閉通知、封鎖 Bot、網路不穩或 LINE 服務異常，都可能造成提醒失敗。
 - 回診、吃藥、拿藥、復健等提醒只能作為一般日程提醒，不代表醫療指示。
+- v1.1.0 的照護行程只保留 `remind_at` 欄位與 UI 說明，LINE reminder runtime 尚未啟用。
 
 ## 資料刪除限制
 
