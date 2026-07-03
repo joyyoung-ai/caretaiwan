@@ -1,6 +1,6 @@
 # CareTaiwan 接手維護改善規劃
 
-日期：2026-07-01
+日期：2026-07-02
 
 這是中揚資訊接手後的第一版維護待辦。先把眼前看得到的問題列下來，之後可以拆成 issue 或 milestone。這份清單來自專案結構檢查、`npm run lint`、`npm run build`、本機索引工具，以及 auth、pairing、Supabase、LINE Bot、照片上傳、cron、README、schema 幾個高風險區塊的快速審視。
 
@@ -14,7 +14,7 @@
 
 - Build：`npm run build` 可在 Next.js 16.2.6 通過。
 - Lint：`npm run lint` 可通過，已無 warning。
-- 測試：已建立第一批 Vitest helper tests；API route 與 E2E 測試尚未建立。
+- 測試：已建立第一批 Vitest helper tests，也已開始補 API route 邊界測試；E2E 測試尚未建立。
 - Memory index：`Users-mark-Documents-caretaiwan-repo`。大量搬移文件或新增主要功能後，要重新索引。
 - 工作樹：除本次文件修改外，已經有其他未提交變更。後續改功能時要先看清楚，不要混在一起。
 

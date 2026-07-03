@@ -18,6 +18,7 @@
 
 - `AGENTS.md` 增加 OpenSpec / Superpowers 使用邊界，避免把協作工具當成 runtime dependency。
 - `docs/README.md` 在 Engineering 區塊加入 AI agent workflow 文件連結。
+- 確認 v1.0.1 第一批 helper tests 已覆蓋 pairing code TTL、禁止自己配對、origin checks 與 cron security helper；`npm run lint` 目前維持無 warning。
 - Production origin allowlist 改為只接受 `PUBLIC_APP_URL` 與 `PRODUCTION_ALLOWED_HOSTS` 明確設定的 host；localhost、preview host 與 Vercel host 不再於 production 自動放行。
 
 ### Security

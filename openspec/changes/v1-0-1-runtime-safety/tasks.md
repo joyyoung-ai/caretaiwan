@@ -16,11 +16,11 @@
 
 ## 3. Helper tests and lint PR
 
-- [ ] 3.1 Add or confirm helper tests for pairing code TTL.
-- [ ] 3.2 Add or confirm helper tests for self-pairing prevention.
+- [x] 3.1 Add or confirm helper tests for pairing code TTL.
+- [x] 3.2 Add or confirm helper tests for self-pairing prevention.
 - [x] 3.3 Add or confirm helper tests for configured production hosts, rejected cross-origin requests, and direct GET behavior.
 - [x] 3.4 Add or confirm helper tests for cron bearer parsing, timing-safe compare behavior, and LINE user ID reference generation.
-- [ ] 3.5 Clean up lint warnings in the touched scope so `npm run lint` has no warning output.
+- [x] 3.5 Clean up lint warnings in the touched scope so `npm run lint` has no warning output.
 
 ## 4. Documentation and release verification
 

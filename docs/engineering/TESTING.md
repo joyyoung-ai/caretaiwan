@@ -1,10 +1,12 @@
 # Testing
 
-日期：2026-07-01
+日期：2026-07-02
 
 ## Current Status
 
 已建立第一批 Vitest helper tests，也開始補 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、expense create ownership 與 LINE webhook security-path 測試。`npm run lint` 目前可無 warning 通過。
+
+本輪已重新跑過 `npm run test`、`npm run lint`、`npm run build`、`npm run docs:check` 與 `git diff --check`。第一批 helper tests 和 lint 狀態可作為 v1.0.1 runtime safety 收尾依據。
 
 正式建置 Docker image 前，應透過 CI pipeline 強制執行 lint 與自動化測試。測試失敗不得產生 production image。
 
@@ -51,7 +53,7 @@
 
 ## Required Before v1.0.1
 
-v1.0.1 不應只停在「測試策略已寫」。目前下列 helper tests 已可由本機執行：
+v1.0.1 不應只停在「測試策略已寫」。截至 2026-07-02，下列 helper tests 已可由本機執行：
 
 - pairing code TTL。
 - self-pairing prevention。
