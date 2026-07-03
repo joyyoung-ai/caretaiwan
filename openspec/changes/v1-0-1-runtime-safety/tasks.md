@@ -1,11 +1,11 @@
 ## 1. Cron runtime safety PR
 
-- [ ] 1.1 Add or confirm a reusable cron redaction helper for LINE user references, using a non-reversible `lineUserRef` or equivalent reference.
-- [ ] 1.2 Update or confirm data retention warn-stage responses so returned samples never include full LINE user IDs, display names, raw DB errors, photo URLs, medical notes, or free-text PII.
-- [ ] 1.3 Update or confirm data retention delete-stage responses so deleted and partial-failure records use only redacted user references.
-- [ ] 1.4 Update or confirm cron bearer token parsing and comparison so `Authorization: Bearer <token>` is checked with fixed-length, timing-safe comparison rather than plain string equality.
-- [ ] 1.5 Update or confirm delete ordering so `cloud_backups` deletion succeeds before related `elder_pairings` are deleted.
-- [ ] 1.6 Update or confirm partial failure handling so pairing delete failures are visible in redacted response / audit metadata without raw DB error text.
+- [x] 1.1 Add or confirm a reusable cron redaction helper for LINE user references, using a non-reversible `lineUserRef` or equivalent reference.
+- [x] 1.2 Update or confirm data retention warn-stage responses so returned samples never include full LINE user IDs, display names, raw DB errors, photo URLs, medical notes, or free-text PII.
+- [x] 1.3 Update or confirm data retention delete-stage responses so deleted and partial-failure records use only redacted user references.
+- [x] 1.4 Update or confirm cron bearer token parsing and comparison so `Authorization: Bearer <token>` is checked with fixed-length, timing-safe comparison rather than plain string equality.
+- [x] 1.5 Update or confirm delete ordering so `cloud_backups` deletion succeeds before related `elder_pairings` are deleted.
+- [x] 1.6 Update or confirm partial failure handling so pairing delete failures are visible in redacted response / audit metadata without raw DB error text.
 
 ## 2. Origin allowlist PR
 
@@ -19,7 +19,7 @@
 - [ ] 3.1 Add or confirm helper tests for pairing code TTL.
 - [ ] 3.2 Add or confirm helper tests for self-pairing prevention.
 - [x] 3.3 Add or confirm helper tests for configured production hosts, rejected cross-origin requests, and direct GET behavior.
-- [ ] 3.4 Add or confirm helper tests for cron bearer parsing, timing-safe compare behavior, and LINE user ID reference generation.
+- [x] 3.4 Add or confirm helper tests for cron bearer parsing, timing-safe compare behavior, and LINE user ID reference generation.
 - [ ] 3.5 Clean up lint warnings in the touched scope so `npm run lint` has no warning output.
 
 ## 4. Documentation and release verification

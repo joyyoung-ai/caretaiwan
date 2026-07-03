@@ -17,8 +17,14 @@ import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
 import { pushMessage, isLineBotEnabled } from "@/lib/line-bot";
 import { logAudit } from "@/lib/audit";
 import {
+  buildDeleteDryRunResult,
+  buildWarnResult,
+  runBackupFirstDelete,
+  type DataRetentionDeleteResult,
+  type DataRetentionWarnResult,
+} from "@/lib/data-retention-cron";
+import {
   extractBearerToken,
-  lineUserRef,
   timingSafeSecretEqual,
 } from "@/lib/cron-security";
 
@@ -74,15 +80,16 @@ export async function GET(req: Request) {
   const sb = getSupabaseAdmin()!;
 
   if (stage === "warn") {
-    return await runWarnStage(sb, dryRun);
+    return await runWarnStage(sb, dryRun, secret);
   }
-  return await runDeleteStage(sb, dryRun);
+  return await runDeleteStage(sb, dryRun, secret);
 }
 
 // 警告階段: 11 個月未活動 → 發 LINE 通知
 async function runWarnStage(
   sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
-  dryRun: boolean
+  dryRun: boolean,
+  refSecret: string
 ) {
   const warnThreshold = new Date(
     Date.now() - (RETENTION_DAYS - WARNING_DAYS_BEFORE) * 24 * 60 * 60 * 1000
@@ -100,7 +107,7 @@ async function runWarnStage(
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
-  const results: Array<{ lineUserRef: string; warned: boolean; reason?: string }> = [];
+  const results: DataRetentionWarnResult[] = [];
 
   for (const c of candidates ?? []) {
     // 查最近 35 天有沒有已警告過 (避免每天重發)
@@ -114,7 +121,14 @@ async function runWarnStage(
       .limit(1)
       .maybeSingle();
     if (prev) {
-      results.push({ lineUserRef: lineUserRef(c.line_user_id), warned: false, reason: "ALREADY_WARNED" });
+      results.push(
+        buildWarnResult({
+          lineUserId: c.line_user_id,
+          refSecret,
+          warned: false,
+          reason: "ALREADY_WARNED",
+        })
+      );
       continue;
     }
 
@@ -124,7 +138,14 @@ async function runWarnStage(
     const daysLeft = Math.max(0, Math.ceil((deleteAt - Date.now()) / (24 * 60 * 60 * 1000)));
 
     if (dryRun) {
-      results.push({ lineUserRef: lineUserRef(c.line_user_id), warned: false, reason: "DRY_RUN" });
+      results.push(
+        buildWarnResult({
+          lineUserId: c.line_user_id,
+          refSecret,
+          warned: false,
+          reason: "DRY_RUN",
+        })
+      );
       continue;
     }
 
@@ -145,7 +166,9 @@ async function runWarnStage(
       metadata: { daysLeft, lineBotEnabled: isLineBotEnabled() },
     });
 
-    results.push({ lineUserRef: lineUserRef(c.line_user_id), warned });
+    results.push(
+      buildWarnResult({ lineUserId: c.line_user_id, refSecret, warned })
+    );
   }
 
   logAudit({
@@ -168,7 +191,8 @@ async function runWarnStage(
 // 刪除階段: 12 個月未活動 → 刪 cloud_backups + 對應 elder_pairings
 async function runDeleteStage(
   sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
-  dryRun: boolean
+  dryRun: boolean,
+  refSecret: string
 ) {
   const deleteThreshold = new Date(
     Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000
@@ -184,59 +208,38 @@ async function runDeleteStage(
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
-  const results: Array<{
-    lineUserRef: string;
-    deleted: boolean;
-    pairingsDeleted?: number;
-    reason?: string;
-  }> = [];
+  const results: DataRetentionDeleteResult[] = [];
 
   for (const c of candidates ?? []) {
-    const ref = lineUserRef(c.line_user_id);
     if (dryRun) {
-      results.push({ lineUserRef: ref, deleted: false, reason: "DRY_RUN" });
+      results.push(buildDeleteDryRunResult(c.line_user_id, refSecret));
       continue;
     }
 
-    // 先刪 cloud_backups。若備份刪除失敗，不先動配對資料，避免留下孤立備份。
-    const { error: cbErr } = await sb
-      .from("cloud_backups")
-      .delete()
-      .eq("line_user_id", c.line_user_id);
+    const outcome = await runBackupFirstDelete({
+      lineUserId: c.line_user_id,
+      refSecret,
+      lastUpdate: c.updated_at,
+      deleteCloudBackup: (lineUserId) =>
+        sb.from("cloud_backups").delete().eq("line_user_id", lineUserId),
+      // 拆兩次 query，不用 .or() 字串拼接，避免 PostgREST filter injection。
+      deleteOwnerPairings: (lineUserId) =>
+        sb
+          .from("elder_pairings")
+          .delete({ count: "exact" })
+          .eq("owner_line_user_id", lineUserId),
+      deletePairedPairings: (lineUserId) =>
+        sb
+          .from("elder_pairings")
+          .delete({ count: "exact" })
+          .eq("paired_line_user_id", lineUserId),
+    });
 
-    if (cbErr) {
-      console.error("[data-retention] backup delete failed", cbErr.message);
-      logAudit({
-        action: "DATA_AUTO_DELETE",
-        actorLineUserId: c.line_user_id,
-        resourceType: "cloud_backup",
-        resourceId: c.line_user_id,
-        status: "fail",
-        metadata: {
-          cloudBackupDeleted: false,
-          lastUpdate: c.updated_at,
-          reason: "DB_ERROR",
-        },
-      });
-
-      results.push({ lineUserRef: ref, deleted: false, reason: "DB_ERROR" });
-      continue;
+    if (outcome.auditMetadata.reason === "DB_ERROR") {
+      console.error("[data-retention] backup delete failed");
     }
-
-    // 再刪 elder_pairings 中 owner 或 paired 是這個 user 的。
-    // 拆兩次 query，不用 .or() 字串拼接，避免 PostgREST filter injection。
-    const { count: ownerCount, error: ownerErr } = await sb
-      .from("elder_pairings")
-      .delete({ count: "exact" })
-      .eq("owner_line_user_id", c.line_user_id);
-    const { count: pairedCount, error: pairedErr } = await sb
-      .from("elder_pairings")
-      .delete({ count: "exact" })
-      .eq("paired_line_user_id", c.line_user_id);
-    const pairCount = (ownerCount ?? 0) + (pairedCount ?? 0);
-    const pairingErr = ownerErr ?? pairedErr;
-    if (pairingErr) {
-      console.error("[data-retention] pairing delete failed", pairingErr.message);
+    if (outcome.auditMetadata.reason === "PAIRING_DELETE_FAILED") {
+      console.error("[data-retention] pairing delete failed");
     }
 
     logAudit({
@@ -244,21 +247,11 @@ async function runDeleteStage(
       actorLineUserId: c.line_user_id,
       resourceType: "cloud_backup",
       resourceId: c.line_user_id,
-      status: pairingErr ? "fail" : "ok",
-      metadata: {
-        cloudBackupDeleted: true,
-        pairingsDeleted: pairCount ?? 0,
-        lastUpdate: c.updated_at,
-        reason: pairingErr ? "PAIRING_DELETE_FAILED" : undefined,
-      },
+      status: outcome.auditStatus,
+      metadata: outcome.auditMetadata,
     });
 
-    results.push({
-      lineUserRef: ref,
-      deleted: !pairingErr,
-      pairingsDeleted: pairCount ?? 0,
-      reason: pairingErr ? "PAIRING_DELETE_FAILED" : undefined,
-    });
+    results.push(outcome.result);
   }
 
   logAudit({

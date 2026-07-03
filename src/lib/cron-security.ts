@@ -1,8 +1,8 @@
 import crypto from "crypto";
 
 export function extractBearerToken(authHeader: string): string {
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() ?? "";
+  const match = authHeader.match(/^Bearer\s+(\S+)\s*$/i);
+  return match?.[1] ?? "";
 }
 
 export function timingSafeSecretEqual(actual: string, expected: string): boolean {
@@ -11,6 +11,10 @@ export function timingSafeSecretEqual(actual: string, expected: string): boolean
   return crypto.timingSafeEqual(actualHash, expectedHash);
 }
 
-export function lineUserRef(lineUserId: string): string {
-  return crypto.createHash("sha256").update(lineUserId).digest("hex").slice(0, 12);
+export function lineUserRef(lineUserId: string, secret: string): string {
+  return crypto
+    .createHmac("sha256", secret)
+    .update(`line-user-ref:${lineUserId}`)
+    .digest("hex")
+    .slice(0, 12);
 }
