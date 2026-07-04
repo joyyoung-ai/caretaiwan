@@ -97,7 +97,7 @@
 - `created_at`
 - `updated_at`
 
-正式欄位要等資料庫策略定下來再寫 migration。現在先不要直接改 `supabase-schema.sql`。
+正式資料庫已決定採 VM 自管 Postgres。下一步要把欄位草案轉成 production migration series；現在仍不要直接把 `supabase-schema.sql` 當正式 migration。
 
 ### 醫療相關提醒文案
 
@@ -126,7 +126,7 @@
 ### 下一步
 
 1. 先確認需求提出者要的是「單純提醒」還是「家屬與看護共同管理行程」。
-2. 決定正式資料庫路線：VM 自管 Postgres，或 VM app 搭配 managed Supabase。
+2. 正式資料庫路線已決定採 VM 自管 Postgres；接著要建立 migration、backup、restore 與 rollback 流程。
 3. 補 UI 草圖：看護端看行程、家屬端新增行程、看護端請假。
 4. 再寫 migration 和 API。
 5. 做最小測試：權限、日期範圍、提醒時間、請假狀態。
@@ -142,14 +142,14 @@ OpenSpec change 已建立在 `openspec/changes/v1-1-0-care-calendar/`。目前�
 - 請假原因同時支援固定選項與自由文字備註。
 - 醫療相關行程只作一般日程提醒，文案固定避開診斷、分流、治療、劑量或急迫性判斷。
 - LINE reminder runtime 先不納入 v1.1.0；本輪只保留資料欄位與 UI 說明，等排程、重試與失敗處理確認後再做。
-- 正式資料庫 migration 等 VM 自管 Postgres / managed Supabase 決策後再落地。
+- 正式資料庫 migration 以 VM 自管 Postgres 為基準落地。
 - 行程與請假資料保留期限先跟照護紀錄一致。
 
 已決策並已完成第一批 foundation：
 
 1. v1.1.0 採家屬與看護共同管理行程，API 已允許家屬與已配對看護建立、查詢、更新與取消同一位長者的照護行程。
 2. LINE reminder runtime 先不納入；目前只保留 `remind_at` 欄位與 UI 說明，不排程、不重試、不送 LINE push。
-3. migration 等正式資料庫策略決策後再落；目前只有 `docs/engineering/CARE_CALENDAR_SCHEMA.md` schema 草案。
+3. 正式資料庫已決定採 VM 自管 Postgres；目前只有 `docs/engineering/CARE_CALENDAR_SCHEMA.md` schema 草案，尚未建立 production migration series。
 4. 請假原因採固定選項與自由文字並存，看護可建立請假紀錄，家屬可查看並標記已收到。
 5. 行程與請假資料保留期限跟照護紀錄一致，刪除請求要涵蓋 live database、備份與 audit metadata。
 6. 產品文案審查已完成：醫療相關行程維持「一般日程提醒，非醫療指示」；請假紀錄改用「已收到」和「標記已收到」，避免被理解成審核、考勤或紀律管理。
@@ -157,4 +157,4 @@ OpenSpec change 已建立在 `openspec/changes/v1-1-0-care-calendar/`。目前�
 尚未完成：
 
 - v1.1.0 已先在看護端與家屬端首頁補上最小可用流程：看護可看 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程，也可查看並確認請假紀錄。它還不是完整日曆格、週期性事件或跨日曆同步。
-- 正式 migration、資料庫驗證與 rollback 操作要等 production DB 策略決策後再做。
+- 正式 migration、資料庫驗證與 rollback 操作要依 VM 自管 Postgres 路線補上。

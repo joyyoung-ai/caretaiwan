@@ -67,9 +67,9 @@ LINE reminder 牽涉排程、重試、失敗記錄、推播內容與 PII redacti
 
 ### 6. Keep formal migration after database strategy decision
 
-正式 migration 等 VM 自管 Postgres / managed Supabase 決策後再落。v1.1.0 規格先定義資料模型、欄位、index、rollback 要求與測試邊界。實作若需要 schema 草案，只能作為後續 migration 的輸入，不得把手動 SQL 當成 production migration series。
+正式資料庫已決定採 VM 自管 Postgres。v1.1.0 規格先定義資料模型、欄位、index、rollback 要求與測試邊界。實作若需要 schema 草案，只能作為後續 migration 的輸入，不得把手動 SQL 當成 production migration series。
 
-替代方案：現在立刻建立 `supabase/migrations/`。這能加速實作，但正式資料庫路線尚未決定，容易產生日後要搬移或重寫的 migration。
+替代方案：現在立刻建立 `supabase/migrations/`。這能加速實作，但正式資料庫已選 VM 自管 Postgres，migration 應改以 production Postgres runbook 為基準。
 
 ### 7. Leave reason uses fixed options plus free text
 
@@ -93,7 +93,7 @@ LINE reminder 牽涉排程、重試、失敗記錄、推播內容與 PII redacti
 ## Migration Plan
 
 1. 先把 `care_events` 與 `caregiver_leave_requests` 的欄位、index、狀態 check、created / updated timestamps、rollback 要求與資料保留註解寫成 migration 設計。
-2. 等 VM 自管 Postgres / managed Supabase 決策後，再建立正式 migration series；production 前必須有可回滾策略。
+2. 依 VM 自管 Postgres 路線建立正式 migration series；production 前必須有可回滾策略。
 3. 先做 helper 與 API route tests，確認家屬、看護、未登入、未配對、跨 elder 存取都被正確處理。
 4. 實作最小 API 與 helper。
 5. 接看護端未來 7 / 30 天查看頁面與家屬 / 看護共同管理行程頁面。
@@ -110,6 +110,6 @@ Rollback 原則：
 
 - v1.1.0 採家屬與看護共同管理行程。
 - LINE reminder runtime 先不納入。
-- migration 等正式資料庫策略決策後再落。
+- migration 依 VM 自管 Postgres 路線落地。
 - 請假原因採固定選項與自由文字並存。
 - 行程與請假資料保留期限跟照護紀錄一致。

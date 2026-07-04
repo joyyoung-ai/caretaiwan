@@ -26,7 +26,7 @@
 
 - 開發語言保留 TypeScript。
 - 框架保留 Next.js 16 / React 19。
-- 資料庫方向保留 Postgres，但要決定正式 VM 要自管 Postgres，還是 VM app 搭配 managed Supabase。
+- 資料庫方向保留 Postgres；正式環境已決定採 VM 自管 Postgres，下一步要補 production migration、backup、restore 與 rollback 流程。
 - LINE Login、Auth.js、LINE Messaging API 先保留。
 - Tailwind CSS 4 先保留，不導入大型設計系統；先補輕量 UI / 文案規範。
 - 正式部署方向改為 VM，但不綁定特定供應商。公有雲 VM、私有雲、主機代管或地端伺服器都可以，前提是符合網路隔離、備份加密、稽核日誌保存與防竄改等安全基準。

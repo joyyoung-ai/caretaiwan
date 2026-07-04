@@ -14,7 +14,7 @@
 
 ## 2. Deployment Environment
 
-- [ ] 選定正式環境：VM 自管 Postgres、VM app 搭配 managed Supabase，或其他 Postgres 相容方案。
+- [x] 選定正式環境：VM / Docker app 搭配 VM 自管 Postgres。
 - [ ] 補實際 app service name、compose path、reverse proxy、domain、TLS、log path。
 - [ ] public network 只開反向代理與必要 app port。
 - [ ] database、storage、Redis 或等效內部服務不得開 public port。

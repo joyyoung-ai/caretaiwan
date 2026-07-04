@@ -25,7 +25,7 @@ flowchart TD
 - API routes：登入狀態、配對、照片、家屬資料、cron、LINE webhook。
 - Server actions：推播與登入登出相關流程。
 - Service helpers：`src/lib/*`，封裝 pairing、origin check、rate limit、照片與 Supabase 存取。
-- Data layer：目前以 Supabase Postgres / Storage 為原架構，正式 VM 可能改為自管 Postgres 或 managed service。
+- Data layer：原作者版本使用 Supabase Postgres / Storage；正式環境已決定採 VM 自管 Postgres，storage 策略另行定案。
 
 ## 邊界
 

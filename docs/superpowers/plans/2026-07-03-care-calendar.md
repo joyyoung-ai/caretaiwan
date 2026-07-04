@@ -60,7 +60,7 @@ Add `docs/engineering/CARE_CALENDAR_SCHEMA.md` with this content:
 
 日期：2026-07-03
 
-這份文件是 v1.1.0 照護行程與看護請假資料模型草案。正式 migration 等 VM 自管 Postgres / managed Supabase 決策後再落；production 前不得只靠手動 SQL。
+這份文件是 v1.1.0 照護行程與看護請假資料模型草案。正式資料庫已決定採 VM 自管 Postgres；production 前不得只靠手動 SQL。
 
 ## care_events
 

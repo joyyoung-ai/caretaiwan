@@ -57,7 +57,7 @@
 
 完成標準：
 
-- `care_events` 與 `caregiver_leave_requests` schema 草案完成；正式 migration 等 production DB 策略決定後再落。
+- `care_events` 與 `caregiver_leave_requests` schema 草案完成；正式 migration 以 VM 自管 Postgres 為基準落地。
 - 權限測試涵蓋家屬建立、看護查看、未配對不可讀。
 - `is_medical_related` 提醒文案通過產品邊界檢查。
 - 首頁先提供照護行程與請假紀錄入口，完整表單頁可接續實作。

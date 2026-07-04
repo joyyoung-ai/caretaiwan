@@ -12,7 +12,7 @@ Review date：2026-09-30
 
 目前資料模型需要關聯、查詢、刪除權處理、稽核與 future migration。Postgres 比 document store 更適合長期整理權限與資料保留策略。
 
-Supabase 是原作者版本的實作選擇。中揚資訊接手後不一定永久綁定 Supabase managed service，但資料模型先維持 Postgres 思路。正式 VM 可以選 managed Supabase、自管 Postgres 或其他相容方案。
+Supabase 是原作者版本的實作選擇。中揚資訊接手後不永久綁定 Supabase managed service，但資料模型先維持 Postgres 思路。正式資料庫路線已在 ADR-0009 決定採 VM 自管 Postgres。
 
 ## ADR-0002：不提供 AI 醫療建議
 
@@ -100,6 +100,40 @@ Review date：2026-09-30
 
 - 立即改成中揚資訊自有品牌名稱。
 - 使用中性 repo 名稱，例如 `caregiver-collab-tw`。
+
+## ADR-0009：正式資料庫採 VM 自管 Postgres
+
+狀態：Accepted
+Owner：Technical Lead（待指定）
+Review date：2026-09-30
+
+背景：
+
+CareTaiwan 正式環境已決定走 VM / Docker。資料庫原本保留兩條路：VM app 連 managed Supabase，或 VM app 連自管 Postgres。v1.1.0 照護行程與請假功能已完成 schema draft、API foundation 與最小 UI；下一步必須建立 production migration series，不能再只靠 `supabase-schema.sql` 或手動 SQL。
+
+決策：
+
+正式 production 資料庫採 VM 自管 Postgres。Next.js app、Postgres、備份、restore、migration、帳號權限與網路隔離都納入 VM runbook 管理。Supabase managed service 暫時只作為原作者架構與相容 Postgres 的參考，不作為正式 production 依賴。
+
+理由：
+
+- 資料落地、備份保存、刪除請求與稽核流程可以由維運團隊直接控制。
+- 避免照護資料、LINE ID、醫療相關備註與請假資料放進尚未完成法務審查的境外 managed service。
+- VM / Docker 已是正式部署方向，資料庫一併納入同一套 runbook，責任邊界比較清楚。
+- Postgres 相容性仍保留，未來若要搬到 managed Postgres 或客戶指定環境，不需要改資料模型方向。
+
+影響：
+
+- 需要新增正式 migration series，不再把 `supabase-schema.sql` 當 production migration。
+- 需要補 Postgres backup、restore drill、WAL / PITR 評估、帳號權限、監控、告警與版本升級流程。
+- API 仍先維持 application-level ownership checks。RLS、scoped JWT 或 database RPC 另開 ADR 評估。
+- 若照片或備份不使用 Supabase Storage，需要在 storage 策略中明確選 filesystem、object storage 或其他方案。
+
+替代方案：
+
+- VM app 搭配 managed Supabase Postgres。優點是維運負擔低；缺點是資料處理者、資料所在區域與平台限制需要另外審查。
+- 其他 managed Postgres。可減少 DBA 負擔，但仍需確認資料區域、備份、刪除請求與合約。
+- 繼續延後決策。這會卡住 v1.1.0 production migration，不採用。
 
 ## ADR 模板
 

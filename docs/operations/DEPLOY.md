@@ -87,18 +87,17 @@ LINE Developers 後台要設定：
 
 ### 6. 資料庫與檔案儲存
 
-正式資料庫路線尚未最終決定。短期只接受兩種清楚路線：
+正式資料庫路線已決定採 VM 自管 Postgres，見 [../governance/DECISIONS.md](../governance/DECISIONS.md) 的 ADR-0009。Supabase managed service 只保留為原作者架構與 Postgres 相容參考，不作為 production 依賴。
 
-- VM app 連 managed Supabase Postgres / Storage。
-- VM app 連自管 Postgres 與明確的 object storage / filesystem storage。
-
-不要在 production 同時維護多套資料庫假設。若改成自管 Postgres，需要先補：
+production 前需要先補：
 
 - migration 執行順序。
 - backup / restore 流程。
 - 權限與帳號分層。
 - 監控與告警。
 - 刪除請求與備份保存原則。
+
+檔案儲存仍需獨立定案。若使用 VM filesystem storage，要寫清楚備份、容量、加密、restore 與刪除請求處理；若使用 object storage，要補資料處理者、資料所在區域與權限控管。
 
 ### 7. 備份、刪除請求與稽核
 

@@ -69,7 +69,7 @@ flowchart TD
 1. 先決定正式 VM 是否仍使用 Supabase managed service，或改成 VM 內的 Postgres / object storage。
 2. 在 `.env.example` 裡標清楚 production 必填變數。
 3. 若 VM 自管資料庫，補 migration、backup、restore、監控與權限管理流程。
-4. 若 VM 仍連 managed Supabase，補網路、密鑰、資料處理者與備援說明。
+4. 正式資料庫已決定採 VM 自管 Postgres；補 Postgres 網路隔離、帳號權限、備份、restore drill、監控與告警說明。
 
 ### VM 基礎設施安全基準
 
@@ -166,6 +166,6 @@ flowchart TD
 3. 擴充最小測試：先補 rate limiter、photo magic-byte、audit metadata，不碰 UI。
 4. 補 API route 與 LINE webhook 邊界測試，讓資料權限與 webhook signature 不只靠人工檢查。
 5. 釐清行事曆 / 請假需求範圍。
-6. 再決定正式 production 架構：VM 自管資料庫，或 VM app 搭配 managed Supabase。
+6. 依 VM 自管 Postgres 路線補 production migration series、backup / restore runbook 與 rollback 操作。
 
 這樣做比較慢，但比較不會把原本已經混在一起的責任再混得更深。
