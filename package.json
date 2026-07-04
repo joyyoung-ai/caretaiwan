@@ -4,6 +4,11 @@
   "private": true,
   "license": "MIT",
   "author": "GUOPEICHI (YuriCrystal)",
+  "packageManager": "npm@10.9.8",
+  "engines": {
+    "node": ">=22 <25",
+    "npm": "10.9.8"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +16,7 @@
     "start:e2e": "node scripts/start-e2e-server.mjs",
     "lint": "eslint",
     "audit": "npm audit --audit-level=moderate",
+    "lockfile:check": "npm ci --ignore-scripts --dry-run",
     "docs:check": "node scripts/check-markdown-links.mjs",
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:e2e": "playwright test",
