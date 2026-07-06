@@ -39,6 +39,8 @@ cp docker/.env.production.example docker/.env.production
 - `LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET`：LINE Login。
 - `LINE_BOT_CHANNEL_SECRET` / `LINE_BOT_CHANNEL_ACCESS_TOKEN`：LINE Messaging API。
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`：若沿用 Supabase managed service。
+- `DATABASE_URL`：server-side app 直接連 VM 自管 Postgres 的 connection string。不得加 `NEXT_PUBLIC_`，也不得放到 client bundle。
+- `POSTGRES_SSL_MODE` / `POSTGRES_POOL_MAX` / `POSTGRES_CONNECTION_TIMEOUT_MS` / `POSTGRES_IDLE_TIMEOUT_MS`：direct Postgres runtime 的連線設定。DB 和 app 在同一個 Docker network 時可用 `POSTGRES_SSL_MODE=disable`；跨主機或受管資料庫通常要改成 `require`。
 - `CRON_SECRET`：cron endpoint 驗證。
 - `LOCAL_PHOTO_SIGNING_SECRET`：若使用 VM 本機照片儲存。
 
@@ -89,7 +91,7 @@ LINE Developers 後台要設定：
 
 正式資料庫路線已決定採 VM 自管 Postgres，見 [../governance/DECISIONS.md](../governance/DECISIONS.md) 的 ADR-0009。Supabase managed service 只保留為原作者架構與 Postgres 相容參考，不作為 production 依賴。
 
-注意：目前程式仍使用 Supabase client 與 `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`。正式接上 VM 自管 Postgres 前，會依 [ADR-0010](../governance/DECISIONS.md) 重構 data layer，讓 server-side app 直接連 Postgres。這是 production 前置工作，不應在已有真實資料後臨時處理。
+注意：direct Postgres data layer 已進入第一階段，`/api/health` 會在 `DATABASE_URL` 存在時以 `select 1` 檢查 DB connectivity。其他資料流程仍在逐步從 Supabase client 搬移；在全部 helper 完成前，`NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 仍不可直接移除。這是 production 前置工作，不應在已有真實資料後臨時處理。
 
 production 前需要先補：
 

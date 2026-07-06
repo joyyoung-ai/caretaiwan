@@ -15,7 +15,7 @@
 - 實際 log 路徑、查詢方式與保存天數。
 - 實際 database / storage backup 指令。
 - restore drill 指令與演練紀錄格式。
-- 依 ADR-0010 改造 data layer，讓 server-side app 直接連 VM 自管 Postgres。現有程式仍讀取 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`，production 前不得帶著這個落差上線。
+- 依 ADR-0010 完成 data layer 改造，讓 server-side app 直接連 VM 自管 Postgres。第一階段已新增 direct Postgres adapter 與 health route pilot；其他資料 helper 仍需逐批從 Supabase client 搬移，production 前不得帶著這個落差上線。
 - incident contact、法務 / 隱私窗口與 escalation 時限。暫定對外窗口為 `services@joyyoung.com.tw`。
 - token rotation owner 與每種 secret 的輪替週期。
 
@@ -85,6 +85,7 @@ Rollback 前應先停用相關 API route / UI 入口。已進 production 且有�
 ## Health Check
 
 - App 首頁可正常回應。
+- `/api/health` 在 `DATABASE_URL` 設定完成後可用 direct Postgres 執行 `select 1`，失敗時只回粗略 `database_error`，不得輸出 DB host、username、raw SQL 或 driver error。
 - `/api/line/webhook` 可通過 LINE Verify。
 - 登入 callback 正常。
 - 產生配對碼正常。
@@ -165,6 +166,7 @@ SHA-256 驗證：
 需要輪替：
 
 - `AUTH_SECRET`
+- `DATABASE_URL` 對應的 DB app role 密碼。
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `LINE_BOT_CHANNEL_SECRET`
 - `LINE_BOT_CHANNEL_ACCESS_TOKEN`

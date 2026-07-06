@@ -4,7 +4,7 @@
 
 ## Current Status
 
-已建立第一批 Vitest helper tests，也補強 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、cloud upload / download / delete ownership and failure paths、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、health keep-alive route、consent audit route、expense create / list / verify ownership、care event helper / create / list / update、caregiver leave helper / create / list / acknowledge、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run test:e2e` 會以 Playwright 啟動 standalone production server，跑桌機與 mobile Chromium 的瀏覽器級 smoke，並確認看護端 7 / 30 天行程入口、請假送出入口、家屬端照護行程管理入口、請假確認入口與 LINE reminder inactive copy 可見。`npm run lint` 目前可無 warning 通過。
+已建立第一批 Vitest helper tests，也補強 API route 邊界測試。`npm run test` 目前會執行 pairing、origin check、cron security、audit metadata redaction、photo magic-byte detection、rate limiter fallback、photo ownership、direct Postgres adapter、cloud upload / download / delete ownership and failure paths、disabled cloud / unauthenticated / DB failure matrix、photo upload pairing guard / invalid bytes / metadata rollback、family paired ownership query and DB failure、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、photo signed token route、session response shape、health direct Postgres route、consent audit route、expense create / list / verify ownership、care event helper / create / list / update、caregiver leave helper / create / list / acknowledge、data-retention cron auth / config / redaction 與 LINE webhook security-path 測試。`npm run test:smoke` 會啟動 production server，檢查首頁、about、privacy、terms、session API 與安全 headers。`npm run test:e2e` 會以 Playwright 啟動 standalone production server，跑桌機與 mobile Chromium 的瀏覽器級 smoke，並確認看護端 7 / 30 天行程入口、請假送出入口、家屬端照護行程管理入口、請假確認入口與 LINE reminder inactive copy 可見。`npm run lint` 目前可無 warning 通過。
 
 本輪已重新跑過 `npm run test`、`npm run test:smoke`、`npm run lint`、`npm run build`、`npm run docs:check` 與 `git diff --check`。第一批 helper tests、route tests、smoke test 和 lint 狀態可作為 v1.0.1 runtime safety 收尾依據。
 
@@ -39,6 +39,9 @@
 - `src/app/api/care-events/list/route.test.ts`（已建立）
 - `src/app/api/care-events/update/route.test.ts`（已建立）
 - `src/lib/caregiver-leave.test.ts`（已建立）
+- `src/lib/db/client.test.ts`（已建立）
+- `src/lib/db/errors.test.ts`（已建立）
+- `src/lib/db/postgres.test.ts`（已建立）
 - `src/app/api/caregiver-leave/create/route.test.ts`（已建立）
 - `src/app/api/caregiver-leave/list/route.test.ts`（已建立）
 - `src/app/api/caregiver-leave/acknowledge/route.test.ts`（已建立）
@@ -98,6 +101,8 @@
 - care event routes 驗證登入、paired elder ownership、建立、7 / 30 天查詢、更新與取消。
 - caregiver leave helpers 驗證固定原因、自由文字備註與時間範圍。
 - caregiver leave routes 驗證只有已配對看護可建立、家屬 / 看護可查詢、只有家屬 owner 可確認。
+- direct Postgres adapter 驗證 missing config、singleton pool、query、transaction rollback 與 public-safe DB error mapping。
+- health route 驗證 direct Postgres success、database disabled 與 redacted DB failure。
 
 第二批 route handler 已涵蓋：
 
@@ -153,7 +158,7 @@ v1.0.1 不應只停在「測試策略已寫」。截至 2026-07-02，下列 help
 - session response shape。
 - expense list failure、expense verify ownership and disputed-note validation。
 - LINE webhook disabled、signature verification 與 malformed JSON handling。
-- health route disabled cloud / missing admin client / DB error / exception handling。
+- health route database disabled / direct Postgres success / redacted DB error handling。
 - consent route anonymous audit、signed-in actor audit、revocation audit 與 CSRF gate。
 
 ## Test Command

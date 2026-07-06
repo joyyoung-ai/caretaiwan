@@ -28,7 +28,7 @@
 - Modify: `package.json`
 - Modify: `package-lock.json`
 
-- [ ] **Step 1: Install runtime and type packages**
+- [x] **Step 1: Install runtime and type packages**
 
 Run:
 
@@ -42,7 +42,7 @@ Expected:
 - `package.json` includes `@types/pg` under `devDependencies` or npm's chosen section.
 - `package-lock.json` is updated.
 
-- [ ] **Step 2: Check dependency placement**
+- [x] **Step 2: Check dependency placement**
 
 Run:
 
@@ -63,7 +63,7 @@ true true
 - Create: `src/lib/db/errors.test.ts`
 - Create: `src/lib/db/postgres.test.ts`
 
-- [ ] **Step 1: Add client tests**
+- [x] **Step 1: Add client tests**
 
 Create `src/lib/db/client.test.ts`:
 
@@ -107,7 +107,7 @@ describe("database client", () => {
 });
 ```
 
-- [ ] **Step 2: Add error tests**
+- [x] **Step 2: Add error tests**
 
 Create `src/lib/db/errors.test.ts`:
 
@@ -139,7 +139,7 @@ describe("database error mapping", () => {
 });
 ```
 
-- [ ] **Step 3: Add query / transaction tests**
+- [x] **Step 3: Add query / transaction tests**
 
 Create `src/lib/db/postgres.test.ts` with a mocked pool client. The tests should assert:
 
@@ -148,7 +148,7 @@ Create `src/lib/db/postgres.test.ts` with a mocked pool client. The tests should
 - `withTransaction<T>()` sends `begin`, calls the callback, sends `commit`, and releases the client.
 - `withTransaction<T>()` sends `rollback` and releases the client when the callback throws.
 
-- [ ] **Step 4: Verify RED**
+- [x] **Step 4: Verify RED**
 
 Run:
 
@@ -165,7 +165,7 @@ Expected: FAIL because `src/lib/db/*` implementation files do not exist yet.
 - Create: `src/lib/db/errors.ts`
 - Create: `src/lib/db/postgres.ts`
 
-- [ ] **Step 1: Implement client module**
+- [x] **Step 1: Implement client module**
 
 Create `src/lib/db/client.ts`:
 
@@ -201,7 +201,7 @@ export function getDatabasePool(): Pool {
 }
 ```
 
-- [ ] **Step 2: Implement error mapping**
+- [x] **Step 2: Implement error mapping**
 
 Create `src/lib/db/errors.ts`:
 
@@ -233,7 +233,7 @@ export function toPublicDatabaseError(error: unknown): { code: DatabaseErrorCode
 }
 ```
 
-- [ ] **Step 3: Implement query helpers**
+- [x] **Step 3: Implement query helpers**
 
 Create `src/lib/db/postgres.ts`:
 
@@ -274,7 +274,7 @@ export async function withTransaction<T>(
 }
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -290,7 +290,7 @@ Expected: PASS.
 - Modify: `src/app/api/health/route.test.ts`
 - Modify: `src/app/api/health/route.ts`
 
-- [ ] **Step 1: Add failing route tests**
+- [x] **Step 1: Add failing route tests**
 
 Update the health route tests to cover:
 
@@ -300,7 +300,7 @@ Update the health route tests to cover:
 
 Mock `src/lib/db/client` and `src/lib/db/postgres`; do not require a real database.
 
-- [ ] **Step 2: Implement route migration**
+- [x] **Step 2: Implement route migration**
 
 Update `src/app/api/health/route.ts` to use:
 
@@ -317,7 +317,7 @@ await query<{ ok: number }>("select 1 as ok");
 
 The public response must not include the DB host, username, raw SQL text, table names or driver error message.
 
-- [ ] **Step 3: Verify route tests**
+- [x] **Step 3: Verify route tests**
 
 Run:
 
@@ -337,7 +337,7 @@ Expected: PASS.
 - Modify: `docs/engineering/TESTING.md`
 - Modify: `docs/releases/CHANGELOG.md`
 
-- [ ] **Step 1: Add env examples**
+- [x] **Step 1: Add env examples**
 
 Add:
 
@@ -351,7 +351,7 @@ POSTGRES_IDLE_TIMEOUT_MS=30000
 
 Production should use real secrets outside git. If the DB is remote or TLS is required, set `POSTGRES_SSL_MODE=require`.
 
-- [ ] **Step 2: Update docs**
+- [x] **Step 2: Update docs**
 
 Document:
 
@@ -361,7 +361,7 @@ Document:
 - Storage strategy is separate from relational DB migration.
 - Rollback for phase 1 is to revert health route pilot while leaving adapter code unused.
 
-- [ ] **Step 3: Verify docs**
+- [x] **Step 3: Verify docs**
 
 Run:
 
@@ -373,11 +373,11 @@ Expected: `Markdown link check passed`.
 
 ## Task 6: Final Verification and Commit
 
-- [ ] Run `npm run test -- src/lib/db/client.test.ts src/lib/db/errors.test.ts src/lib/db/postgres.test.ts src/app/api/health/route.test.ts`.
-- [ ] Run `npm run lint`.
-- [ ] Run `npm run build`.
-- [ ] Run `git diff --check`.
-- [ ] Commit with message `feat: add direct postgres data layer foundation`.
-- [ ] Push to `origin/main`.
+- [x] Run `npm run test -- src/lib/db/client.test.ts src/lib/db/errors.test.ts src/lib/db/postgres.test.ts src/app/api/health/route.test.ts`.
+- [x] Run `npm run lint`.
+- [x] Run `npm run build`.
+- [x] Run `git diff --check`.
+- [x] Commit with message `feat: add direct postgres data layer foundation`.
+- [x] Push to `origin/main`.
 
 Do not proceed to care calendar, caregiver leave, photo, cloud backup or cron migration in the same PR. Those are separate review units.

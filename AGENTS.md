@@ -52,6 +52,11 @@ npm run dev
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `DATABASE_URL`
+- `POSTGRES_SSL_MODE`
+- `POSTGRES_POOL_MAX`
+- `POSTGRES_CONNECTION_TIMEOUT_MS`
+- `POSTGRES_IDLE_TIMEOUT_MS`
 - `CRON_SECRET`
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
@@ -61,7 +66,7 @@ npm run dev
 - `PUBLIC_APP_URL`
 - `PRODUCTION_ALLOWED_HOSTS`
 
-service-role、Bot access token、cron secret、signing secret 都只能留在伺服器端。不要放進 client component，也不要加上 `NEXT_PUBLIC_*`。
+service-role、Postgres URL、Bot access token、cron secret、signing secret 都只能留在伺服器端。不要放進 client component，也不要加上 `NEXT_PUBLIC_*`。
 
 ## 安全邊界
 
