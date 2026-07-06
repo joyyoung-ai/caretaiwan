@@ -2,9 +2,9 @@
 
 - [x] 1.1 Create a dedicated OpenSpec change for public open-source readiness.
 - [x] 1.2 Confirm repository visibility will not be changed by this readiness change.
-- [ ] 1.3 Decide final open-source license before publishing.
-- [ ] 1.4 Decide public security reporting contact or private vulnerability channel.
-- [ ] 1.5 Decide whether first public release includes screenshots, and only use anonymized or synthetic data if screenshots are included.
+- [x] 1.3 Decide final open-source license before publishing.
+- [x] 1.4 Decide public security reporting contact or private vulnerability channel.
+- [x] 1.5 Decide whether first public release includes screenshots, and only use anonymized or synthetic data if screenshots are included.
 
 ## 2. Repository hygiene scan
 
@@ -28,7 +28,7 @@
 - [ ] 4.1 Add or update `SECURITY.md` with reporting instructions and PII redaction rules.
 - [ ] 4.2 Add or update `CONTRIBUTING.md` with local setup, test commands and no-real-data contribution rules.
 - [ ] 4.3 Add or update `CODE_OF_CONDUCT.md` if the repository will accept external contributors.
-- [ ] 4.4 Add selected `LICENSE` file after owner decision.
+- [x] 4.4 Add selected `LICENSE` file after owner decision.
 - [ ] 4.5 Add GitHub issue templates that warn users not to include names, phone numbers, LINE IDs, photos, logs with secrets, database URLs or raw provider errors.
 - [ ] 4.6 Add a security/private-reporting pointer in issue templates for vulnerabilities.
 

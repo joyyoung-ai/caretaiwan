@@ -17,6 +17,14 @@
 
 GitHub private vulnerability reporting 尚未確認啟用前，`services@joyyoung.com.tw` 是本 repository 的正式對外資安通報窗口。
 
+GitHub private vulnerability reporting 啟用方式：由 repository owner、organization owner、security manager 或 admin role 進入 repository `Settings`，在 sidebar 的 `Security` 區塊點 `Advanced Security`，再將 `Private vulnerability reporting` 設為 `Enable`。啟用後，請確認實際處理人已訂閱 repository 的 `Security alerts` 通知。
+
+內部處理責任：
+
+- GitHub / 技術初步處理：廖俊雄，軟體部經理。
+- 資安升級處理：鄧榮駐，資安長。
+- 法務 / 隱私審閱：蔡雅雯，公司法務窗口。
+
 回報時請包含：
 
 - 受影響的 endpoint、檔案或流程。

@@ -348,7 +348,7 @@ UI inspiration: medical app dribbble references (saved separately, not included 
 
 ## License & Use
 
-**Code: [MIT](./LICENSE).** Copyright © 2026 GUOPEICHI (YuriCrystal).
+**Code: [MIT](./LICENSE).** Original copyright © 2026 GUOPEICHI (YuriCrystal). JoyYoung Information Co., Ltd. keeps later fork maintenance changes under the same MIT license.
 
 Use it, study it, modify it, ship it — commercial or not — just keep the
 copyright notice. No strings attached.

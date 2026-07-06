@@ -348,7 +348,7 @@ UI 靈感：醫療 APP 的 dribbble 參考（另外保存，未收進 repo）。
 
 ## 授權與使用
 
-**程式碼：[MIT](./LICENSE)。** 版權所有 © 2026 GUOPEICHI（YuriCrystal）。
+**程式碼：[MIT](./LICENSE)。** 原作者版權所有 © 2026 GUOPEICHI（YuriCrystal）。中揚資訊股份有限公司後續維護分支的修改同樣採 MIT 授權。
 
 自由使用、研究、修改、發布——商用或非商用都可以——保留版權聲明就好，沒有其他限制。
 

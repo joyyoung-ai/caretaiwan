@@ -6,12 +6,37 @@
 
 ## Owner Decisions
 
-公開前必須先決定：
+已決定：
 
-- Open-source license。決定後新增 `LICENSE`，並確認 README 與 package metadata 對齊。
-- GitHub private vulnerability reporting 是否啟用。未啟用前，`services@joyyoung.com.tw` 是資安通報窗口。
-- 第一版公開 release 是否放 screenshots。若要放，只能使用匿名或合成資料。
-- GitHub organization、team、CODEOWNERS、branch protection 與 release manager。
+- License：MIT。保留原作者 copyright，並把中揚資訊股份有限公司後續維護修改列入同一份 MIT license。
+- Security reporting：GitHub private vulnerability reporting 尚未啟用前，使用 `services@joyyoung.com.tw`。
+- Screenshots：第一版公開 release 不放 screenshots。之後若要補，只能使用匿名或合成資料。
+- Maintainer mode：目前採 single-maintainer mode，由廖俊雄（軟體部經理，GitHub login email：`cosmos@joyyoung.com.tw`）負責 Technical Lead、Product Owner、Release Manager 與 GitHub / 技術初步處理。資安長鄧榮駐與法務窗口蔡雅雯透過公司內部流程作為 escalation / review，不需要 GitHub 帳號。
+
+公開前仍需確認：
+
+- GitHub private vulnerability reporting 是否已在 repository 後台啟用。
+- 是否維持 single-maintainer mode，或改成 GitHub team mode。
+- 若維持 single-maintainer mode，確認 branch protection 至少阻擋 force push，並要求 CI 通過後再 merge / deploy。
+- 若改成 team mode，公開前需更新 GitHub organization、team、CODEOWNERS、branch protection 與 review 規則。
+- 若要啟用 CODEOWNERS，先確認可被 GitHub tag 的 username 或 team slug；GitHub login email 不一定能直接放進 `.github/CODEOWNERS`。
+
+GitHub private vulnerability reporting 啟用步驟：
+
+1. 由 repository owner、organization owner、security manager 或 admin role 登入 GitHub。
+2. 進入 `joyyoung-ai/caretaiwan` repository。
+3. 開啟 `Settings`。
+4. 在 sidebar 的 `Security` 區塊點 `Advanced Security`。
+5. 在 `Private vulnerability reporting` 旁點 `Enable`。
+6. 啟用後，確認 security contact 或 maintainer 有訂閱 repository 的 `Security alerts` 通知。
+
+Maintainer / release manager 確認方式：
+
+1. Technical Lead / Product Owner / Release Manager：目前由廖俊雄兼任，負責 code owner、architecture、schema / migration、roadmap、產品邊界、release checklist、tag、production image 與 rollback 紀錄。
+2. Security Contact：`services@joyyoung.com.tw` 是公開入口，廖俊雄負責 GitHub / 技術初步處理，必要時升級給資安長鄧榮駐。
+3. Legal / Privacy Contact：涉及條款、隱私、資料保留、刪除請求或個資事件時，升級給蔡雅雯。
+4. 在 GitHub organization 建立對應 team 後，更新 `.github/CODEOWNERS`，再啟用 branch protection 要求 PR review 與 CI 通過。
+5. 若上述名單有異動，先同步回 [MAINTAINERS.md](./MAINTAINERS.md)，再進行公開。
 
 ## Hygiene Scan
 

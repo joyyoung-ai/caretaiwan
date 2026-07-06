@@ -21,17 +21,25 @@
 
 ## Roles
 
-目前角色待正式指定：
+目前採 single-maintainer mode。GitHub repository、技術判斷、產品範圍與 release 先由同一位維護者負責；公司資安長與法務窗口作為內部 escalation / review，不需要 GitHub 帳號。
 
-- Technical Lead：待指定。
-- Product Owner：待指定。
-- Security Contact：`services@joyyoung.com.tw`。若 GitHub private vulnerability reporting 已啟用，資安通報優先使用該管道。
-- Legal / Privacy Contact：`services@joyyoung.com.tw` 作為暫定收件窗口，正式責任人待指定。
-- Release Manager：待指定。
+- Technical Lead：廖俊雄，軟體部經理（GitHub login email：`cosmos@joyyoung.com.tw`）。
+- Product Owner：廖俊雄，軟體部經理。
+- Release Manager：廖俊雄，軟體部經理。
+- Security Contact primary：廖俊雄，負責 GitHub / 技術初步處理；對外入口仍為 `services@joyyoung.com.tw`。
+- Security escalation：鄧榮駐，資安長，透過公司內部流程升級處理。
+- Legal / Privacy Contact：蔡雅雯，公司法務窗口，透過公司內部流程處理隱私、條款與個資事件判斷。
 
-在 GitHub organization 與 team 建立前，不要在文件裡填寫不存在的帳號或 email。
+在 GitHub organization 與 team 建立前，不要在文件裡填寫不存在的 GitHub team。若要啟用 CODEOWNERS，需先確認可被 GitHub tag 的 username 或 team slug；登入 email 不一定能放進 `.github/CODEOWNERS`。
 
-Security Contact 已有對外信箱。正式公開 repository 前，仍建議確認 GitHub private vulnerability reporting 是否啟用，並確認 `services@joyyoung.com.tw` 的收件、分派與值班責任。
+Security Contact 已有對外信箱。正式公開 repository 前，仍建議確認 GitHub private vulnerability reporting 是否啟用，並確認 `services@joyyoung.com.tw` 的收件、分派與備援責任。
+
+角色確認方式：
+
+1. Technical Lead / Product Owner / Release Manager：目前由廖俊雄兼任。
+2. Security Contact：`services@joyyoung.com.tw` 是公開入口，廖俊雄負責 GitHub / 技術初步處理，必要時升級給資安長鄧榮駐。
+3. Legal / Privacy Contact：涉及條款、隱私、資料保留、刪除請求或個資事件時，升級給蔡雅雯。
+4. GitHub team：未來若建立對應 team，再把 `.github/CODEOWNERS` 從註解範本改成實際 team。
 
 ## Issue 與 PR
 
