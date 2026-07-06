@@ -17,6 +17,12 @@ CareTaiwan 歡迎 issue、文件修正與小範圍 PR。這個專案處理照護
 
 如果你的提案會改資料庫、部署方式、身份權限、LINE 推播、照片或醫療相關文字，請先開 issue 討論。
 
+## 本機資料規則
+
+本機開發與 issue / PR 範例只能使用假資料、測試 LINE channel 與本機 Postgres。不要把 production secret、LINE token、DB URL、photo signing secret、正式備份、真實照護紀錄、照片、signed URL、完整 log、raw provider error 或可識別截圖放進 repo 或 GitHub 討論串。
+
+如果需要說明問題，請先去識別化，並用假 LINE ID、假姓名、假日期與假照片路徑替代。資安漏洞細節不要放在 public issue；GitHub private vulnerability reporting 啟用前，請寄到 `services@joyyoung.com.tw`。
+
 ## Issue 格式
 
 開 issue 時請選最接近的類型：
@@ -24,7 +30,7 @@ CareTaiwan 歡迎 issue、文件修正與小範圍 PR。這個專案處理照護
 - Bug：現有行為錯誤、資安疑慮、資料保護問題、部署失敗。
 - Feature：新增功能或調整產品流程。
 - Documentation：文件錯誤、連結失效、說明不清。
-- Security：不要公開貼敏感資料。請先看 [../security/SECURITY.md](../security/SECURITY.md) 的通報方式。
+- Security：不要公開貼敏感資料。請先看 [../../SECURITY.md](../../SECURITY.md) 的通報方式。
 
 好的 issue 至少要包含：
 
@@ -33,6 +39,7 @@ CareTaiwan 歡迎 issue、文件修正與小範圍 PR。這個專案處理照護
 - 重現步驟或截圖。
 - 涉及的頁面、API、資料表或文件。
 - 是否可能碰到個資、照片、LINE ID、醫療內容或刪除請求。
+- 用假資料替代真實使用者、照護紀錄、照片、LINE user ID、DB URL 與完整 log。
 
 ## Branch 規則
 
@@ -78,8 +85,9 @@ PR 說明要包含：
 
 PR checklist 請使用 [.github/PULL_REQUEST_TEMPLATE.md](../../.github/PULL_REQUEST_TEMPLATE.md)。送出前至少確認：
 
-- 沒有把 production secret、LINE token、service-role key 或真實備份放進 repo。
-- 沒有在 API response、client log、push log 或 audit metadata 輸出未遮蔽 PII。
+- 沒有把 production secret、LINE token、DB URL、photo signing secret 或真實備份放進 repo。
+- 沒有把 DB URL、photo signing secret、真實照護紀錄、照片、signed URL 或可識別截圖放進 repo。
+- 沒有在 API response、client log、push log、audit metadata 或 raw provider error 輸出未遮蔽 PII。
 - Feature、bug fix、refactor、documentation、migration 沒有混在同一個 PR。
 - 涉及醫療相關提醒時，文案沒有提供醫療判斷或醫療指示。
 - 相關文件與 changelog 已更新，或明確說明不需要更新。

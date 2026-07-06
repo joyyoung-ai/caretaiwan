@@ -16,21 +16,21 @@
 
 ## 3. Public documentation
 
-- [ ] 3.1 Update public README with project purpose, non-medical boundary, local development quick start and current development status.
-- [ ] 3.2 Add or update Traditional Chinese README for local contributors.
-- [ ] 3.3 Document local Postgres setup without requiring production credentials.
-- [ ] 3.4 Document VM local photo storage setup and limitations, including persistent volume, backup / restore drill and capacity monitoring.
-- [ ] 3.5 Document LINE integration as optional or mocked for local development.
-- [ ] 3.6 Update known limitations so open-source readers see single-node storage, notification delivery and development-stage caveats.
+- [x] 3.1 Update public README with project purpose, non-medical boundary, local development quick start and current development status.
+- [x] 3.2 Add or update Traditional Chinese README for local contributors.
+- [x] 3.3 Document local Postgres setup without requiring production credentials.
+- [x] 3.4 Document VM local photo storage setup and limitations, including persistent volume, backup / restore drill and capacity monitoring.
+- [x] 3.5 Document LINE integration as optional or mocked for local development.
+- [x] 3.6 Update known limitations so open-source readers see single-node storage, notification delivery and development-stage caveats.
 
 ## 4. Governance and public issue safety
 
-- [ ] 4.1 Add or update `SECURITY.md` with reporting instructions and PII redaction rules.
-- [ ] 4.2 Add or update `CONTRIBUTING.md` with local setup, test commands and no-real-data contribution rules.
-- [ ] 4.3 Add or update `CODE_OF_CONDUCT.md` if the repository will accept external contributors.
+- [x] 4.1 Add or update `SECURITY.md` with reporting instructions and PII redaction rules.
+- [x] 4.2 Add or update `CONTRIBUTING.md` with local setup, test commands and no-real-data contribution rules.
+- [x] 4.3 Add or update `CODE_OF_CONDUCT.md` if the repository will accept external contributors.
 - [x] 4.4 Add selected `LICENSE` file after owner decision.
-- [ ] 4.5 Add GitHub issue templates that warn users not to include names, phone numbers, LINE IDs, photos, logs with secrets, database URLs or raw provider errors.
-- [ ] 4.6 Add a security/private-reporting pointer in issue templates for vulnerabilities.
+- [x] 4.5 Add GitHub issue templates that warn users not to include names, phone numbers, LINE IDs, photos, logs with secrets, database URLs or raw provider errors.
+- [x] 4.6 Add a security/private-reporting pointer in issue templates for vulnerabilities.
 
 ## 5. Release and visibility checklist
 
@@ -44,5 +44,5 @@
 
 - [x] 6.1 Run `npm run docs:check`.
 - [x] 6.2 Run `git diff --check`.
-- [ ] 6.3 Run broader test / lint / build gates once docs and templates are implemented.
-- [ ] 6.4 Push the readiness change after verification.
+- [x] 6.3 Run broader test / lint / build gates once docs and templates are implemented.
+- [x] 6.4 Push the readiness change after verification.

@@ -28,4 +28,4 @@ assignees: ""
 
 ## 驗證資料
 
-請貼去識別化截圖或 log。不要貼 token、LINE user ID、照片、備份檔或完整個資。
+請貼去識別化截圖或 log。不要貼 token、DB URL、LINE user ID、照片、signed URL、備份檔、raw provider error、完整 log 或完整個資。

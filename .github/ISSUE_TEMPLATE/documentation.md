@@ -17,3 +17,7 @@ assignees: ""
 ## 建議修改
 
 請提供你建議的文字或方向。
+
+## 資料保護
+
+如果需要範例、截圖或 log，請使用假資料。不要貼 token、DB URL、LINE user ID、照片、signed URL、備份檔、raw provider error、完整 log 或完整個資。

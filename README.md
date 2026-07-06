@@ -297,35 +297,67 @@ If I were starting over, knowing what I know now:
 
 ## Local Setup
 
+This setup is for local development only. Use fake data, test LINE channels, and a local Postgres database. Do not copy production tokens, production backups, real care records, real photos, or real LINE identifiers into your workstation.
+
 ```bash
 # Clone
 git clone <this-repo>
 cd caregiver-app
 
 # Install
-npm install
+npm ci
 
-# Env (see .env.example for full list)
+# Start local Postgres for development
+docker run -d --name caretaiwan-local-postgres \
+  -e POSTGRES_USER=caretaiwan \
+  -e POSTGRES_PASSWORD=caretaiwan \
+  -e POSTGRES_DB=caretaiwan \
+  -p 5432:5432 \
+  postgres:16-alpine
+
+# Env
 cp .env.example .env.local
-# Fill in:
-#   AUTH_SECRET                — openssl rand -base64 32
-#   LINE_CHANNEL_ID/SECRET     — LINE Login Channel
-#   LINE_BOT_*                 — LINE Messaging API Channel
-#   DATABASE_URL               — local or VM Postgres connection string
-#   LOCAL_PHOTO_STORAGE_DIR    — local path for uploaded photos
-#   LOCAL_PHOTO_SIGNING_SECRET — server-only signing secret
+```
 
-# Schema
-# Apply supabase-schema.sql or the SQL files in supabase/migrations/ to Postgres
+Use development-only values in `.env.local`:
 
-# Dev
+```bash
+AUTH_SECRET=<generate with openssl rand -base64 32>
+DATABASE_URL=postgres://caretaiwan:caretaiwan@localhost:5432/caretaiwan
+POSTGRES_SSL_MODE=disable
+LOCAL_PHOTO_STORAGE_DIR=./tmp/photo-storage
+LOCAL_PHOTO_SIGNING_SECRET=<generate with openssl rand -base64 32>
+PUBLIC_APP_URL=http://localhost:3000
+PRODUCTION_ALLOWED_HOSTS=
+PREVIEW_ALLOWED_HOSTS=
+```
+
+LINE Login and LINE Messaging API can stay blank for docs, tests, and most shell rendering work. Login, pairing, webhook, and push-message flows need a dedicated test LINE channel; never use production LINE tokens locally.
+
+Create the local photo directory and apply the schema:
+
+```bash
+mkdir -p tmp/photo-storage
+docker exec -i caretaiwan-local-postgres psql -U caretaiwan -d caretaiwan < supabase-schema.sql
+```
+
+Run the app and checks:
+
+```bash
 npm run dev
 
-# Docs / build / lint
 npm run docs:check
+npm run migrations:check
 npm run test
-npm run build
 npm run lint
+npm run build
+```
+
+When finished, stop the local database:
+
+```bash
+docker stop caretaiwan-local-postgres
+docker rm caretaiwan-local-postgres
 ```
 
 ---

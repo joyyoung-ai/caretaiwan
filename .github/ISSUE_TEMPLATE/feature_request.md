@@ -28,7 +28,9 @@ assignees: ""
 ## 風險檢查
 
 - 是否涉及個資：
+- 是否涉及照片、signed URL 或檔案上傳：
 - 是否涉及醫療判斷：
 - 是否涉及 LINE 推播：
 - 是否涉及資料庫 schema：
+- 是否涉及 production secret、DB URL、備份檔或外部 provider raw error：
 - 是否需要新增 ADR：

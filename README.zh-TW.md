@@ -297,35 +297,67 @@ iOS PWA 的 Web Push 在使用者把圖示加到主畫面之前都不可靠，�
 
 ## 本機安裝
 
+這段只給本機開發使用。請使用假資料、測試 LINE channel 與本機 Postgres。不要把 production token、正式備份、真實照護紀錄、真照片或真 LINE ID 複製到個人工作站。
+
 ```bash
 # 複製
 git clone <this-repo>
 cd caregiver-app
 
 # 安裝
-npm install
+npm ci
 
-# 環境變數（完整清單見 .env.example）
+# 啟動本機開發用 Postgres
+docker run -d --name caretaiwan-local-postgres \
+  -e POSTGRES_USER=caretaiwan \
+  -e POSTGRES_PASSWORD=caretaiwan \
+  -e POSTGRES_DB=caretaiwan \
+  -p 5432:5432 \
+  postgres:16-alpine
+
+# 環境變數
 cp .env.example .env.local
-# 填入：
-#   AUTH_SECRET                — openssl rand -base64 32
-#   LINE_CHANNEL_ID/SECRET     — LINE Login Channel
-#   LINE_BOT_*                 — LINE Messaging API Channel
-#   DATABASE_URL               — 本機或 VM Postgres connection string
-#   LOCAL_PHOTO_STORAGE_DIR    — 照片上傳使用的本機目錄
-#   LOCAL_PHOTO_SIGNING_SECRET — 僅限伺服器端使用的照片簽名 secret
+```
 
-# Schema
-# 將 supabase-schema.sql 或 supabase/migrations/ 內的 SQL 套用到 Postgres
+`.env.local` 請填開發用設定：
 
-# 開發
+```bash
+AUTH_SECRET=<用 openssl rand -base64 32 產生>
+DATABASE_URL=postgres://caretaiwan:caretaiwan@localhost:5432/caretaiwan
+POSTGRES_SSL_MODE=disable
+LOCAL_PHOTO_STORAGE_DIR=./tmp/photo-storage
+LOCAL_PHOTO_SIGNING_SECRET=<用 openssl rand -base64 32 產生>
+PUBLIC_APP_URL=http://localhost:3000
+PRODUCTION_ALLOWED_HOSTS=
+PREVIEW_ALLOWED_HOSTS=
+```
+
+LINE Login 與 LINE Messaging API 可以先留空。文件檢查、測試與大部分畫面 shell rendering 不需要正式 LINE 設定。登入、配對、webhook 與推播流程才需要專用測試 LINE channel；本機不要使用 production LINE token。
+
+建立本機照片目錄並套用 schema：
+
+```bash
+mkdir -p tmp/photo-storage
+docker exec -i caretaiwan-local-postgres psql -U caretaiwan -d caretaiwan < supabase-schema.sql
+```
+
+啟動 app 與檢查：
+
+```bash
 npm run dev
 
-# 文件檢查／建置／lint
 npm run docs:check
+npm run migrations:check
 npm run test
-npm run build
 npm run lint
+npm run build
+```
+
+開發結束後停止本機資料庫：
+
+```bash
+docker stop caretaiwan-local-postgres
+docker rm caretaiwan-local-postgres
 ```
 
 ---
