@@ -3,7 +3,7 @@ import { GET } from "./route";
 import { auth } from "@/auth";
 import { listLeaveRequestsForElder } from "@/lib/caregiver-leave";
 import { checkSameOriginGet } from "@/lib/origin-check";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/caregiver-leave", () => ({
@@ -20,12 +20,12 @@ vi.mock("@/lib/caregiver-leave", () => ({
   }),
 }));
 vi.mock("@/lib/origin-check", () => ({ checkSameOriginGet: vi.fn() }));
-vi.mock("@/lib/supabase-server", () => ({ isCloudEnabled: vi.fn() }));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
 
 const authMock = vi.mocked(auth);
 const listLeaveRequestsForElderMock = vi.mocked(listLeaveRequestsForElder);
 const checkSameOriginGetMock = vi.mocked(checkSameOriginGet);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 
 function request(): Request {
   return new Request("https://care.example.test/api/caregiver-leave/list?elderId=elder-1", {
@@ -37,7 +37,7 @@ describe("GET /api/caregiver-leave/list", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginGetMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "family-1" } } as never);
     listLeaveRequestsForElderMock.mockResolvedValue({
       ok: true,

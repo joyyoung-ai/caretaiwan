@@ -15,7 +15,7 @@
 - 實際 log 路徑、查詢方式與保存天數。
 - 實際 database / storage backup 指令。
 - restore drill 指令與演練紀錄格式。
-- 依 ADR-0010 完成 data layer 改造，讓 server-side app 直接連 VM 自管 Postgres。第一階段已新增 direct Postgres adapter 與 health route pilot；其他資料 helper 仍需逐批從 Supabase client 搬移，production 前不得帶著這個落差上線。
+- 依 ADR-0010 完成 data layer 改造，讓 server-side app 直接連 VM 自管 Postgres。Direct Postgres adapter、health route pilot、照護行程與看護請假 helper 已先搬移；pairing、audit、expense、photo metadata、cloud backup 與 data-retention cron 仍需逐批從 Supabase client 搬移，production 前不得帶著這個落差上線。
 - incident contact、法務 / 隱私窗口與 escalation 時限。暫定對外窗口為 `services@joyyoung.com.tw`。
 - token rotation owner 與每種 secret 的輪替週期。
 

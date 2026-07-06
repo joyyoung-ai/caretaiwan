@@ -1,4 +1,5 @@
-import { getSupabaseAdmin } from "./supabase-server";
+import { isDatabaseEnabled } from "./db/client";
+import { query } from "./db/postgres";
 
 export const LEAVE_REASONS = ["personal", "health", "family", "documents", "other"] as const;
 export const LEAVE_STATUSES = ["pending", "acknowledged", "cancelled"] as const;
@@ -101,18 +102,27 @@ export async function findLeavePairingForCaregiver(
   elderId: string,
   caregiverLineUserId: string
 ): Promise<{ ok: true; ownerLineUserId: string } | { ok: false; error: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .select("owner_line_user_id, paired_line_user_id")
-    .eq("elder_id", elderId)
-    .maybeSingle();
+  try {
+    const [pairing] = await query<{
+      owner_line_user_id: string;
+      paired_line_user_id: string | null;
+    }>(
+      `select owner_line_user_id, paired_line_user_id
+       from elder_pairings
+       where elder_id = $1
+       limit 1`,
+      [elderId]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data || data.paired_line_user_id !== caregiverLineUserId) return { ok: false, error: "NOT_PAIRED" };
-  return { ok: true, ownerLineUserId: data.owner_line_user_id };
+    if (!pairing || pairing.paired_line_user_id !== caregiverLineUserId) {
+      return { ok: false, error: "NOT_PAIRED" };
+    }
+    return { ok: true, ownerLineUserId: pairing.owner_line_user_id };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 export async function createLeaveRequest(
@@ -121,78 +131,102 @@ export async function createLeaveRequest(
     ownerLineUserId: string;
   }
 ): Promise<{ ok: boolean; leave?: CaregiverLeaveRequest; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("caregiver_leave_requests")
-    .insert({
-      elder_id: input.elderId,
-      caregiver_line_user_id: input.caregiverLineUserId,
-      owner_line_user_id: input.ownerLineUserId,
-      reason: input.reason,
-      note: input.note,
-      starts_at: input.startsAt,
-      ends_at: input.endsAt,
-      status: "pending",
-    })
-    .select()
-    .maybeSingle();
+  try {
+    const [leave] = await query<CaregiverLeaveRequest>(
+      `insert into caregiver_leave_requests (
+         elder_id,
+         caregiver_line_user_id,
+         owner_line_user_id,
+         reason,
+         note,
+         starts_at,
+         ends_at,
+         status
+       ) values ($1, $2, $3, $4, $5, $6, $7, 'pending')
+       returning *`,
+      [
+        input.elderId,
+        input.caregiverLineUserId,
+        input.ownerLineUserId,
+        input.reason,
+        input.note,
+        input.startsAt,
+        input.endsAt,
+      ]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "INSERT_FAILED" };
-  return { ok: true, leave: data };
+    if (!leave) return { ok: false, error: "INSERT_FAILED" };
+    return { ok: true, leave };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 export async function listLeaveRequestsForElder(
   elderId: string,
   actorLineUserId: string
 ): Promise<{ ok: boolean; leaves?: CaregiverLeaveRequest[]; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data: pairing, error: pairingError } = await sb
-    .from("elder_pairings")
-    .select("owner_line_user_id, paired_line_user_id")
-    .eq("elder_id", elderId)
-    .maybeSingle();
-
-  if (pairingError) return { ok: false, error: "DB_ERROR" };
+  let pairing: { owner_line_user_id: string; paired_line_user_id: string | null } | undefined;
+  try {
+    [pairing] = await query<{
+      owner_line_user_id: string;
+      paired_line_user_id: string | null;
+    }>(
+      `select owner_line_user_id, paired_line_user_id
+       from elder_pairings
+       where elder_id = $1
+       limit 1`,
+      [elderId]
+    );
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
   if (!pairing) return { ok: false, error: "NOT_PAIRED" };
   if (pairing.owner_line_user_id !== actorLineUserId && pairing.paired_line_user_id !== actorLineUserId) {
     return { ok: false, error: "NOT_PAIRED" };
   }
 
-  const { data, error } = await sb
-    .from("caregiver_leave_requests")
-    .select("*")
-    .eq("elder_id", elderId)
-    .order("starts_at", { ascending: false });
+  try {
+    const leaves = await query<CaregiverLeaveRequest>(
+      `select *
+       from caregiver_leave_requests
+       where elder_id = $1
+       order by starts_at desc`,
+      [elderId]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  return { ok: true, leaves: data ?? [] };
+    return { ok: true, leaves };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 export async function acknowledgeLeaveRequest(
   leaveId: number,
   ownerLineUserId: string
 ): Promise<{ ok: boolean; leave?: CaregiverLeaveRequest; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("caregiver_leave_requests")
-    .update({
-      status: "acknowledged",
-      acknowledged_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", leaveId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .select()
-    .maybeSingle();
+  try {
+    const now = new Date().toISOString();
+    const [leave] = await query<CaregiverLeaveRequest>(
+      `update caregiver_leave_requests
+       set status = 'acknowledged',
+           acknowledged_at = $3,
+           updated_at = $3
+       where id = $1
+         and owner_line_user_id = $2
+       returning *`,
+      [leaveId, ownerLineUserId, now]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
-  return { ok: true, leave: data };
+    if (!leave) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
+    return { ok: true, leave };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }

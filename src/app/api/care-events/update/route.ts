@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import { isCareEventStatus, toCareEventResponse, updateCareEvent } from "@/lib/care-calendar";
 
 export const runtime = "nodejs";
@@ -17,7 +17,7 @@ function parseOptionalIso(raw: unknown): { ok: true; value?: string } | { ok: fa
 export async function POST(req: Request) {
   const csrf = checkSameOrigin(req);
   if (csrf) return csrf;
-  if (!isCloudEnabled()) return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isDatabaseEnabled()) return NextResponse.json({ error: "資料庫服務未啟用" }, { status: 503 });
 
   const session = await auth();
   const actorLineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;

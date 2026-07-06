@@ -1,4 +1,5 @@
-import { getSupabaseAdmin } from "./supabase-server";
+import { isDatabaseEnabled } from "./db/client";
+import { query } from "./db/postgres";
 
 export const CARE_EVENT_TYPES = [
   "medical_appointment",
@@ -129,24 +130,31 @@ export async function findCareEventPairing(
   elderId: string,
   actorLineUserId: string
 ): Promise<{ ok: true; ownerLineUserId: string; role: "owner" | "caregiver" } | { ok: false; error: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .select("owner_line_user_id, paired_line_user_id")
-    .eq("elder_id", elderId)
-    .maybeSingle();
+  try {
+    const [pairing] = await query<{
+      owner_line_user_id: string;
+      paired_line_user_id: string | null;
+    }>(
+      `select owner_line_user_id, paired_line_user_id
+       from elder_pairings
+       where elder_id = $1
+       limit 1`,
+      [elderId]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "NOT_PAIRED" };
-  if (data.owner_line_user_id === actorLineUserId) {
-    return { ok: true, ownerLineUserId: data.owner_line_user_id, role: "owner" };
+    if (!pairing) return { ok: false, error: "NOT_PAIRED" };
+    if (pairing.owner_line_user_id === actorLineUserId) {
+      return { ok: true, ownerLineUserId: pairing.owner_line_user_id, role: "owner" };
+    }
+    if (pairing.paired_line_user_id === actorLineUserId) {
+      return { ok: true, ownerLineUserId: pairing.owner_line_user_id, role: "caregiver" };
+    }
+    return { ok: false, error: "NOT_PAIRED" };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
   }
-  if (data.paired_line_user_id === actorLineUserId) {
-    return { ok: true, ownerLineUserId: data.owner_line_user_id, role: "caregiver" };
-  }
-  return { ok: false, error: "NOT_PAIRED" };
 }
 
 export async function createCareEvent(
@@ -155,32 +163,46 @@ export async function createCareEvent(
     ownerLineUserId: string;
   }
 ): Promise<{ ok: boolean; event?: CareEvent; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("care_events")
-    .insert({
-      elder_id: input.elderId,
-      owner_line_user_id: input.ownerLineUserId,
-      created_by_line_user_id: input.actorLineUserId,
-      updated_by_line_user_id: input.actorLineUserId,
-      type: input.type,
-      is_medical_related: input.isMedicalRelated,
-      title: input.title,
-      starts_at: input.startsAt,
-      ends_at: input.endsAt,
-      location: input.location,
-      note: input.note,
-      remind_at: input.remindAt,
-      status: "scheduled",
-    })
-    .select()
-    .maybeSingle();
+  try {
+    const [event] = await query<CareEvent>(
+      `insert into care_events (
+         elder_id,
+         owner_line_user_id,
+         created_by_line_user_id,
+         updated_by_line_user_id,
+         type,
+         is_medical_related,
+         title,
+         starts_at,
+         ends_at,
+         location,
+         note,
+         remind_at,
+         status
+       ) values ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'scheduled')
+       returning *`,
+      [
+        input.elderId,
+        input.ownerLineUserId,
+        input.actorLineUserId,
+        input.type,
+        input.isMedicalRelated,
+        input.title,
+        input.startsAt,
+        input.endsAt,
+        input.location,
+        input.note,
+        input.remindAt,
+      ]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "INSERT_FAILED" };
-  return { ok: true, event: data };
+    if (!event) return { ok: false, error: "INSERT_FAILED" };
+    return { ok: true, event };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 export async function listCareEventsForElder(
@@ -188,25 +210,29 @@ export async function listCareEventsForElder(
   actorLineUserId: string,
   rangeDays = 7
 ): Promise<{ ok: boolean; events?: CareEvent[]; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
   const pairing = await findCareEventPairing(elderId, actorLineUserId);
   if (!pairing.ok) return { ok: false, error: pairing.error };
 
   const now = new Date();
   const end = new Date(now.getTime() + Math.min(Math.max(rangeDays, 1), 30) * 24 * 60 * 60 * 1000);
-  const { data, error } = await sb
-    .from("care_events")
-    .select("*")
-    .eq("elder_id", elderId)
-    .neq("status", "cancelled")
-    .gte("starts_at", now.toISOString())
-    .lte("starts_at", end.toISOString())
-    .order("starts_at", { ascending: true });
+  try {
+    const events = await query<CareEvent>(
+      `select *
+       from care_events
+       where elder_id = $1
+         and status <> 'cancelled'
+         and starts_at >= $2
+         and starts_at <= $3
+       order by starts_at asc`,
+      [elderId, now.toISOString(), end.toISOString()]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  return { ok: true, events: data ?? [] };
+    return { ok: true, events };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 export async function updateCareEvent(input: {
@@ -219,16 +245,20 @@ export async function updateCareEvent(input: {
   note?: string | null;
   status?: CareEventStatus;
 }): Promise<{ ok: boolean; event?: CareEvent; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data: event, error: lookupError } = await sb
-    .from("care_events")
-    .select("id, elder_id, starts_at, ends_at")
-    .eq("id", input.eventId)
-    .maybeSingle();
-
-  if (lookupError) return { ok: false, error: "DB_ERROR" };
+  let event: { id: number; elder_id: string; starts_at: string; ends_at: string | null } | undefined;
+  try {
+    [event] = await query<{ id: number; elder_id: string; starts_at: string; ends_at: string | null }>(
+      `select id, elder_id, starts_at, ends_at
+       from care_events
+       where id = $1
+       limit 1`,
+      [input.eventId]
+    );
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
   if (!event) return { ok: false, error: "NOT_FOUND" };
 
   const pairing = await findCareEventPairing(event.elder_id, input.actorLineUserId);
@@ -244,25 +274,34 @@ export async function updateCareEvent(input: {
     return { ok: false, error: "TIME_RANGE_INVALID" };
   }
 
-  const patch: Record<string, unknown> = {
-    updated_by_line_user_id: input.actorLineUserId,
-    updated_at: new Date().toISOString(),
+  const values: unknown[] = [input.eventId];
+  const assignments: string[] = [];
+  const addAssignment = (column: string, value: unknown) => {
+    values.push(value);
+    assignments.push(`${column} = $${values.length}`);
   };
-  if (input.title !== undefined) patch.title = input.title.slice(0, 100);
-  if (input.startsAt !== undefined) patch.starts_at = input.startsAt;
-  if (input.endsAt !== undefined) patch.ends_at = input.endsAt;
-  if (input.location !== undefined) patch.location = input.location?.slice(0, 200) ?? null;
-  if (input.note !== undefined) patch.note = input.note?.slice(0, 500) ?? null;
-  if (input.status !== undefined) patch.status = input.status;
 
-  const { data, error } = await sb
-    .from("care_events")
-    .update(patch)
-    .eq("id", input.eventId)
-    .select()
-    .maybeSingle();
+  addAssignment("updated_by_line_user_id", input.actorLineUserId);
+  addAssignment("updated_at", new Date().toISOString());
+  if (input.title !== undefined) addAssignment("title", input.title.slice(0, 100));
+  if (input.startsAt !== undefined) addAssignment("starts_at", input.startsAt);
+  if (input.endsAt !== undefined) addAssignment("ends_at", input.endsAt);
+  if (input.location !== undefined) addAssignment("location", input.location?.slice(0, 200) ?? null);
+  if (input.note !== undefined) addAssignment("note", input.note?.slice(0, 500) ?? null);
+  if (input.status !== undefined) addAssignment("status", input.status);
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "UPDATE_FAILED" };
-  return { ok: true, event: data };
+  try {
+    const [updated] = await query<CareEvent>(
+      `update care_events
+       set ${assignments.join(", ")}
+       where id = $1
+       returning *`,
+      values
+    );
+
+    if (!updated) return { ok: false, error: "UPDATE_FAILED" };
+    return { ok: true, event: updated };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }

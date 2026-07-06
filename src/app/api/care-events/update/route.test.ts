@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import { updateCareEvent } from "@/lib/care-calendar";
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/origin-check", () => ({ checkSameOrigin: vi.fn() }));
-vi.mock("@/lib/supabase-server", () => ({ isCloudEnabled: vi.fn() }));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
 vi.mock("@/lib/care-calendar", () => ({
   updateCareEvent: vi.fn(),
   isCareEventStatus: vi.fn((status: unknown) => ["scheduled", "done", "cancelled"].includes(String(status))),
@@ -27,7 +27,7 @@ vi.mock("@/lib/care-calendar", () => ({
 
 const authMock = vi.mocked(auth);
 const checkSameOriginMock = vi.mocked(checkSameOrigin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 const updateCareEventMock = vi.mocked(updateCareEvent);
 
 function request(body: unknown): Request {
@@ -42,7 +42,7 @@ describe("POST /api/care-events/update", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     updateCareEventMock.mockResolvedValue({
       ok: true,

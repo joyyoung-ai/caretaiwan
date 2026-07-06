@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { getActorIp, logAudit } from "@/lib/audit";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import {
   createLeaveRequest,
   findLeavePairingForCaregiver,
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     logAudit({ action: "FORBIDDEN_ORIGIN", actorIp: ip, resourceType: "caregiver_leave", status: "forbidden" });
     return csrf;
   }
-  if (!isCloudEnabled()) return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isDatabaseEnabled()) return NextResponse.json({ error: "資料庫服務未啟用" }, { status: 503 });
 
   const session = await auth();
   const caregiverLineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;

@@ -103,6 +103,7 @@
 - caregiver leave routes 驗證只有已配對看護可建立、家屬 / 看護可查詢、只有家屬 owner 可確認。
 - direct Postgres adapter 驗證 missing config、singleton pool、query、transaction rollback 與 public-safe DB error mapping。
 - health route 驗證 direct Postgres success、database disabled 與 redacted DB failure。
+- care calendar / caregiver leave data helper 驗證 direct Postgres 查詢、建立、列表、更新、ownership guard 與 disabled database path。
 
 第二批 route handler 已涵蓋：
 

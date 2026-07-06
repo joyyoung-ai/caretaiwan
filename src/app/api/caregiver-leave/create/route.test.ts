@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import { createLeaveRequest, findLeavePairingForCaregiver } from "@/lib/caregiver-leave";
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/origin-check", () => ({ checkSameOrigin: vi.fn() }));
-vi.mock("@/lib/supabase-server", () => ({ isCloudEnabled: vi.fn() }));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
 vi.mock("@/lib/caregiver-leave", () => {
   const reasons = new Set(["personal", "health", "family", "documents", "other"]);
   return {
@@ -42,7 +42,7 @@ vi.mock("@/lib/audit", () => ({ getActorIp: vi.fn(() => "203.0.113.10"), logAudi
 
 const authMock = vi.mocked(auth);
 const checkSameOriginMock = vi.mocked(checkSameOrigin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 const createLeaveRequestMock = vi.mocked(createLeaveRequest);
 const findLeavePairingForCaregiverMock = vi.mocked(findLeavePairingForCaregiver);
 
@@ -58,7 +58,7 @@ describe("POST /api/caregiver-leave/create", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     findLeavePairingForCaregiverMock.mockResolvedValue({ ok: true, ownerLineUserId: "family-1" } as never);
     createLeaveRequestMock.mockResolvedValue({
