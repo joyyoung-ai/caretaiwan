@@ -10,10 +10,7 @@ export function PolicySection({ title, children }: { title: string; children: Re
 }
 
 // 客服聯絡資訊 - 統一在這裡維護
-export const CONTACT_EMAIL = "caretaiwan.app@gmail.com";
-export const CONTACT_LINE_ID = "@273kvcru";
-// LINE deep link:手機點擊自動開 LINE App 加好友;桌面跳網頁版加好友頁
-export const CONTACT_LINE_URL = `https://line.me/R/ti/p/${encodeURIComponent(CONTACT_LINE_ID)}`;
+export const CONTACT_EMAIL = "services@joyyoung.com.tw";
 
 export function ContactBlock() {
   return (
@@ -31,25 +28,8 @@ export function ContactBlock() {
           </div>
         </div>
       </a>
-      <a
-        href={CONTACT_LINE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-950 active:bg-emerald-100 dark:active:bg-emerald-900 rounded-xl border border-emerald-200 dark:border-emerald-800"
-      >
-        <span className="text-xl">💬</span>
-        <div className="flex-1">
-          <div className="font-semibold text-emerald-900 dark:text-emerald-100">
-            LINE 真人客服
-          </div>
-          <div className="text-xs text-emerald-700 dark:text-emerald-300">
-            點此加入好友並開始諮詢 ({CONTACT_LINE_ID})
-          </div>
-        </div>
-        <span className="text-emerald-600 dark:text-emerald-400 text-lg">›</span>
-      </a>
       <p className="text-xs text-slate-500 leading-relaxed">
-        個資相關權利行使（查詢、更正、刪除、停止處理）請透過上述任一管道聯繫,
+        個資相關權利行使（查詢、更正、刪除、停止處理）請透過上述信箱聯繫,
         我們會在 15 個工作日內回應。
       </p>
     </div>
@@ -59,11 +39,11 @@ export function ContactBlock() {
 export function BetaNote() {
   return (
     <div className="p-4 bg-amber-50 dark:bg-amber-950 ring-1 ring-amber-300/60 dark:ring-amber-800 rounded-2xl text-amber-900 dark:text-amber-100">
-      <p className="font-semibold mb-1">⚠️ 封閉測試版 (Closed Beta)</p>
+      <p className="font-semibold mb-1">⚠️ 試辦版法律文件草案</p>
       <p className="text-xs leading-relaxed">
-        本服務目前為封閉測試版,僅供受邀測試者使用,請勿用於正式照護環境。
-        正式版上線前,本政策將由法律專業人士重新審閱與更新。
-        測試版蒐集之個人資料僅用於開發與功能驗證。
+        本服務目前仍在試辦與導入準備階段。以下內容已切換為中揚資訊股份有限公司版本,
+        但正式上線前仍須由法律專業人士審閱。試辦期間請勿把本服務作為緊急醫療、
+        排班、薪資、扣款或勞資爭議判定依據。
       </p>
     </div>
   );
@@ -80,8 +60,9 @@ export function PrivacyContent() {
           <strong>日常記錄與家屬溝通工具</strong> Progressive Web App (PWA)。
         </p>
         <p>
-          本服務目前處於封閉測試階段,由獨立開發者營運。
-          正式上線時將以法人主體營運並更新本政策。
+          本服務目前由<strong>中揚資訊股份有限公司</strong>維護與規劃營運。
+          中揚資訊股份有限公司為本服務試辦與正式導入規劃中的資料控制者；
+          實際受託維運、主機、LINE 與儲存服務為資料處理者或第三方服務。
         </p>
         <p className="text-xs text-slate-500">
           ⚠️ 本服務<strong>不提供任何醫療建議</strong>,
@@ -162,12 +143,13 @@ export function PrivacyContent() {
             即使不登入,基本功能仍可離線使用。
           </li>
           <li>
-            <strong>雲端備份(可選)</strong>:LINE 登入後資料以加密 HTTPS 傳輸至 Supabase 雲端資料庫,
-            以你的 LINE userId 為 key 儲存。
+            <strong>雲端備份(可選)</strong>:LINE 登入後資料以加密 HTTPS 傳輸至本服務後端,
+            以你的 LINE userId 為 key 儲存。正式環境規劃採 VM 自管 Postgres；測試或過渡環境若使用
+            Supabase-compatible 服務,會在部署文件與正式政策中揭露。
           </li>
           <li>
-            <strong>照片儲存</strong>:看護附加之照片儲存於 Supabase Storage 私有儲存桶,
-            僅在推播當下產生 1 小時有效之簽名連結,過期後即無法存取。
+            <strong>照片儲存</strong>:看護附加之照片儲存於後端私有儲存空間,
+            僅在推播或授權查看時產生短期簽名連結,過期後即無法存取。
           </li>
           <li>
             <strong>家屬端推播</strong>:你按下「送出給家屬」之記錄會透過 LINE Messaging API 推播至家屬 LINE。
@@ -182,12 +164,14 @@ export function PrivacyContent() {
 
       <PolicySection title="6. 國際傳輸聲明(個資法第 21 條)">
         <p>
-          本服務之資料處理可能涉及國際傳輸至下列地點:
+          正式環境預設以台灣境內 VM、資料庫、檔案儲存與備份為優先規劃。
+          若實際部署使用境外服務,上線前會在本政策揭露資料所在區域、資料處理者與風險。
+          目前可能涉及的第三方服務邊界如下:
         </p>
         <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>Vercel Inc.(網站託管)— 美國</li>
-          <li>Supabase Inc.(資料庫、儲存)— 美國 / 歐盟</li>
-          <li>LINE Corporation(身分驗證、推播)— 日本東京</li>
+          <li>LINE Corporation / LY Corporation(LINE Login、Messaging API)— 依 LINE 服務政策處理</li>
+          <li>VM、資料庫、備份與檔案儲存供應商— 正式環境選定後揭露</li>
+          <li>測試或舊原型環境可能使用 Vercel、Supabase 或相容服務；正式服務不以原作者原型環境為準</li>
         </ul>
         <p>
           上述業者依據其各自之隱私政策與相關國家法令處理資料。
@@ -214,9 +198,9 @@ export function PrivacyContent() {
 
       <PolicySection title="8. 第三方資料處理者">
         <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>Vercel Inc.(網站託管、CDN、無伺服器函式)</li>
-          <li>Supabase Inc.(PostgreSQL 資料庫、Storage)</li>
-          <li>LINE Corporation(LINE Login OAuth、LINE Messaging API)</li>
+          <li>LINE Corporation / LY Corporation(LINE Login OAuth、LINE Messaging API)</li>
+          <li>正式 VM、資料庫、檔案儲存、備份與監控供應商(正式環境選定後揭露)</li>
+          <li>測試或舊原型環境使用之 Vercel、Supabase 或相容服務(僅限測試、過渡或歷史參考時適用)</li>
         </ul>
         <p className="text-xs text-slate-500 mt-2">
           上述業者皆有自己的隱私政策,建議使用前查閱。
@@ -251,12 +235,14 @@ export function PrivacyContent() {
       <PolicySection title="10. 資料保存期限">
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>本地資料:於使用者刪除 APP 或執行「刪除全部資料」時消失</li>
-          <li>雲端備份:於使用者執行「刪除全部資料」時清除</li>
+          <li>雲端備份:於使用者執行「刪除全部資料」或提出刪除請求時清除 live database / storage</li>
+          <li>照護行程與看護請假紀錄:跟照護紀錄一致,刪除請求要涵蓋 live database、備份與 audit metadata</li>
           <li>未活動帳號:超過 12 個月未登入之雲端資料將自動刪除(預告 30 天前 email 通知)</li>
           <li>照片檔案:存放於私有儲存桶,推播時臨時產生簽名連結</li>
           <li>LINE 推播訊息:依 LINE Corporation 政策(不在本服務控制範圍)</li>
-          <li>Vercel 存取日誌:30 天</li>
+          <li>App / proxy 存取日誌:正式環境保存天數依 runbook 與法務政策設定,預設不保留未遮蔽 PII</li>
           <li>稽核日誌(操作記錄、不含內容):90 天,個資法或刑事訴訟要求保留時延長</li>
+          <li>歷史備份:原則上不直接拆包修改,而是記錄刪除請求並在保留期到期時覆蓋；若法律或合約要求不同做法,依正式法務文件處理</li>
         </ul>
       </PolicySection>
 
@@ -310,9 +296,9 @@ export function PrivacyContent() {
           重大變更會在 APP 內顯眼通知,並透過客服信箱向已登入使用者發送通知。
         </p>
         <p className="text-xs text-slate-500">
-          當前版本: <strong>2026-05-15 v0.3 (Closed Beta)</strong>
+          當前版本: <strong>2026-07-06 v0.4 (中揚資訊試辦版草案)</strong>
           <br />
-          v0.3 變更:封閉測試版定位、加入家族群組推播揭露條款、強化特種個資聲明、加入失智長者保護條款、加入正式客服聯絡資訊。
+          v0.4 變更:切換服務提供者與聯絡窗口為中揚資訊股份有限公司,補資料控制者、資料落地、VM 自管 Postgres、備份刪除與 reminder 邊界說明。
         </p>
       </PolicySection>
 
@@ -341,14 +327,14 @@ export function TermsContent() {
         </p>
       </PolicySection>
 
-      <PolicySection title="2. 封閉測試版聲明">
+      <PolicySection title="2. 試辦版聲明">
         <p>
-          本服務目前處於<strong>封閉測試版(Closed Beta)</strong>階段,
-          僅供受邀測試者使用。請勿用於正式照護環境之關鍵決策依據。
+          本服務目前處於<strong>試辦與導入準備</strong>階段,
+          僅供受邀測試或指定試辦對象使用。請勿用於正式照護環境之關鍵決策依據。
           測試期間可能有功能變動、服務中斷、資料重置等情形。
         </p>
         <p>
-          正式版上線時,本條款將由法律專業人士重新審閱與更新。
+          正式版上線前,本條款仍需由法律專業人士重新審閱與更新。
         </p>
       </PolicySection>
 
@@ -384,6 +370,7 @@ export function TermsContent() {
             照護判斷之最終責任在於專業醫護人員與家屬本人
           </li>
           <li>第三方服務(LINE / Supabase / Vercel)異常時,本服務功能可能受影響</li>
+          <li>正式環境改採 VM 自管 Postgres 後,仍可能因主機、資料庫、備份、網路或 LINE 服務異常而受影響</li>
           <li>離線時可記錄但無法即時推播,使用者應自行確認家屬已收到關鍵訊息</li>
           <li>因群組成員洩漏、截圖、外傳所造成之損害,服務提供者不承擔責任</li>
         </ul>
@@ -391,7 +378,7 @@ export function TermsContent() {
 
       <PolicySection title="6. 智慧財產權">
         <p>
-          APP 程式碼、UI 設計、介面文案、商標為服務提供者著作物。
+          APP 程式碼依 MIT 授權保留原作者著作權與授權聲明；中揚資訊接手後新增或修改之 UI 設計、介面文案與部署文件,依 repository 授權與各檔案聲明處理。
           本服務目前僅含日常記錄與家屬溝通功能,不引用第三方衛教內容。
         </p>
         <p>
@@ -440,10 +427,10 @@ export function TermsContent() {
 
       <PolicySection title="11. 版本與聯絡">
         <p>
-          當前版本: <strong>2026-05-15 v0.3 (Closed Beta)</strong>
+          當前版本: <strong>2026-07-06 v0.4 (中揚資訊試辦版草案)</strong>
         </p>
         <p className="text-xs text-slate-500">
-          v0.3 變更:封閉測試版定位、強化免責、加入群組推播相關責任、加入損害賠償上限。
+          v0.4 變更:切換服務提供者與聯絡窗口為中揚資訊股份有限公司,補資料控制者、資料落地、備份刪除與正式法務審閱待辦。
         </p>
         <div className="mt-3">
           <ContactBlock />

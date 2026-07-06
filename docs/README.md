@@ -10,6 +10,7 @@
 - [governance/FORK_NOTICE.md](./governance/FORK_NOTICE.md)：中揚資訊接手背景。
 - [governance/KNOWN_LIMITATIONS.md](./governance/KNOWN_LIMITATIONS.md)：目前限制，哪些不是 bug。
 - [governance/MAINTAINERS.md](./governance/MAINTAINERS.md)：維護責任與聯絡方式。
+- [governance/RELEASE_PROCESS.md](./governance/RELEASE_PROCESS.md)：release gate、tag、branch protection 與 production image 規則。
 
 ## Product
 
@@ -23,6 +24,7 @@
 - [engineering/SYSTEM_ARCHITECTURE_PLAN.md](./engineering/SYSTEM_ARCHITECTURE_PLAN.md)：接手初期的系統架構整理。
 - [engineering/BUGFIX_PLAN.md](./engineering/BUGFIX_PLAN.md)：工程待辦與風險分級。
 - [engineering/CARE_CALENDAR_SCHEMA.md](./engineering/CARE_CALENDAR_SCHEMA.md)：v1.1.0 照護行程與看護請假資料模型草案。
+- [engineering/MIGRATIONS.md](./engineering/MIGRATIONS.md)：production migration series 與檢查方式。
 - [engineering/TESTING.md](./engineering/TESTING.md)：測試策略與第一批測試目標。
 
 ## Operations

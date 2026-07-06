@@ -6,8 +6,8 @@ import { PrivacyContent, TermsContent } from "@/components/legal/PolicyContent";
 
 const CONSENT_KEY = "consent-v1";
 // 版本變動時 bump 這個（例如政策大改），會讓所有使用者重新同意
-// v2 (2026-05-15): Closed Beta 版本，加入特種個資獨立勾選
-const CURRENT_VERSION = 2;
+// v3 (2026-07-06): 切換為中揚資訊試辦版法律文件草案
+const CURRENT_VERSION = 3;
 
 type ConsentRecord = {
   version: number;

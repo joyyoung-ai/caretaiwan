@@ -53,11 +53,11 @@
 - 看護提出請假紀錄，家屬查看並標記已確認。
 - 請假原因支援固定選項與自由文字備註。
 - `is_medical_related` 欄位與提醒免責文字。
-- `remind_at` 先保留為 inert 欄位；LINE 提醒 runtime 延後到 v1.2.0 或後續 change。
+- `remind_at` 先保留為 inert 欄位；LINE 提醒 runtime 延後到 v1.2.0。
 
 完成標準：
 
-- `care_events` 與 `caregiver_leave_requests` schema 草案完成；正式 migration 以 VM 自管 Postgres 為基準落地。
+- `care_events` 與 `caregiver_leave_requests` schema 與 production migration series 完成；production 前需在 disposable 或 staging Postgres 演練 forward / rollback。
 - 權限測試涵蓋家屬建立、看護查看、未配對不可讀。
 - `is_medical_related` 提醒文案通過產品邊界檢查。
 - 首頁先提供照護行程與請假紀錄入口，完整表單頁可接續實作。
@@ -72,17 +72,23 @@
 
 ## v1.2.0：照護提醒
 
+狀態：OpenSpec change 已建立於 `openspec/changes/v1-2-0-care-reminders/`，尚未實作 runtime。
+
 目標：把日程與日常照護提醒整理成可理解、可取消、可追蹤的流程。
 
 - 回診、復健、拿藥、檢查等提醒。
 - 提醒送達狀態。
 - 多語文案。
 - 提醒失敗時的清楚提示。
+- Server-side cron / worker runtime。
+- Claim / retry / coarse error code，避免重複推播與 raw provider error 外洩。
 
 完成標準：
 
 - 提醒狀態可追蹤。
 - 多語文案同步。
+- 醫療相關提醒包含一般日程提醒免責文案。
+- public response、audit metadata 與長期 log 不輸出 raw LINE user ID、自由文字 note 或 raw provider error。
 - 沒有劑量、病情、分流或急迫性判斷。
 
 不納入：
@@ -90,6 +96,8 @@
 - 用藥劑量建議。
 - 病情判斷。
 - 醫療分流。
+- 保證 LINE 提醒一定送達。
+- 排班、薪資、扣款或代理人安排。
 
 ## v1.3.0：家屬協作
 

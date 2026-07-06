@@ -15,6 +15,7 @@
 - 實際 log 路徑、查詢方式與保存天數。
 - 實際 database / storage backup 指令。
 - restore drill 指令與演練紀錄格式。
+- 自管 Postgres 要如何提供目前程式使用的 Supabase-compatible API，或改造資料存取層讓 app 直接連 Postgres。現有程式仍讀取 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`。
 - incident contact、法務 / 隱私窗口與 escalation 時限。暫定對外窗口為 `services@joyyoung.com.tw`。
 - token rotation owner 與每種 secret 的輪替週期。
 
@@ -24,16 +25,51 @@
 
 - App service name：TBD。
 - Docker compose file path：TBD。
+- Database service name：TBD。若採 Docker Compose，以下範例假設為 `postgres`。
+- Database name：TBD。以下範例假設為 `caretaiwan`。
+- Database app role：TBD。不得使用 superuser 作為 app runtime role。
+- Database migration role：TBD。只能由維運人員或 CI deploy job 使用。
 - Reverse proxy：TBD。
 - App log command：TBD。
 - Proxy access log：TBD。
 - Proxy error log：TBD。
 - Backup command：TBD。
 - Restore command：TBD。
+- Backup root：TBD。建議放在 VM 上受限目錄，例如 `/var/backups/caretaiwan`，並同步到加密離站備份。
 - Cron scheduler：TBD。
 - Incident contact：`services@joyyoung.com.tw`。
 - Legal / privacy contact：`services@joyyoung.com.tw` 作為暫定收件窗口，正式責任人待指定。
 - Token rotation owner：TBD。
+
+## Database Migration
+
+正式資料庫採 VM 自管 Postgres，但目前 app data layer 仍是 Supabase client。production 前需先完成其中一條路：
+
+- VM 內提供 Supabase-compatible API / PostgREST 與對應 auth / service-role 管控。
+- 或重構 `src/lib/supabase-server.ts` 與相關 data helpers，改為直接連 self-managed Postgres。
+
+不論採哪條路，migration SQL 先以 Postgres 為基準。以 Docker Compose 為例，套用 v1.1.0 migration 前先在 staging 或 disposable DB 執行：
+
+```bash
+cd /srv/caretaiwan/repo
+docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan -v ON_ERROR_STOP=1 < supabase/migrations/202607060001_create_care_calendar_tables.sql
+```
+
+驗證：
+
+```bash
+docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan -c "\d+ care_events"
+docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan -c "\d+ caregiver_leave_requests"
+npm run migrations:check
+```
+
+Rollback 演練：
+
+```bash
+docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan -v ON_ERROR_STOP=1 < supabase/migrations/202607060001_create_care_calendar_tables.down.sql
+```
+
+Rollback 前應先停用相關 API route / UI 入口。已進 production 且有真實資料後，不得把 rollback 當成一般清資料工具；要先確認資料匯出、法務保留與刪除請求狀態。
 
 ## Deploy
 
@@ -46,7 +82,7 @@
 
 - 保留上一版 image tag。
 - 回滾前先確認 migration 是否可回退。
-- 照護行程 / 看護請假正式 migration 尚未建立；未來若落地新表，回滾前應先停用相關 API route / UI 入口，再評估 drop 新表，不得影響既有 `elder_pairings`、照護紀錄、照片、備份或核帳資料。
+- 照護行程 / 看護請假 migration 已建立於 `supabase/migrations/202607060001_create_care_calendar_tables.sql`。回滾前應先停用相關 API route / UI 入口，再執行 `supabase/migrations/202607060001_create_care_calendar_tables.down.sql`，不得影響既有 `elder_pairings`、照護紀錄、照片、備份或核帳資料。
 - 回滾後檢查 health check、LINE webhook、登入與配對流程。
 
 ## Health Check
@@ -72,17 +108,60 @@
 
 ## Backup
 
-- database backup。
-- photo / object storage backup。
-- env / secret 不進一般備份。
-- 備份加密。
+- Database backup 使用 `pg_dump --format=custom`，保留 schema 與資料，避免把 secret 檔放進同一份備份。
+- Photo / object storage backup 需與 database backup 同批次記錄，至少包含時間戳、來源 path、目的地與 hash。
+- `.env.production`、LINE token、service-role key、cron secret、photo signing secret 不進一般備份；secret 備份需另走受控金鑰庫或離線流程。
+- 備份檔落地後要產生 SHA-256，並加密後再同步到離站位置。
 - 至少一份備份離開原 VM。
+
+Database backup 範例：
+
+```bash
+sudo install -d -m 0700 -o root -g root /var/backups/caretaiwan/db
+backup_file="/var/backups/caretaiwan/db/caretaiwan-$(date -u +%Y%m%dT%H%M%SZ).dump"
+docker compose exec -T postgres pg_dump -U caretaiwan_backup -d caretaiwan --format=custom --no-owner --no-acl > "$backup_file"
+sha256sum "$backup_file" > "$backup_file.sha256"
+```
+
+Photo storage backup 範例：
+
+```bash
+sudo install -d -m 0700 -o root -g root /var/backups/caretaiwan/photo-storage
+rsync -a --delete /srv/caretaiwan/docker/photo-storage/ /var/backups/caretaiwan/photo-storage/current/
+tar -C /var/backups/caretaiwan/photo-storage -czf "/var/backups/caretaiwan/photo-storage-$(date -u +%Y%m%dT%H%M%SZ).tar.gz" current
+sha256sum /var/backups/caretaiwan/photo-storage-*.tar.gz > /var/backups/caretaiwan/photo-storage.sha256
+```
+
+正式環境要把上述路徑、service name、DB role 與保留天數換成實際值。
 
 ## Restore Drill
 
-- 定期在隔離環境演練 restore。
-- 不得把 production 個資還原到個人本機。
-- restore drill 結束後清除測試資料。
+- 每月至少在隔離 VM 或 staging network 演練一次 restore。不得把 production 個資還原到個人本機。
+- Restore drill 要記錄備份檔名、hash 驗證結果、操作者、開始 / 結束時間、還原目標、驗證結果與清除時間。
+- Restore drill 結束後清除測試資料，並確認隔離環境沒有對外 webhook、LINE token 或 production secret。
+
+Restore drill 範例：
+
+```bash
+sha256sum -c /var/backups/caretaiwan/db/caretaiwan-YYYYMMDDTHHMMSSZ.dump.sha256
+docker compose exec -T postgres createdb -U caretaiwan_migrator caretaiwan_restore_drill
+docker compose exec -T postgres pg_restore -U caretaiwan_migrator -d caretaiwan_restore_drill --clean --if-exists --no-owner --no-acl < /var/backups/caretaiwan/db/caretaiwan-YYYYMMDDTHHMMSSZ.dump
+docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan_restore_drill -c "select count(*) from elder_pairings;"
+docker compose exec -T postgres dropdb -U caretaiwan_migrator caretaiwan_restore_drill
+```
+
+Restore drill 紀錄格式：
+
+```text
+日期：
+操作者：
+備份檔：
+SHA-256 驗證：
+還原目標：
+驗證查詢：
+發現問題：
+清除時間：
+```
 
 ## Token Rotation
 
@@ -109,7 +188,7 @@
 - cron secret 正確。
 - cron response 不輸出完整 LINE user ID。
 - 失敗時有 log，但不含未遮蔽 PII。
-- v1.1.0 照護行程的 `remind_at` 不應由 cron 或 LINE push 處理；若未來啟用 reminder runtime，需先新增排程、重試、失敗紀錄與使用者提示 runbook。
+- v1.1.0 照護行程的 `remind_at` 不應由 cron 或 LINE push 處理；v1.2.0 reminder runtime 已建立 OpenSpec change，實作前需補排程、claim、重試、失敗紀錄、dry-run、手動停用與使用者提示 runbook。
 
 ## User Data Deletion Request
 

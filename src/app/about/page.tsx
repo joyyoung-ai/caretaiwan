@@ -44,8 +44,8 @@ export default function AboutPage() {
               <strong>緊急狀況請撥 119</strong>。本 APP 不取代任何緊急醫療管道。
             </li>
             <li>
-              本服務目前為**封閉測試版 (Closed Beta)**，僅供受邀測試者使用，不對照護結果負責。
-              正式版上線時將通知使用者。
+              本服務目前仍在試辦與導入準備階段，不對照護結果、LINE 推播送達或提醒即時性做保證。
+              正式版上線前會重新審閱法律文件。
             </li>
           </ul>
         </Section>
@@ -61,8 +61,8 @@ export default function AboutPage() {
 
         <Section title="📦 版本">
           <ul className="space-y-1">
-            <li>v0.3 ─ Closed Beta (封閉測試版)</li>
-            <li>新增：家族 LINE 群組推播、特種個資同意機制</li>
+            <li>v0.4 ─ 中揚資訊試辦版草案</li>
+            <li>新增：照護行程、看護請假、production migration 與特種個資同意機制</li>
             <li>支援離線使用、PWA 可加到主畫面</li>
           </ul>
         </Section>
@@ -80,11 +80,11 @@ export default function AboutPage() {
         <Section title="📮 客服與意見回報">
           <p className="mb-3">
             個資權利行使（查詢、更正、刪除）、bug 回報、功能建議，
-            請透過下列任一管道聯繫，我們會在 15 個工作日內回應。
+            請透過下列信箱聯繫，我們會在 15 個工作日內回應。
           </p>
           <div className="space-y-3 text-sm">
             <a
-              href="mailto:caretaiwan.app@gmail.com"
+              href="mailto:services@joyyoung.com.tw"
               className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 active:bg-blue-100 dark:active:bg-blue-900 rounded-xl border border-blue-200 dark:border-blue-800"
             >
               <span className="text-2xl">📧</span>
@@ -93,26 +93,9 @@ export default function AboutPage() {
                   寄信給客服
                 </div>
                 <div className="text-xs text-blue-700 dark:text-blue-300 break-all">
-                  caretaiwan.app@gmail.com
+                  services@joyyoung.com.tw
                 </div>
               </div>
-            </a>
-            <a
-              href="https://line.me/R/ti/p/@273kvcru"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-950 active:bg-emerald-100 dark:active:bg-emerald-900 rounded-xl border border-emerald-200 dark:border-emerald-800"
-            >
-              <span className="text-2xl">💬</span>
-              <div className="flex-1">
-                <div className="font-semibold text-emerald-900 dark:text-emerald-100">
-                  LINE 真人客服
-                </div>
-                <div className="text-xs text-emerald-700 dark:text-emerald-300">
-                  點此加入好友並開始諮詢 (@273kvcru)
-                </div>
-              </div>
-              <span className="text-emerald-600 dark:text-emerald-400 text-xl">›</span>
             </a>
           </div>
         </Section>

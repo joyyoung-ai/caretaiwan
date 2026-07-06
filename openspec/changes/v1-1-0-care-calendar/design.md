@@ -14,7 +14,7 @@ CareTaiwan 目前已有照護紀錄、長者卡、家屬 LINE 推播、記帳與
 
 **Goals:**
 
-- 建立 `care_events` 與 `caregiver_leave_requests` 的第一版資料模型；正式 migration 等資料庫策略決策後再落。
+- 建立 `care_events` 與 `caregiver_leave_requests` 的第一版資料模型；正式 migration 依 VM 自管 Postgres 路線落地。
 - 家屬與看護能共同管理已配對長者的照護行程。
 - 看護能查看自己配對長者的未來 7 天 / 30 天行程。
 - 看護能提出請假紀錄，家屬能查看並標記已確認。
@@ -67,7 +67,7 @@ LINE reminder 牽涉排程、重試、失敗記錄、推播內容與 PII redacti
 
 ### 6. Keep formal migration after database strategy decision
 
-正式資料庫已決定採 VM 自管 Postgres。v1.1.0 規格先定義資料模型、欄位、index、rollback 要求與測試邊界。實作若需要 schema 草案，只能作為後續 migration 的輸入，不得把手動 SQL 當成 production migration series。
+正式資料庫已決定採 VM 自管 Postgres。v1.1.0 規格先定義資料模型、欄位、index、rollback 要求與測試邊界；production migration series 應以 VM 自管 Postgres runbook 為基準，不得把手動 SQL 當成正式流程。
 
 替代方案：現在立刻建立 `supabase/migrations/`。這能加速實作，但正式資料庫已選 VM 自管 Postgres，migration 應改以 production Postgres runbook 為基準。
 
@@ -86,7 +86,7 @@ LINE reminder 牽涉排程、重試、失敗記錄、推播內容與 PII redacti
 - 回診時間、地點與備註是敏感資料 → API response、audit metadata、LINE push log 不輸出未遮蔽 PII；資料保留與刪除權要寫入文件。
 - 請假可能被家屬當成監控或施壓工具 → 家屬只能確認看護提出的請假，不得代建；文案避免命令語氣。
 - Reminder 漏發可能造成照護風險 → 所有提醒都標示為輔助，不保證送達；失敗狀態不得被隱藏。
-- `supabase-schema.sql` 不是 production migration series → 正式 migration 等資料庫策略決策後再落；production 前不得只靠手動 SQL。
+- `supabase-schema.sql` 不是 production migration series → production migration 已另建於 `supabase/migrations/`；production 前不得只靠手動 SQL。
 - 現有 RLS 尚未完成 → route 必須維持 application-level ownership checks，並以 tests 保護。
 - 多語文案可能不同步 → 涉及使用者可見文案時，同步 `src/lib/i18n/dict.ts` 或明確記錄暫不多語的理由。
 

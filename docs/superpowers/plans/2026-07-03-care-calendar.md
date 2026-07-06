@@ -1,5 +1,7 @@
 # Care Calendar Implementation Plan
 
+> 狀態：歷史執行計畫。v1.1.0 foundation 已依 OpenSpec tasks 完成；正式進度以 `openspec/changes/v1-1-0-care-calendar/tasks.md` 與後續 changelog 為準。本文件保留原始 TDD 計畫，不再作為目前待辦清單。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build v1.1.0 care event and caregiver leave foundations with family/caregiver joint event management, caregiver-created leave requests, inert reminder fields, and no LINE reminder runtime.

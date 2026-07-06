@@ -82,6 +82,7 @@ GitHub private vulnerability reporting 尚未確認啟用前，`services@joyyoun
 - 歷史備份保留時間過長，導致刪除請求失效。
 - 醫療提醒文案被誤解成醫療指示。
 - 照護行程的 `remind_at` 欄位被誤解為已啟用 LINE reminder runtime。
+- v1.2.0 reminder runtime 實作後，LINE provider error、raw LINE user ID、群組 ID、自由文字 note 或完整 payload 被寫進 response、audit metadata 或長期 log。
 - 請假紀錄被誤用為排班、扣款、薪資或勞資爭議判定工具。
 
 目前先用 application-level checks 管控 ownership。若公開營運，應逐步評估 RLS、scoped JWT 或 database RPC。

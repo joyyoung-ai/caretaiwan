@@ -2,13 +2,13 @@
 
 日期：2026-07-03
 
-這份文件是 v1.1.0 照護行程與看護請假資料模型草案。正式資料庫已決定採 VM 自管 Postgres；下一步要把本草案轉成 production migration series，production 前不得只靠手動 SQL。
+這份文件是 v1.1.0 照護行程與看護請假資料模型。正式資料庫已決定採 VM 自管 Postgres；production migration series 已建立於 `supabase/migrations/202607060001_create_care_calendar_tables.sql`，檢查方式見 [MIGRATIONS.md](./MIGRATIONS.md)。production 前仍需在 disposable 或 staging Postgres 實際演練 forward / rollback。
 
 ## care_events
 
 用途：家屬與看護共同管理已配對長者的照護行程。
 
-欄位草案：
+欄位：
 
 - `id bigserial primary key`
 - `elder_id text not null`
@@ -27,7 +27,7 @@
 - `created_at timestamptz default now()`
 - `updated_at timestamptz default now()`
 
-Index 草案：
+Index：
 
 - `idx_care_events_elder_starts` on `(elder_id, starts_at)`
 - `idx_care_events_owner` on `(owner_line_user_id)`
@@ -39,7 +39,7 @@ Index 草案：
 
 用途：看護提出請假紀錄，家屬查看並確認。
 
-欄位草案：
+欄位：
 
 - `id bigserial primary key`
 - `elder_id text not null`
@@ -54,7 +54,7 @@ Index 草案：
 - `created_at timestamptz default now()`
 - `updated_at timestamptz default now()`
 
-Index 草案：
+Index：
 
 - `idx_caregiver_leave_elder_starts` on `(elder_id, starts_at)`
 - `idx_caregiver_leave_caregiver` on `(caregiver_line_user_id)`
@@ -65,4 +65,4 @@ Index 草案：
 
 ## Rollback Notes
 
-正式 migration 建立後，rollback 應先停用相關 API route / UI 入口，再 drop 新表。Rollback 不得影響 `elder_pairings`、`cloud_backups`、`expense_logs`、`record_photos` 或既有照護紀錄資料。
+Rollback 應先停用相關 API route / UI 入口，再執行 `supabase/migrations/202607060001_create_care_calendar_tables.down.sql` drop 新表。Rollback 不得影響 `elder_pairings`、`cloud_backups`、`expense_logs`、`record_photos` 或既有照護紀錄資料。

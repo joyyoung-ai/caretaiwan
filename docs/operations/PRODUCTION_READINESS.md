@@ -6,11 +6,11 @@
 
 ## 1. Release and Repository Controls
 
-- [ ] 建立正式 release 流程：版本號、tag、changelog、rollback note。
+- [x] 建立正式 release 流程：版本號、tag、changelog、rollback note。
 - [ ] 設定 branch protection，要求 PR 通過 CI 才能合併。
 - [ ] 確認 GitHub organization、team、CODEOWNERS 與 maintainer 權限。
 - [ ] 確認 GitHub private vulnerability reporting 是否啟用。
-- [ ] 建立 production image 建置規則；測試失敗不得產生 production image。
+- [x] 建立 production image 建置規則；測試失敗不得產生 production image。
 
 ## 2. Deployment Environment
 
@@ -23,9 +23,10 @@
 
 ## 3. Data and Migration
 
-- [ ] 建立 production migration series，不再只依賴 `supabase-schema.sql`。
-- [ ] 每個新增資料表都要有 rollback strategy、保留期限、刪除流程、可讀寫角色與 right-to-erasure 說明。
+- [x] 建立 production migration series，不再只依賴 `supabase-schema.sql`。
+- [x] 每個新增資料表都要有 rollback strategy、保留期限、刪除流程、可讀寫角色與 right-to-erasure 說明。
 - [ ] 決定 Supabase RLS、scoped JWT、database RPC 或 application-level checks 的長期路線。
+- [ ] 決定 VM 自管 Postgres 要提供 Supabase-compatible API / PostgREST，或重構 app data layer 直接連 Postgres。
 - [ ] migration 先套用到 disposable project 或 staging database，再進 production。
 - [ ] 建立資料匯出、restore drill 與測試資料清除流程。
 
@@ -38,8 +39,8 @@
 
 ## 5. Privacy, Legal, and Data Residency
 
-- [ ] `/privacy`、`/terms`、ConsentModal 切換為中揚資訊股份有限公司版本。
-- [ ] 定義 Data Controller、Data Processor、第三方服務、資料保留、刪除權、備份處理與聯絡窗口。
+- [x] `/privacy`、`/terms`、ConsentModal 切換為中揚資訊股份有限公司版本。
+- [x] 定義 Data Controller、Data Processor、第三方服務、資料保留、刪除權、備份處理與聯絡窗口。
 - [ ] 決定資料庫、檔案儲存與備份所在區域；若使用境外服務，要完成風險評估與使用者告知。
 - [ ] 法律專業審閱隱私權政策與服務條款。
 - [ ] 明確揭露 LINE 服務邊界與群組推播風險。

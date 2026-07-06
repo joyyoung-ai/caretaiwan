@@ -49,6 +49,9 @@ jobs:
       - name: Check docs links
         run: npm run docs:check
 
+      - name: Check migrations
+        run: npm run migrations:check
+
       - name: Run unit and route tests
         run: npm run test
 

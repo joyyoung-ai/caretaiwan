@@ -26,7 +26,7 @@
 
 - 開發語言保留 TypeScript。
 - 框架保留 Next.js 16 / React 19。
-- 資料庫方向保留 Postgres；正式環境已決定採 VM 自管 Postgres，下一步要補 production migration、backup、restore 與 rollback 流程。
+- 資料庫方向保留 Postgres；正式環境已決定採 VM 自管 Postgres，v1.1.0 production migration series 已建立，下一步要補 backup、restore、rollback 演練與實際套用流程。
 - LINE Login、Auth.js、LINE Messaging API 先保留。
 - Tailwind CSS 4 先保留，不導入大型設計系統；先補輕量 UI / 文案規範。
 - 正式部署方向改為 VM，但不綁定特定供應商。公有雲 VM、私有雲、主機代管或地端伺服器都可以，前提是符合網路隔離、備份加密、稽核日誌保存與防竄改等安全基準。
@@ -101,8 +101,8 @@
    - 舊 `caretaiwan.app`、原作者 Vercel 假設與本機絕對路徑應標為 legacy prototype，不要默默沿用。
 
 4. 建立資料庫 migration 規則。
-   - `supabase-schema.sql` 是 idempotent，但不是 migration series。
-   - production 前應新增 `supabase/migrations/`，或至少把 migration 順序寫清楚。
+   - v1.1.0 已建立第一支 production migration series，並保留 `npm run migrations:check` 檢查 forward / rollback 與 `supabase-schema.sql` 是否同步。
+   - production 前仍需在 disposable 或 staging Postgres 實際演練 forward / rollback。
 
 5. 補設計規範。
    - 現況：畫面靠 Tailwind class 和少量 component 撐住，沒有明確 UI 規則。
@@ -115,11 +115,10 @@
    - 目前架構仰賴 service-role 加 application checks。
    - 若公開營運，應逐步改成 RLS、scoped JWT 或 RPC。
 
-2. 重寫分支營運方自己的隱私權政策與服務條款。
-   - 目前文字仍參照原服務營運與原接觸窗口。
-   - 風險：正式展示、試辦或承接公部門專案時，法律主體不清會讓資料責任、刪除請求、事件通報和第三方處理者責任都變模糊。
-   - 修法：將 `/privacy`、`/terms`、ConsentModal 內容切換為中揚資訊股份有限公司版本。文件要明確定義資料擁有者 / 控制者（Data Controller）、資料處理者（Data Processor）、第三方服務、資料保留、刪除權、備份處理原則、資料落地（Data Residency）與聯絡窗口。原作者個人服務的語氣只能保留在歷史說明，不應留在正式條款裡。
-   - 資料落地：若要對接公部門、醫療院所或大型企業，正式隱私權政策要明確宣告資料庫、檔案儲存與備份所在區域。預設規劃應以台灣境內實體伺服器或公有雲台灣機房為優先；若不得不使用境外服務，要先完成風險評估、契約揭露與使用者告知。
+2. 完成分支營運方自己的隱私權政策與服務條款。
+   - 現況：`/privacy`、`/terms`、ConsentModal 與 about page 已切換為中揚資訊股份有限公司版本草案，並補 Data Controller、第三方服務、資料保留、刪除權、備份處理、資料落地規劃與聯絡窗口。
+   - 風險：正式展示、試辦或承接公部門專案前，仍需要法律專業審閱；正式資料庫、檔案儲存與備份所在區域尚未選定。
+   - 下一步：法務確認正式用語、責任限制、資料處理者清單、資料落地區域、LINE 服務邊界、備份刪除請求處理與主管機關通知條件。
 
 3. 公開部署時，rate limiting 不應只是 fallback。
    - 公開 production 若缺 Upstash，濫用風險高的 endpoint 應 fail closed 或明確警示。
@@ -132,10 +131,10 @@
 ## Technical Debt
 
 - 自動化測試已有 helper tests，包含 pairing、origin check、cron security、rate limiter、photo magic-byte、audit metadata redaction 與 photo ownership。Route handler 測試已補 cloud upload / download / delete、data-retention cron、photo upload、photo signed token、family paired、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status、session、health、consent、expense create / list / verify 與 LINE webhook，並補強錯誤路徑與 gate matrix。Production HTTP smoke test 與 Playwright E2E 已可用。測試目標見 `TESTING.md`。
-- migration series 尚未建立。`supabase-schema.sql` 仍是 idempotent schema。
+- v1.1.0 production migration series 已建立；`supabase-schema.sql` 仍保留為 idempotent schema，不取代正式 migration。
 - Supabase RLS 尚未完成，目前仰賴 service-role + application checks。
 - CI/CD 測試閘門已建立於 `.github/workflows/ci.yml`，會執行 lint、docs check、Vitest、build、production smoke 與 Playwright E2E。
-- `/privacy`、`/terms`、ConsentModal 尚未切成中揚資訊正式法律主體版本。
+- `/privacy`、`/terms`、ConsentModal 已切成中揚資訊版本草案；法律專業審閱與實際資料落地區域仍未完成。
 
 ## Deferred
 
@@ -155,6 +154,7 @@
 - 正式 GitHub organization 與 team 尚未建立；CODEOWNERS 草案已存在，但公開前仍要確認實際 owner。
 - GitHub private vulnerability reporting 尚未確認啟用。
 - VM 實際環境尚未選定，runbook 目前只能先寫供應商中立版本。
+- 正式資料庫雖已決定採 VM 自管 Postgres，但 app data layer 仍使用 Supabase client。production 前需決定 VM 內 Supabase-compatible API / PostgREST，或重構資料存取層。
 - 法律文件尚未由專業人士審閱。
 - 第三方滲透測試尚未安排。
 

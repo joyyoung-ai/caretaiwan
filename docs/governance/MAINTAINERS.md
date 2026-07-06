@@ -45,7 +45,7 @@ Security Contact 已有對外信箱。正式公開 repository 前，仍建議確
 
 ## Release
 
-中揚資訊接手後的 release notes 以 [../releases/CHANGELOG.md](../releases/CHANGELOG.md) 為準。每次 release 至少要記錄：
+中揚資訊接手後的 release 流程以 [RELEASE_PROCESS.md](./RELEASE_PROCESS.md) 為準，release notes 以 [../releases/CHANGELOG.md](../releases/CHANGELOG.md) 為準。每次 release 至少要記錄：
 
 - 新增功能。
 - 修正 bug。

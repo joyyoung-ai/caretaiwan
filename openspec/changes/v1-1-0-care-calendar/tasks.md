@@ -13,7 +13,7 @@
 - [x] 2.1 Draft `care_events` schema with elder ownership fields, event type, medical-related flag, title, time range, location, note, inert reminder fields, status, timestamps, indexes, and rollback notes.
 - [x] 2.2 Draft `caregiver_leave_requests` schema with elder ownership fields, caregiver and owner LINE user IDs, time range, fixed reason option, free-text note, status, timestamps, indexes, and rollback notes.
 - [x] 2.3 Document retention, deletion, readable roles, writable roles, backup handling, and right-to-erasure behavior for both new tables; retention follows care records.
-- [ ] 2.4 After production database strategy is decided, turn the schema draft into a formal migration series and verify it in a disposable database before production use.
+- [x] 2.4 After production database strategy is decided, turn the schema draft into a formal migration series; disposable or staging database forward / rollback verification remains required before production use.
 
 ## 3. Care event API and tests
 
@@ -45,7 +45,7 @@
 - [x] 6.1 Keep `remind_at` or equivalent data fields inert in v1.1.0.
 - [x] 6.2 Document that LINE reminder runtime is deferred and reminders are not active yet.
 - [x] 6.3 Do not implement scheduler, retry, LINE push, or reminder failure logging in v1.1.0.
-- [ ] 6.4 Open a follow-up change before implementing reminder runtime.
+- [x] 6.4 Open a follow-up change before implementing reminder runtime.
 
 ## 7. Documentation and release verification
 

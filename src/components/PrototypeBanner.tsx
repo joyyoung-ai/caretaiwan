@@ -26,7 +26,7 @@ export default function PrototypeBanner() {
         strokeWidth={2.4}
       />
       <div className="flex-1 text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
-        <strong>封閉測試版 (Closed Beta)</strong> — 僅供受邀測試者使用，不取代醫療建議。緊急狀況請撥 <strong>119</strong>。
+        <strong>試辦版</strong> — 僅供受邀測試與導入準備使用，不取代醫療建議。緊急狀況請撥 <strong>119</strong>。
       </div>
       <button
         onClick={() => {

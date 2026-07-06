@@ -11,6 +11,7 @@ CareTaiwan 歡迎 issue、文件修正與小範圍 PR。這個專案處理照護
 - [PROJECT_VISION.md](./PROJECT_VISION.md)
 - [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md)
 - [DECISIONS.md](./DECISIONS.md)
+- [RELEASE_PROCESS.md](./RELEASE_PROCESS.md)
 - [../../CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md)
 - [../../AGENTS.md](../../AGENTS.md)
 
@@ -96,6 +97,7 @@ PR checklist 請使用 [.github/PULL_REQUEST_TEMPLATE.md](../../.github/PULL_REQ
 
 ```bash
 npm run docs:check
+npm run migrations:check
 npm run test
 npm run lint
 npm run build
@@ -105,7 +107,7 @@ npm run build
 
 ## Migration Rule
 
-目前 `supabase-schema.sql` 是 idempotent schema，不是完整 migration series。正式 production 前需要建立 migration 規則。
+`supabase-schema.sql` 是 idempotent schema，不取代正式 migration series。production migration series 建立後，schema 變更仍要同步更新 idempotent schema 與 `npm run migrations:check`。
 
 在 migration series 建立後：
 
@@ -115,11 +117,7 @@ npm run build
 - 會刪資料、改欄位型別、搬移 PII 的 migration 要先寫風險說明。
 - 新增資料表要說明保留期限、刪除流程、讀寫角色與 right-to-erasure。
 
-在 migration series 建立前：
-
-- 不要直接把新功能 schema 塞進 `supabase-schema.sql` 當作已定案。
-- 先在 issue 或文件裡寫資料模型草案。
-- 等 production 資料庫策略確認後再實作。
+新增 production migration 前，先在 issue、OpenSpec change 或文件裡寫資料模型草案，再依 VM 自管 Postgres 路線實作。
 
 ## Documentation Rule
 
