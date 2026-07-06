@@ -31,7 +31,14 @@ npm run docs:check
 - 主要 constraints、indexes、RLS 與資料治理註解是否保留。
 - rollback 是否只 drop v1.1.0 新增資料表。
 
-正式套用 production 前，仍需在 disposable 或 staging Postgres 跑一次 forward / rollback。檢查腳本只能避免漏檔與明顯 schema drift，不能取代資料庫實際演練。
+2026-07-06 已用本機一次性 Docker Postgres `postgres:16-alpine` 演練 v1.1.0 migration：
+
+- forward：`202607060001_create_care_calendar_tables.sql` 套用成功。
+- 驗證：`care_events` 與 `caregiver_leave_requests` 兩張表存在，且 `relrowsecurity = true`。
+- rollback：`202607060001_create_care_calendar_tables.down.sql` 套用成功。
+- rollback 驗證：兩張 v1.1.0 新表剩餘數量為 0。
+
+production 套用前，若已建立正式 staging DB，仍建議用 staging DB 再跑一次同樣流程。檢查腳本只能避免漏檔與明顯 schema drift，不能取代資料庫實際演練。
 
 ## 後續規則
 

@@ -47,4 +47,4 @@
 - [x] 6.5 Run `npm run build`.
 - [x] 6.6 Run `npm run test:smoke`.
 - [x] 6.7 Run `npm run test:e2e` when UI behavior changes.
-- [ ] 6.8 Run disposable or staging Postgres connectivity check before production rollout.
+- [x] 6.8 Run disposable or staging Postgres connectivity check before production rollout.

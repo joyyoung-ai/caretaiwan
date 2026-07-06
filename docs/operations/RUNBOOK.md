@@ -68,6 +68,16 @@ docker compose exec -T postgres psql -U caretaiwan_migrator -d caretaiwan -v ON_
 
 Rollback 前應先停用相關 API route / UI 入口。已進 production 且有真實資料後，不得把 rollback 當成一般清資料工具；要先確認資料匯出、法務保留與刪除請求狀態。
 
+2026-07-06 本機 disposable Postgres 演練結果：
+
+- 使用一次性 Docker container：`postgres:16-alpine`。
+- forward migration 成功建立 `care_events` 與 `caregiver_leave_requests`。
+- 驗證兩張表 `relrowsecurity = true`。
+- rollback migration 成功移除兩張表。
+- rollback 後查詢兩張 v1.1.0 表，剩餘數量為 0。
+
+正式 staging DB 建立後，建議用 staging DB 再跑一次同樣流程，並把實際 DB role、操作者與時間寫進部署紀錄。
+
 ## Deploy
 
 - 確認 image tag。
