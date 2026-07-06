@@ -53,7 +53,7 @@ Pilot 通過後再搬移 `care-calendar` / `caregiver-leave`，因為這兩個 h
 
 ### 4. Keep Supabase dependency until migration is complete
 
-`@supabase/supabase-js` 目前仍被 photo file storage fallback、cloud backup 與 cron 使用。第一階段不能移除 dependency，也不能刪 `src/lib/supabase-server.ts`。每一批 migration 應在 tasks 中列出受影響 helper、route tests、redaction checks 與 rollback。
+`@supabase/supabase-js` 目前仍被 photo file storage fallback 使用。第一階段不能移除 dependency，也不能刪 `src/lib/supabase-server.ts`。每一批 migration 應在 tasks 中列出受影響 helper、route tests、redaction checks 與 rollback。
 
 ### 5. Treat storage separately
 

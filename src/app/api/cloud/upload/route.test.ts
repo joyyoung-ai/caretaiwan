@@ -3,7 +3,8 @@ import { POST } from "./route";
 import { auth } from "@/auth";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { rateLimitAsync } from "@/lib/rate-limit";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -17,10 +18,8 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimitAsync: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  getSupabaseAdmin: vi.fn(),
-  isCloudEnabled: vi.fn(),
-}));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
+vi.mock("@/lib/db/postgres", () => ({ query: vi.fn() }));
 
 vi.mock("@/lib/audit", () => ({
   getActorIp: vi.fn(() => "203.0.113.10"),
@@ -30,8 +29,8 @@ vi.mock("@/lib/audit", () => ({
 const authMock = vi.mocked(auth);
 const checkSameOriginMock = vi.mocked(checkSameOrigin);
 const rateLimitAsyncMock = vi.mocked(rateLimitAsync);
-const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
+const queryMock = vi.mocked(query);
 
 function jsonRequest(body: unknown): Request {
   return new Request("https://care.example.test/api/cloud/upload", {
@@ -60,17 +59,13 @@ describe("POST /api/cloud/upload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "family-1", name: "家屬" } } as never);
     rateLimitAsyncMock.mockResolvedValue({ ok: true, remaining: 5, resetAt: Date.now() + 60_000 });
+    queryMock.mockResolvedValue([]);
   });
 
   it("stores backups under the signed-in user and strips unexpected top-level keys", async () => {
-    const upsert = vi.fn().mockResolvedValue({ error: null });
-    getSupabaseAdminMock.mockReturnValue({
-      from: vi.fn(() => ({ upsert })),
-    } as never);
-
     const res = await POST(
       jsonRequest({
         elderStore: { elders: [{ id: "elder-1" }] },
@@ -82,16 +77,17 @@ describe("POST /api/cloud/upload", () => {
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ ok: true });
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        line_user_id: "family-1",
-        display_name: "家屬",
-        data: {
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining("insert into cloud_backups"),
+      [
+        "family-1",
+        "家屬",
+        JSON.stringify({
           elderStore: { elders: [{ id: "elder-1" }] },
           records: [{ id: "record-1" }],
-        },
-      }),
-      { onConflict: "line_user_id" }
+        }),
+        expect.any(String),
+      ]
     );
   });
 
@@ -100,7 +96,7 @@ describe("POST /api/cloud/upload", () => {
 
     expect(res.status).toBe(400);
     await expect(res.json()).resolves.toEqual({ error: "格式錯誤" });
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
   });
 
   it("rejects oversized requests using content-length before reading the body", async () => {
@@ -108,14 +104,11 @@ describe("POST /api/cloud/upload", () => {
 
     expect(res.status).toBe(413);
     await expect(res.json()).resolves.toEqual({ error: "備份檔過大" });
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
   });
 
   it("returns a generic server error when backup upsert fails", async () => {
-    const upsert = vi.fn().mockResolvedValue({ error: { message: "raw database failure" } });
-    getSupabaseAdminMock.mockReturnValue({
-      from: vi.fn(() => ({ upsert })),
-    } as never);
+    queryMock.mockRejectedValueOnce(new Error("raw database failure"));
 
     const res = await POST(jsonRequest({ records: [] }));
 
@@ -123,13 +116,13 @@ describe("POST /api/cloud/upload", () => {
     await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
   });
 
-  it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+  it("returns 503 when database services are disabled", async () => {
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await POST(jsonRequest({ records: [] }));
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用（管理員未設定）" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用（管理員未設定）" });
     expect(authMock).not.toHaveBeenCalled();
   });
 
@@ -141,6 +134,6 @@ describe("POST /api/cloud/upload", () => {
     expect(res.status).toBe(401);
     await expect(res.json()).resolves.toEqual({ error: "未登入" });
     expect(rateLimitAsyncMock).not.toHaveBeenCalled();
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
   });
 });

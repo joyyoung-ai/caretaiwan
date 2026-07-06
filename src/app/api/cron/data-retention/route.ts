@@ -13,7 +13,8 @@
 //      b. GET /api/cron/data-retention?stage=delete
 //      Authorization: Bearer <CRON_SECRET>
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 import { pushMessage, isLineBotEnabled } from "@/lib/line-bot";
 import { logAudit } from "@/lib/audit";
 import {
@@ -47,6 +48,21 @@ function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
+type RetentionCandidate = {
+  line_user_id: string;
+  display_name: string | null;
+  updated_at: string;
+};
+
+type CountRow = {
+  count: number | string | null;
+};
+
+function rowCount(rows: CountRow[]): number {
+  const value = rows[0]?.count ?? 0;
+  return typeof value === "number" ? value : Number(value) || 0;
+}
+
 export async function GET(req: Request) {
   // Bearer token 認證
   const secret = process.env.CRON_SECRET;
@@ -62,8 +78,8 @@ export async function GET(req: Request) {
     return unauthorized();
   }
 
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "Cloud not enabled" }, { status: 503 });
+  if (!isDatabaseEnabled()) {
+    return NextResponse.json({ error: "Database not enabled" }, { status: 503 });
   }
 
   const url = new URL(req.url);
@@ -77,49 +93,52 @@ export async function GET(req: Request) {
     );
   }
 
-  const sb = getSupabaseAdmin()!;
-
   if (stage === "warn") {
-    return await runWarnStage(sb, dryRun, secret);
+    return await runWarnStage(dryRun, secret);
   }
-  return await runDeleteStage(sb, dryRun, secret);
+  return await runDeleteStage(dryRun, secret);
 }
 
 // 警告階段: 11 個月未活動 → 發 LINE 通知
-async function runWarnStage(
-  sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
-  dryRun: boolean,
-  refSecret: string
-) {
+async function runWarnStage(dryRun: boolean, refSecret: string) {
   const warnThreshold = new Date(
     Date.now() - (RETENTION_DAYS - WARNING_DAYS_BEFORE) * 24 * 60 * 60 * 1000
   ).toISOString();
   // 已警告過的不再重發 (用 metadata 紀錄,簡化為 last_warned_at column 在未來版本加;
   // 目前用 audit_logs 查 11 個月內是否已警告)
-  const { data: candidates, error } = await sb
-    .from("cloud_backups")
-    .select("line_user_id, display_name, updated_at")
-    .lt("updated_at", warnThreshold)
-    .limit(MAX_BATCH_SIZE);
-
-  if (error) {
-    console.error("[data-retention] warn query failed", error.message);
+  let candidates: RetentionCandidate[];
+  try {
+    candidates = await query<RetentionCandidate>(
+      `
+        select line_user_id, display_name, updated_at
+        from cloud_backups
+        where updated_at < $1
+        order by updated_at asc
+        limit $2
+      `,
+      [warnThreshold, MAX_BATCH_SIZE]
+    );
+  } catch {
+    console.error("[data-retention] warn query failed");
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
   const results: DataRetentionWarnResult[] = [];
 
-  for (const c of candidates ?? []) {
+  for (const c of candidates) {
     // 查最近 35 天有沒有已警告過 (避免每天重發)
     const since = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: prev } = await sb
-      .from("audit_logs")
-      .select("id")
-      .eq("actor_line_user_id", c.line_user_id)
-      .eq("action", "DATA_RETENTION_WARNING")
-      .gt("created_at", since)
-      .limit(1)
-      .maybeSingle();
+    const [prev] = await query<{ id: number }>(
+      `
+        select id
+        from audit_logs
+        where actor_line_user_id = $1
+          and action = $2
+          and created_at > $3
+        limit 1
+      `,
+      [c.line_user_id, "DATA_RETENTION_WARNING", since]
+    );
     if (prev) {
       results.push(
         buildWarnResult({
@@ -189,28 +208,31 @@ async function runWarnStage(
 }
 
 // 刪除階段: 12 個月未活動 → 刪 cloud_backups + 對應 elder_pairings
-async function runDeleteStage(
-  sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
-  dryRun: boolean,
-  refSecret: string
-) {
+async function runDeleteStage(dryRun: boolean, refSecret: string) {
   const deleteThreshold = new Date(
     Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
-  const { data: candidates, error } = await sb
-    .from("cloud_backups")
-    .select("line_user_id, display_name, updated_at")
-    .lt("updated_at", deleteThreshold)
-    .limit(MAX_BATCH_SIZE);
 
-  if (error) {
-    console.error("[data-retention] delete query failed", error.message);
+  let candidates: RetentionCandidate[];
+  try {
+    candidates = await query<RetentionCandidate>(
+      `
+        select line_user_id, display_name, updated_at
+        from cloud_backups
+        where updated_at < $1
+        order by updated_at asc
+        limit $2
+      `,
+      [deleteThreshold, MAX_BATCH_SIZE]
+    );
+  } catch {
+    console.error("[data-retention] delete query failed");
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
   const results: DataRetentionDeleteResult[] = [];
 
-  for (const c of candidates ?? []) {
+  for (const c of candidates) {
     if (dryRun) {
       results.push(buildDeleteDryRunResult(c.line_user_id, refSecret));
       continue;
@@ -221,18 +243,38 @@ async function runDeleteStage(
       refSecret,
       lastUpdate: c.updated_at,
       deleteCloudBackup: (lineUserId) =>
-        sb.from("cloud_backups").delete().eq("line_user_id", lineUserId),
+        query("delete from cloud_backups where line_user_id = $1", [lineUserId])
+          .then(() => ({ error: null }))
+          .catch(() => ({ error: { message: "DB_ERROR" } })),
       // 拆兩次 query，不用 .or() 字串拼接，避免 PostgREST filter injection。
       deleteOwnerPairings: (lineUserId) =>
-        sb
-          .from("elder_pairings")
-          .delete({ count: "exact" })
-          .eq("owner_line_user_id", lineUserId),
+        query<CountRow>(
+          `
+            with deleted as (
+              delete from elder_pairings
+              where owner_line_user_id = $1
+              returning 1
+            )
+            select count(*)::int as count from deleted
+          `,
+          [lineUserId]
+        )
+          .then((rows) => ({ count: rowCount(rows), error: null }))
+          .catch(() => ({ error: { message: "DB_ERROR" } })),
       deletePairedPairings: (lineUserId) =>
-        sb
-          .from("elder_pairings")
-          .delete({ count: "exact" })
-          .eq("paired_line_user_id", lineUserId),
+        query<CountRow>(
+          `
+            with deleted as (
+              delete from elder_pairings
+              where paired_line_user_id = $1
+              returning 1
+            )
+            select count(*)::int as count from deleted
+          `,
+          [lineUserId]
+        )
+          .then((rows) => ({ count: rowCount(rows), error: null }))
+          .catch(() => ({ error: { message: "DB_ERROR" } })),
     });
 
     if (outcome.auditMetadata.reason === "DB_ERROR") {

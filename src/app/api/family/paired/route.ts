@@ -9,7 +9,8 @@
 // 路徑保留 /api/family/paired 是歷史遺留，未來可改 /api/paired-elders。
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import type { Elder } from "@/lib/elder";
 
@@ -24,13 +25,27 @@ type PairedElderItem = {
   hasGroup: boolean; // 看護端用來判斷要不要顯示「也送到群組」選項
 };
 
+type PairingRow = {
+  elder_id: string;
+  display_name: string | null;
+  paired_at: string | null;
+  owner_line_user_id: string;
+  notify_group_id: string | null;
+};
+
+type BackupRow = {
+  line_user_id: string;
+  display_name: string | null;
+  data: unknown;
+};
+
 export async function GET(req: Request) {
   // GET 回傳完整醫護卡(特種個資)-> 同源檢查
   const csrf = checkSameOriginGet(req);
   if (csrf) return csrf;
 
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isDatabaseEnabled()) {
+    return NextResponse.json({ error: "資料庫服務未啟用" }, { status: 503 });
   }
   const session = await auth();
   const lineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;
@@ -38,32 +53,43 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "未登入" }, { status: 401 });
   }
 
-  const sb = getSupabaseAdmin()!;
-
   // 找 pairings：caller 是 paired_line_user_id（看護端）
-  const { data: pairings, error: pairErr } = await sb
-    .from("elder_pairings")
-    .select("elder_id, display_name, paired_at, owner_line_user_id, notify_group_id")
-    .eq("paired_line_user_id", lineUserId);
-
-  if (pairErr) {
-    console.error("[paired]", pairErr.message);
+  let pairings: PairingRow[];
+  try {
+    pairings = await query<PairingRow>(
+      `
+        select elder_id,
+               display_name,
+               paired_at,
+               owner_line_user_id,
+               notify_group_id
+        from elder_pairings
+        where paired_line_user_id = $1
+      `,
+      [lineUserId]
+    );
+  } catch {
+    console.error("[paired] pairing query failed");
     return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
   }
 
-  if (!pairings || pairings.length === 0) {
+  if (pairings.length === 0) {
     return NextResponse.json({ ok: true, items: [] });
   }
 
   // 抓 owner（家屬）的 cloud_backups
   const ownerIds = Array.from(new Set(pairings.map((p) => p.owner_line_user_id)));
-  const { data: backups } = await sb
-    .from("cloud_backups")
-    .select("line_user_id, display_name, data")
-    .in("line_user_id", ownerIds);
+  const backups = await query<BackupRow>(
+    `
+      select line_user_id, display_name, data
+      from cloud_backups
+      where line_user_id = any($1::text[])
+    `,
+    [ownerIds]
+  );
 
   const backupByOwner = new Map<string, { displayName: string | null; data: unknown }>();
-  for (const b of backups ?? []) {
+  for (const b of backups) {
     backupByOwner.set(b.line_user_id, { displayName: b.display_name, data: b.data });
   }
 

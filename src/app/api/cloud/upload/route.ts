@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { logAudit, getActorIp } from "@/lib/audit";
 import { rateLimitAsync } from "@/lib/rate-limit";
@@ -26,8 +27,8 @@ export async function POST(req: Request) {
     logAudit({ action: "FORBIDDEN_ORIGIN", actorIp: ip, resourceType: "cloud_backup", status: "forbidden" });
     return csrf;
   }
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "雲端服務未啟用（管理員未設定）" }, { status: 503 });
+  if (!isDatabaseEnabled()) {
+    return NextResponse.json({ error: "資料庫服務未啟用（管理員未設定）" }, { status: 503 });
   }
   const session = await auth();
   const lineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;
@@ -83,21 +84,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "備份檔過大" }, { status: 413 });
   }
 
-  const supabase = getSupabaseAdmin()!;
-  const { error } = await supabase
-    .from("cloud_backups")
-    .upsert(
-      {
-        line_user_id: lineUserId,
-        display_name: session?.user?.name ?? null,
-        data: sanitized,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "line_user_id" }
+  try {
+    await query(
+      `
+        insert into cloud_backups (
+          line_user_id,
+          display_name,
+          data,
+          updated_at
+        )
+        values ($1, $2, $3::jsonb, $4)
+        on conflict (line_user_id)
+        do update set
+          display_name = excluded.display_name,
+          data = excluded.data,
+          updated_at = excluded.updated_at
+      `,
+      [
+        lineUserId,
+        session?.user?.name ?? null,
+        JSON.stringify(sanitized),
+        new Date().toISOString(),
+      ]
     );
-
-  if (error) {
-    console.error("[cloud/upload]", error.message);
+  } catch {
+    console.error("[cloud/upload] backup upsert failed");
     logAudit({
       action: "CLOUD_UPLOAD",
       actorLineUserId: lineUserId,

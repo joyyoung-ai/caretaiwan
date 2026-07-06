@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 import { auth } from "@/auth";
 import { checkSameOriginGet } from "@/lib/origin-check";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -12,15 +13,13 @@ vi.mock("@/lib/origin-check", () => ({
   checkSameOriginGet: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  getSupabaseAdmin: vi.fn(),
-  isCloudEnabled: vi.fn(),
-}));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
+vi.mock("@/lib/db/postgres", () => ({ query: vi.fn() }));
 
 const authMock = vi.mocked(auth);
 const checkSameOriginGetMock = vi.mocked(checkSameOriginGet);
-const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
+const queryMock = vi.mocked(query);
 
 function request(): Request {
   return new Request("https://care.example.test/api/family/paired", {
@@ -32,13 +31,13 @@ describe("GET /api/family/paired", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginGetMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
   });
 
   it("queries pairings by signed-in caregiver and returns only matching elder cards", async () => {
-    const pairingEq = vi.fn().mockResolvedValue({
-      data: [
+    queryMock
+      .mockResolvedValueOnce([
         {
           elder_id: "elder-1",
           display_name: "阿公",
@@ -46,11 +45,8 @@ describe("GET /api/family/paired", () => {
           owner_line_user_id: "family-1",
           notify_group_id: "group-1",
         },
-      ],
-      error: null,
-    });
-    const backupIn = vi.fn().mockResolvedValue({
-      data: [
+      ])
+      .mockResolvedValueOnce([
         {
           line_user_id: "family-1",
           display_name: "家屬",
@@ -63,31 +59,22 @@ describe("GET /api/family/paired", () => {
             },
           },
         },
-      ],
-      error: null,
-    });
-
-    getSupabaseAdminMock.mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === "elder_pairings") {
-          return {
-            select: vi.fn().mockReturnThis(),
-            eq: pairingEq,
-          };
-        }
-        return {
-          select: vi.fn().mockReturnThis(),
-          in: backupIn,
-        };
-      }),
-    } as never);
+      ]);
 
     const res = await GET(request());
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(pairingEq).toHaveBeenCalledWith("paired_line_user_id", "caregiver-1");
-    expect(backupIn).toHaveBeenCalledWith("line_user_id", ["family-1"]);
+    expect(queryMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("from elder_pairings"),
+      ["caregiver-1"]
+    );
+    expect(queryMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("from cloud_backups"),
+      [["family-1"]]
+    );
     expect(body.items).toEqual([
       {
         elderId: "elder-1",
@@ -101,15 +88,7 @@ describe("GET /api/family/paired", () => {
   });
 
   it("returns a generic server error when pairing lookup fails", async () => {
-    getSupabaseAdminMock.mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: { message: "raw pairing query failure" },
-        }),
-      })),
-    } as never);
+    queryMock.mockRejectedValueOnce(new Error("raw pairing query failure"));
 
     const res = await GET(request());
 
@@ -117,13 +96,13 @@ describe("GET /api/family/paired", () => {
     await expect(res.json()).resolves.toEqual({ error: "伺服器錯誤" });
   });
 
-  it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+  it("returns 503 when database services are disabled", async () => {
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await GET(request());
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 
@@ -134,6 +113,6 @@ describe("GET /api/family/paired", () => {
 
     expect(res.status).toBe(401);
     await expect(res.json()).resolves.toEqual({ error: "未登入" });
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
   });
 });

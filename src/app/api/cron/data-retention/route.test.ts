@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { query } from "@/lib/db/postgres";
 import { isLineBotEnabled } from "@/lib/line-bot";
 
-vi.mock("@/lib/supabase-server", () => ({
-  getSupabaseAdmin: vi.fn(),
-  isCloudEnabled: vi.fn(),
-}));
+vi.mock("@/lib/db/client", () => ({ isDatabaseEnabled: vi.fn() }));
+vi.mock("@/lib/db/postgres", () => ({ query: vi.fn() }));
 
 vi.mock("@/lib/line-bot", () => ({
   isLineBotEnabled: vi.fn(),
@@ -25,8 +24,8 @@ vi.mock("@/lib/cron-security", async () => {
   return await import("../../../../lib/cron-security");
 });
 
-const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
+const queryMock = vi.mocked(query);
 const isLineBotEnabledMock = vi.mocked(isLineBotEnabled);
 
 function cronRequest(stage: "warn" | "delete", dryRun = true): Request {
@@ -54,34 +53,13 @@ function backupRows() {
   ];
 }
 
-function supabaseForRetentionCandidates() {
-  return {
-    from: vi.fn((table: string) => {
-      if (table === "cloud_backups") {
-        return {
-          select: vi.fn().mockReturnThis(),
-          lt: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue({ data: backupRows(), error: null }),
-        };
-      }
-      return {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gt: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      };
-    }),
-  };
-}
-
 describe("GET /api/cron/data-retention", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("CRON_SECRET", "cron-secret");
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     isLineBotEnabledMock.mockReturnValue(false);
-    getSupabaseAdminMock.mockReturnValue(supabaseForRetentionCandidates() as never);
+    queryMock.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -89,6 +67,8 @@ describe("GET /api/cron/data-retention", () => {
   });
 
   it("redacts warn-stage response samples", async () => {
+    queryMock.mockResolvedValueOnce(backupRows()).mockResolvedValueOnce([]);
+
     const res = await GET(cronRequest("warn"));
     const body = await res.json();
 
@@ -108,9 +88,21 @@ describe("GET /api/cron/data-retention", () => {
     expect(body.results[0].lineUserRef).toMatch(/^[a-f0-9]{12}$/);
     expect(JSON.stringify(body)).not.toContain("U1234567890abcdef1234567890abcdef");
     expect(JSON.stringify(body)).not.toContain("王小明");
+    expect(queryMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("from cloud_backups"),
+      expect.arrayContaining([expect.any(String), 100])
+    );
+    expect(queryMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("from audit_logs"),
+      expect.arrayContaining(["U1234567890abcdef1234567890abcdef", "DATA_RETENTION_WARNING"])
+    );
   });
 
   it("redacts delete-stage dry-run response samples", async () => {
+    queryMock.mockResolvedValueOnce(backupRows());
+
     const res = await GET(cronRequest("delete"));
     const body = await res.json();
 
@@ -132,6 +124,35 @@ describe("GET /api/cron/data-retention", () => {
     expect(JSON.stringify(body)).not.toContain("王小明");
   });
 
+  it("deletes expired backups before pairings through direct Postgres", async () => {
+    queryMock
+      .mockResolvedValueOnce(backupRows())
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ count: 2 }])
+      .mockResolvedValueOnce([{ count: 1 }]);
+
+    const res = await GET(cronRequest("delete", false));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.results[0]).toMatchObject({ deleted: true, pairingsDeleted: 3 });
+    expect(queryMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("delete from cloud_backups"),
+      ["U1234567890abcdef1234567890abcdef"]
+    );
+    expect(queryMock).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining("owner_line_user_id"),
+      ["U1234567890abcdef1234567890abcdef"]
+    );
+    expect(queryMock).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining("paired_line_user_id"),
+      ["U1234567890abcdef1234567890abcdef"]
+    );
+  });
+
   it("rejects missing or invalid bearer tokens", async () => {
     const missing = await GET(cronRequestWithAuth());
     const invalid = await GET(cronRequestWithAuth("Bearer wrong-secret"));
@@ -149,5 +170,15 @@ describe("GET /api/cron/data-retention", () => {
 
     expect(res.status).toBe(503);
     await expect(res.json()).resolves.toEqual({ error: "CRON_SECRET not configured" });
+  });
+
+  it("returns service unavailable when database services are disabled", async () => {
+    isDatabaseEnabledMock.mockReturnValue(false);
+
+    const res = await GET(cronRequestWithAuth("Bearer cron-secret"));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ error: "Database not enabled" });
+    expect(queryMock).not.toHaveBeenCalled();
   });
 });
