@@ -29,6 +29,10 @@ npm run test:e2e
 
 若 release 不碰 UI，維護者仍可要求跑 `test:e2e`，因為首頁 shell、legal pages、session redaction 與照護行程入口都屬於 smoke baseline。
 
+## Public visibility gate
+
+一般 release 不會改 repository visibility。若要把 repository 改成 public，必須先完成 [PUBLIC_RELEASE_CHECKLIST.md](./PUBLIC_RELEASE_CHECKLIST.md)，包含 current tree / git history hygiene scan、license 決策、security reporting channel、issue template 檢查與 maintainer approval。公開動作不得包在一般功能 PR 或 release tag 裡順手處理。
+
 ## Required review
 
 Release PR 至少檢查：

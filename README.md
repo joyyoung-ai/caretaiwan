@@ -311,11 +311,12 @@ cp .env.example .env.local
 #   AUTH_SECRET                — openssl rand -base64 32
 #   LINE_CHANNEL_ID/SECRET     — LINE Login Channel
 #   LINE_BOT_*                 — LINE Messaging API Channel
-#   NEXT_PUBLIC_SUPABASE_URL   — Supabase project
-#   SUPABASE_SERVICE_ROLE_KEY  — service_role (server-only!)
+#   DATABASE_URL               — local or VM Postgres connection string
+#   LOCAL_PHOTO_STORAGE_DIR    — local path for uploaded photos
+#   LOCAL_PHOTO_SIGNING_SECRET — server-only signing secret
 
 # Schema
-# Run supabase-schema.sql in Supabase SQL Editor
+# Apply supabase-schema.sql or the SQL files in supabase/migrations/ to Postgres
 
 # Dev
 npm run dev

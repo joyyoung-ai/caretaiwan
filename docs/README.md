@@ -10,6 +10,7 @@
 - [governance/FORK_NOTICE.md](./governance/FORK_NOTICE.md)：中揚資訊接手背景。
 - [governance/KNOWN_LIMITATIONS.md](./governance/KNOWN_LIMITATIONS.md)：目前限制，哪些不是 bug。
 - [governance/MAINTAINERS.md](./governance/MAINTAINERS.md)：維護責任與聯絡方式。
+- [governance/PUBLIC_RELEASE_CHECKLIST.md](./governance/PUBLIC_RELEASE_CHECKLIST.md)：repository 公開前的 hygiene scan、owner decision 與 visibility gate。
 - [governance/RELEASE_PROCESS.md](./governance/RELEASE_PROCESS.md)：release gate、tag、branch protection 與 production image 規則。
 
 ## Product

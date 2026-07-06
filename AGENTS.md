@@ -17,10 +17,10 @@ CareTaiwan 是給台灣外籍家庭看護與家屬使用的 Next.js 16 / React 1
 - 框架：Next.js 16 App Router，使用 Turbopack。
 - UI：React 19、Tailwind CSS 4、Lucide React。
 - 認證：Auth.js v5 beta，LINE provider。
-- 資料：Supabase Postgres，伺服器端使用 service-role client。
+- 資料：VM 自管 Postgres，伺服器端透過 `src/lib/db/*` direct Postgres adapter 存取。
 - 推播：LINE Messaging API webhook 與 push API。
 - PWA：手寫 service worker，位於 `public/sw.js`。
-- 執行環境：需要 crypto、Auth.js、Supabase 或本機照片儲存的 API route 使用 Node.js。
+- 執行環境：需要 crypto、Auth.js、direct Postgres 或 VM local photo storage 的 API route 使用 Node.js。
 
 ## 常用命令
 
@@ -49,9 +49,6 @@ npm run dev
 - `LINE_CHANNEL_SECRET`
 - `LINE_BOT_CHANNEL_SECRET`
 - `LINE_BOT_CHANNEL_ACCESS_TOKEN`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `DATABASE_URL`
 - `POSTGRES_SSL_MODE`
 - `POSTGRES_POOL_MAX`
@@ -66,12 +63,12 @@ npm run dev
 - `PUBLIC_APP_URL`
 - `PRODUCTION_ALLOWED_HOSTS`
 
-service-role、Postgres URL、Bot access token、cron secret、signing secret 都只能留在伺服器端。不要放進 client component，也不要加上 `NEXT_PUBLIC_*`。
+Postgres URL、Bot access token、cron secret、photo signing secret 都只能留在伺服器端。不要放進 client component，也不要加上 `NEXT_PUBLIC_*`。
 
 ## 安全邊界
 
 - 照護紀錄、長者卡、記帳紀錄、照片、LINE ID、顯示名稱與稽核 metadata 都當成敏感資料處理。
-- 伺服器端 Supabase 目前使用 `SUPABASE_SERVICE_ROLE_KEY`；每個 API route 在讀寫資料前都要自行檢查 ownership / role。
+- 伺服器端資料存取目前使用 direct Postgres adapter；每個 API route 在讀寫資料前都要自行檢查 ownership / role。
 - 會改變狀態的 API route 應使用 `checkSameOrigin`。
 - 讀取個資的 GET route 若預期由瀏覽器發起，應使用 `checkSameOriginGet`。
 - 重要濫用風險面應使用 `rateLimitAsync`，不要只靠同步 fallback helper。
@@ -84,7 +81,7 @@ service-role、Postgres URL、Bot access token、cron secret、signing secret �
 ## 程式碼規範
 
 - 新增工具前，優先使用 `src/lib/*` 既有 helper。
-- 明確維持 client/server 邊界。不得從 client component import `src/lib/supabase-server.ts`。
+- 明確維持 client/server 邊界。不得從 client component import `src/lib/db/*` 或其他 server-only helper。
 - API 回傳錯誤要保持乾淨；詳細 DB 錯誤只留在 server log 或已遮蔽的 audit metadata。
 - 對匯入資料或使用者可控 JSON，使用結構化驗證或明確欄位 allowlist。
 - 使用者可見文案以繁體中文為主；若涉及多語字典，再同步更新越南文、印尼文與英文。
@@ -150,7 +147,7 @@ service-role、Postgres URL、Bot access token、cron secret、signing secret �
 ## 重要檔案
 
 - `src/auth.ts`：Auth.js LINE provider 設定。
-- `src/lib/supabase-server.ts`：僅限伺服器使用的 Supabase service-role client。
+- `src/lib/db/client.ts`、`src/lib/db/postgres.ts`、`src/lib/db/errors.ts`：僅限伺服器使用的 direct Postgres adapter。
 - `src/lib/origin-check.ts`：CSRF / same-origin 檢查。
 - `src/lib/rate-limit.ts`：以 Upstash 支援的 rate limiter，含 in-memory fallback。
 - `src/lib/pairing.ts`：長者、家屬、看護與 LINE 群組配對邏輯。

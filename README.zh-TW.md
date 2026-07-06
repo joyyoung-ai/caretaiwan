@@ -311,11 +311,12 @@ cp .env.example .env.local
 #   AUTH_SECRET                — openssl rand -base64 32
 #   LINE_CHANNEL_ID/SECRET     — LINE Login Channel
 #   LINE_BOT_*                 — LINE Messaging API Channel
-#   NEXT_PUBLIC_SUPABASE_URL   — Supabase 專案
-#   SUPABASE_SERVICE_ROLE_KEY  — service_role（僅限伺服器端！）
+#   DATABASE_URL               — 本機或 VM Postgres connection string
+#   LOCAL_PHOTO_STORAGE_DIR    — 照片上傳使用的本機目錄
+#   LOCAL_PHOTO_SIGNING_SECRET — 僅限伺服器端使用的照片簽名 secret
 
 # Schema
-# 在 Supabase SQL Editor 執行 supabase-schema.sql
+# 將 supabase-schema.sql 或 supabase/migrations/ 內的 SQL 套用到 Postgres
 
 # 開發
 npm run dev

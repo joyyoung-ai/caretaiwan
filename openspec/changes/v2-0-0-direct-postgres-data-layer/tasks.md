@@ -40,11 +40,11 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Run `npm run docs:check`.
-- [ ] 6.2 Run `npm run migrations:check`.
-- [ ] 6.3 Run adapter and affected route tests.
-- [ ] 6.4 Run `npm run lint`.
-- [ ] 6.5 Run `npm run build`.
-- [ ] 6.6 Run `npm run test:smoke`.
-- [ ] 6.7 Run `npm run test:e2e` when UI behavior changes.
+- [x] 6.1 Run `npm run docs:check`.
+- [x] 6.2 Run `npm run migrations:check`.
+- [x] 6.3 Run adapter and affected route tests.
+- [x] 6.4 Run `npm run lint`.
+- [x] 6.5 Run `npm run build`.
+- [x] 6.6 Run `npm run test:smoke`.
+- [x] 6.7 Run `npm run test:e2e` when UI behavior changes.
 - [ ] 6.8 Run disposable or staging Postgres connectivity check before production rollout.

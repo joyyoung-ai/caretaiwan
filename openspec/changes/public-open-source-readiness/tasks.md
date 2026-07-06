@@ -8,11 +8,11 @@
 
 ## 2. Repository hygiene scan
 
-- [ ] 2.1 Run a current tree scan for secrets, private keys, database URLs, LINE tokens, LINE IDs, signed URLs, logs and real personal data.
-- [ ] 2.2 Run a git history scan for the same categories before repository visibility changes.
+- [x] 2.1 Run a current tree scan for secrets, private keys, database URLs, LINE tokens, LINE IDs, signed URLs, logs and real personal data.
+- [x] 2.2 Run a git history scan for the same categories before repository visibility changes.
 - [ ] 2.3 If any secret appears in history, rotate or revoke it before cleanup.
 - [ ] 2.4 Redact or remove any real care records, names, phone numbers, addresses, photos, screenshots or logs.
-- [ ] 2.5 Document scan commands and final results in the release checklist without publishing sensitive findings.
+- [x] 2.5 Document scan commands and final results in the release checklist without publishing sensitive findings.
 
 ## 3. Public documentation
 
@@ -34,15 +34,15 @@
 
 ## 5. Release and visibility checklist
 
-- [ ] 5.1 Add a public release checklist covering docs, hygiene scan, CI, migrations, build, smoke test and maintainer approval.
-- [ ] 5.2 Include exact verification commands: `npm run docs:check`, `npm run migrations:check`, `npm run test`, `npm run lint`, `npm run build`, `npm run test:smoke` and `git diff --check`.
-- [ ] 5.3 Include manual checks for `.env*`, screenshots, fixtures, seed data and public issue templates.
-- [ ] 5.4 Require owner approval before changing GitHub repository visibility to public.
-- [ ] 5.5 Document immediate response steps if the repository is accidentally made public before readiness approval.
+- [x] 5.1 Add a public release checklist covering docs, hygiene scan, CI, migrations, build, smoke test and maintainer approval.
+- [x] 5.2 Include exact verification commands: `npm run docs:check`, `npm run migrations:check`, `npm run test`, `npm run lint`, `npm run build`, `npm run test:smoke` and `git diff --check`.
+- [x] 5.3 Include manual checks for `.env*`, screenshots, fixtures, seed data and public issue templates.
+- [x] 5.4 Require owner approval before changing GitHub repository visibility to public.
+- [x] 5.5 Document immediate response steps if the repository is accidentally made public before readiness approval.
 
 ## 6. Verification
 
-- [ ] 6.1 Run `npm run docs:check`.
-- [ ] 6.2 Run `git diff --check`.
+- [x] 6.1 Run `npm run docs:check`.
+- [x] 6.2 Run `git diff --check`.
 - [ ] 6.3 Run broader test / lint / build gates once docs and templates are implemented.
 - [ ] 6.4 Push the readiness change after verification.
