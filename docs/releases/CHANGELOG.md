@@ -36,6 +36,7 @@
 - 將 pairing helper 與 `/api/pairing/*` routes 改用 direct Postgres adapter，保留配對碼 TTL、防自己配對、conditional bind、群組配對與照片推播設定的 ownership guard。
 - 將 expense helper、`/api/expense/*` routes 與 `record_photos` metadata helper 改用 direct Postgres adapter，照片檔案儲存與 Supabase Storage fallback 保留到後續 storage strategy slice。
 - 將 cloud backup upload / download / delete、family paired 與 data-retention cron 改用 direct Postgres adapter，保留 cloud backup key whitelist、response redaction 與 backup-first retention delete 語意。
+- 正式照片儲存策略採 VM local storage，移除 Supabase Storage fallback、Supabase runtime env、`@supabase/supabase-js` dependency 與未使用 Supabase helper。
 - 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
 - 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已收到。
 - 看護端與家屬端首頁新增照護行程 / 請假紀錄最小流程：看護可切換 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程並標記請假紀錄已收到。

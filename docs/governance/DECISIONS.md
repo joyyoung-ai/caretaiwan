@@ -143,7 +143,7 @@ Review date：2026-09-30
 
 背景：
 
-ADR-0009 已決定正式資料庫採 VM 自管 Postgres。現有程式仍使用 Supabase client 介面，例如 `.from().select().eq()`，也仍依賴 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`。若正式環境不使用 managed Supabase，還需要決定 app 要怎麼連到自管 Postgres。
+ADR-0009 已決定正式資料庫採 VM 自管 Postgres。原作者版本使用 Supabase client 介面，例如 `.from().select().eq()`，也依賴 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`。正式分支已決定不使用 managed Supabase 作為 production runtime。
 
 決策：
 
@@ -158,9 +158,9 @@ App data layer 逐步重構為 server-side 直接連 VM 自管 Postgres。正式
 
 影響：
 
-- 需要新增 `src/lib/db/*` 或等效 server-only adapter，先包住 query、transaction、error redaction 與測試 mock。
-- 不能一次替換所有 Supabase client 呼叫。應先選一條低到中風險流程做代表，再逐步遷移 pairing、care calendar、expense、photo ownership、cloud backup 與 audit。
-- 照片與備份 storage 要另定策略。DB 直接連 Postgres 不會自動取代 Supabase Storage。
+- 已新增 `src/lib/db/*` server-only adapter，包住 query、transaction、error redaction 與測試 mock。
+- Supabase client 呼叫已分批移除；pairing、care calendar、expense、photo ownership、cloud backup、data-retention cron 與 audit 已改用 direct Postgres。
+- 照片 storage 正式採 VM local storage，需掛 persistent volume 並納入備份。
 - 現有 tests 要保留，並為新的 DB adapter 補 regression tests。
 - `.env.example`、Docker env、runbook 與 production readiness 需要新增 Postgres connection 設定與 secret owner。
 - RLS、database role、database RPC 或 application-level checks 的長期路線仍需另外評估。第一階段維持 application-level ownership checks。

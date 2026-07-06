@@ -92,9 +92,9 @@ LINE Developers Console → Messaging API → Bot basic ID / QR code。
 | `LINE_BOT_CHANNEL_SECRET` | LINE Messaging API webhook 驗簽 |
 | `LINE_BOT_CHANNEL_ACCESS_TOKEN` | LINE Messaging API push message |
 | `AUTH_SECRET` | Auth.js session secret |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | server-side Supabase service role |
+| `DATABASE_URL` | VM 自管 Postgres connection string |
+| `LOCAL_PHOTO_STORAGE_DIR` | VM local photo storage path |
+| `LOCAL_PHOTO_SIGNING_SECRET` | Photo signed URL secret |
 
 ## Legacy Vercel Reference
 

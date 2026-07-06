@@ -38,11 +38,11 @@ cp docker/.env.production.example docker/.env.production
 - `AUTH_SECRET`：正式環境專用，不可沿用開發值。
 - `LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET`：LINE Login。
 - `LINE_BOT_CHANNEL_SECRET` / `LINE_BOT_CHANNEL_ACCESS_TOKEN`：LINE Messaging API。
-- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`：若沿用 Supabase managed service。
 - `DATABASE_URL`：server-side app 直接連 VM 自管 Postgres 的 connection string。不得加 `NEXT_PUBLIC_`，也不得放到 client bundle。
 - `POSTGRES_SSL_MODE` / `POSTGRES_POOL_MAX` / `POSTGRES_CONNECTION_TIMEOUT_MS` / `POSTGRES_IDLE_TIMEOUT_MS`：direct Postgres runtime 的連線設定。DB 和 app 在同一個 Docker network 時可用 `POSTGRES_SSL_MODE=disable`；跨主機或受管資料庫通常要改成 `require`。
 - `CRON_SECRET`：cron endpoint 驗證。
-- `LOCAL_PHOTO_SIGNING_SECRET`：若使用 VM 本機照片儲存。
+- `LOCAL_PHOTO_STORAGE_DIR`：VM local photo storage 目錄。Docker 部署必須掛 persistent volume。
+- `LOCAL_PHOTO_SIGNING_SECRET`：照片短期簽名 URL 的 HMAC secret。
 
 新增或改名環境變數時，要同步更新：
 
@@ -91,7 +91,7 @@ LINE Developers 後台要設定：
 
 正式資料庫路線已決定採 VM 自管 Postgres，見 [../governance/DECISIONS.md](../governance/DECISIONS.md) 的 ADR-0009。Supabase managed service 只保留為原作者架構與 Postgres 相容參考，不作為 production 依賴。
 
-注意：direct Postgres data layer 已進入分批搬移。`/api/health`、照護行程、看護請假、audit、pairing、expense、photo metadata、cloud backup、family paired 與 data-retention cron 會使用 `DATABASE_URL`；photo file storage fallback 仍待另案決定。在全部 runtime user 完成前，`NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 仍不可直接移除。這是 production 前置工作，不應在已有真實資料後臨時處理。
+注意：direct Postgres data layer 已完成分批搬移。`/api/health`、照護行程、看護請假、audit、pairing、expense、photo metadata、cloud backup、family paired 與 data-retention cron 會使用 `DATABASE_URL`。照片正式採 VM local storage，production 必須設定 `LOCAL_PHOTO_STORAGE_DIR`、`LOCAL_PHOTO_SIGNING_SECRET`，並把 photo storage 目錄納入備份與 restore drill。
 
 production 前需要先補：
 
@@ -127,7 +127,7 @@ npm run dev
 
 測試環境可以使用 Docker，但環境變數、LINE channel、資料庫與 webhook 不應共用 production 設定。
 
-開發者在本機複製 `.env.example` 成 `.env.local` 後，只能填入開發或測試用設定。不要把 production 的真實個資備份檔、正式 `SUPABASE_SERVICE_ROLE_KEY`、LINE Bot access token、webhook secret 或正式 Channel ID 倒回本機測試。本機資料應使用假資料、去識別化資料，或專用測試 channel。
+開發者在本機複製 `.env.example` 成 `.env.local` 後，只能填入開發或測試用設定。不要把 production 的真實個資備份檔、正式 `DATABASE_URL`、LINE Bot access token、webhook secret、照片簽名 secret 或正式 Channel ID 倒回本機測試。本機資料應使用假資料、去識別化資料，或專用測試 channel。
 
 ## 舊版原型參考：Vercel
 

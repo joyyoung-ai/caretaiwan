@@ -51,13 +51,13 @@ ADR-0010 已決定不把 Supabase-compatible API / PostgREST 作為正式主路�
 
 Pilot 通過後再搬移 `care-calendar` / `caregiver-leave`，因為這兩個 helper 測試較集中，而且是近期新增功能，資料模型也比較清楚。
 
-### 4. Keep Supabase dependency until migration is complete
+### 4. Remove Supabase dependency after migration is complete
 
-`@supabase/supabase-js` 目前仍被 photo file storage fallback 使用。第一階段不能移除 dependency，也不能刪 `src/lib/supabase-server.ts`。每一批 migration 應在 tasks 中列出受影響 helper、route tests、redaction checks 與 rollback。
+所有 runtime data access 已搬到 direct Postgres，照片正式採 VM local storage。`@supabase/supabase-js`、`src/lib/supabase-server.ts` 與 Supabase runtime env 不再保留。
 
 ### 5. Treat storage separately
 
-Direct Postgres adapter 只處理 relational data。照片檔案或備份 payload 的儲存策略仍需獨立決策。第一階段只可搬移 `record_photos` metadata，不應順手決定 Supabase Storage、local filesystem、S3-compatible object storage 或 NAS 的正式路線。
+Direct Postgres adapter 只處理 relational data。照片檔案正式採 VM local storage，透過 `LOCAL_PHOTO_STORAGE_DIR` persistent volume 保存，並用 `LOCAL_PHOTO_SIGNING_SECRET` 產生短期 signed URL。
 
 ## Risks / Trade-offs
 
@@ -66,7 +66,7 @@ Direct Postgres adapter 只處理 relational data。照片檔案或備份 payloa
 - Connection pool 在 Next.js runtime 需要小心 singleton 與 hot reload；tests 要覆蓋 repeated import 不重複建立過多 pool。
 - 只做 application-level ownership checks 仍有 service-role 類型風險；這是第一階段接受的 trade-off，後續可再評估 DB-level enforcement。
 - Health route pilot 能驗證連線與 redaction，但不能代表所有 SQL helper 都正確。後續每個 feature helper 還是要逐一補測試。
-- Supabase Storage / backup payload 尚未決定正式路線。若在 data layer PR 順手處理，會混淆風險與 review 範圍。
+- VM local photo storage 讓部署較簡單，但 production 必須補容量監控、備份與 restore drill；多台 app server 前需重新評估 shared storage。
 
 ## Migration Plan
 
@@ -77,7 +77,7 @@ Direct Postgres adapter 只處理 relational data。照片檔案或備份 payloa
 5. 在 disposable 或 staging Postgres 驗證 DB connectivity 與 health route。
 6. 第二批搬移 `care-calendar` / `caregiver-leave` helper，保持 API contract 不變。
 7. 第三批再搬移 audit、pairing、expense、photo metadata、cloud backup 與 cron；已完成的 relational helper 不代表 photo file storage 已定案。
-8. 所有 runtime user 搬完且 storage 策略另案決定後，才移除 Supabase server client 與相關 env。
+8. 所有 runtime user 搬完，storage 策略決定採 VM local storage 後，移除 Supabase server client 與相關 env。
 
 Rollback 原則：
 

@@ -43,9 +43,9 @@ CareTaiwan 目前不提供：
 - `npm run lint` 可通過，已無 warning。
 - `supabase-schema.sql` 是 idempotent schema，不取代正式 migration series。
 - v1.1.0 照護行程與看護請假目前已有 production migration、API foundation 與首頁內的最小可用流程；正式資料庫已決定採 VM 自管 Postgres，下一步要在 disposable 或 staging Postgres 演練 forward / rollback。
-- 目前 app data layer 仍使用 Supabase client 與 Supabase-style URL / key。ADR-0010 已決定改為 server-side 直接連 VM 自管 Postgres，但重構尚未實作。
+- App data layer 已改為 server-side 直接連 VM 自管 Postgres；照片儲存採 VM local storage。production 前仍需完成實際 VM volume、backup、restore drill、容量監控與告警設定。
 - 照護行程與請假紀錄先採列表與表單，不提供完整日曆格、拖拉、週期性事件、批次編輯或跨日曆同步。
-- Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。
+- DB-level RLS / policy 尚未導入，現階段仰賴 server-side application checks 與 Postgres app role。
 - 正式 VM runbook 尚未完整落地。
 - 正式資料庫已選 VM 自管 Postgres；backup、restore drill、migration 執行、監控與告警 runbook 尚未完成。
 

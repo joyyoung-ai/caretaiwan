@@ -14,8 +14,8 @@ flowchart TD
   api --> auth["Auth.js / LINE Login"]
   api --> line["LINE Messaging API"]
   api --> service["src/lib service helpers"]
-  service --> db["Postgres / Supabase schema"]
-  service --> storage["Supabase Storage 或 VM local storage"]
+  service --> db["VM self-managed Postgres"]
+  service --> storage["VM local photo storage"]
   line --> family["家屬 LINE / 群組"]
 ```
 
@@ -24,8 +24,8 @@ flowchart TD
 - Client pages：看護端、家屬端、備份、醫護卡與日常紀錄。
 - API routes：登入狀態、配對、照片、家屬資料、cron、LINE webhook。
 - Server actions：推播與登入登出相關流程。
-- Service helpers：`src/lib/*`，封裝 pairing、origin check、rate limit、照片與 Supabase 存取。
-- Data layer：原作者版本使用 Supabase Postgres / Storage；正式環境已決定採 VM 自管 Postgres，storage 策略另行定案。
+- Service helpers：`src/lib/*`，封裝 pairing、origin check、rate limit、照片與資料存取。
+- Data layer：正式環境採 VM 自管 Postgres；照片採 VM local storage，必須掛 persistent volume 並納入備份。
 
 ## 邊界
 

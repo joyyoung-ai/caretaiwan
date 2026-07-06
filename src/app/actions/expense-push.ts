@@ -2,7 +2,6 @@
 
 // 看護建立記帳 → 推播給家屬(1對1 LINE Bot)
 import { pushMessage, isLineBotEnabled } from "@/lib/line-bot";
-import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { logAudit } from "@/lib/audit";
 import { CATEGORY_META, type ExpenseCategory } from "@/lib/expense";
 import { verifyPhotoOwnership } from "@/lib/record-photos";
@@ -38,7 +37,7 @@ export async function pushExpenseToFamily(input: {
     | { type: "image"; originalContentUrl: string; previewImageUrl: string }
   > = [{ type: "text", text: lines.join("\n") }];
 
-  // 收據照片:從 private bucket 簽 1h signed URL
+  // 收據照片:從 VM local storage 簽 1h signed URL
   // v55: 簽 URL 前先驗 metadata（uploader+elder+purpose 三者吻合）— codex HIGH-2
   // 無 metadata 或不符 → skip 照片，不擋整則 push
   if (input.photoPath) {
@@ -56,20 +55,6 @@ export async function pushExpenseToFamily(input: {
           originalContentUrl: localSignedUrl,
           previewImageUrl: localSignedUrl,
         });
-      } else {
-        const sb = getSupabaseAdmin();
-        if (sb) {
-        const { data: signed, error } = await sb.storage
-          .from("record-photos")
-          .createSignedUrl(input.photoPath, 60 * 60);
-        if (!error && signed?.signedUrl) {
-          messages.push({
-            type: "image",
-            originalContentUrl: signed.signedUrl,
-            previewImageUrl: signed.signedUrl,
-          });
-        }
-        }
       }
     } else {
       logAudit({

@@ -36,8 +36,8 @@ flowchart TD
   api --> auth["Auth.js / LINE Login"]
   api --> line["LINE Messaging API"]
   api --> service["src/lib service helpers"]
-  service --> db["Postgres / Supabase schema"]
-  service --> storage["Supabase Storage 或 VM local storage"]
+  service --> db["VM self-managed Postgres"]
+  service --> storage["VM local photo storage"]
   line --> family["家屬 LINE / 群組"]
 ```
 
@@ -150,7 +150,7 @@ flowchart TD
 | 開發語言 | 保留 TypeScript | 現有程式已是 TS，重寫沒有回報 | 補型別邊界與測試 |
 | 框架 | 保留 Next.js 16 | PWA、API route、server action 都已在此架構上 | 補 Next.js 16 注意事項與升級策略 |
 | 資料庫 | 保留 Postgres 思路 | 現有 schema 以 Postgres 為核心 | 決定 VM 自管或 managed service |
-| Storage | 先保留現有抽象 | 原架構使用 Supabase Storage，VM 需要正式儲存方案 | 決定 object storage / filesystem / managed storage |
+| Storage | VM local storage | 開發期與單 VM 部署改動最小，現有程式已有 local signed URL 支援 | 補容量監控、備份與 restore drill；多台 app server 前重新評估 shared storage |
 | Auth | 保留 LINE Login / Auth.js | 符合台灣使用情境 | 補 session / callback / PWA 測試 |
 | 推播 | 保留 LINE Messaging API | 家屬端最符合現實使用習慣 | 補 webhook runbook |
 | 設計規範 | 先補輕量規範，不導入大型設計系統 | 現有規模不需要重工具 | 整理元件與文案規則 |

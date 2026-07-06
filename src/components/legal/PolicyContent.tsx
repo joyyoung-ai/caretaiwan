@@ -249,7 +249,7 @@ export function PrivacyContent() {
       <PolicySection title="11. 資料安全">
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>全站 HTTPS 加密傳輸</li>
-          <li>照片儲存桶設為私有,僅以短期簽名連結推送</li>
+          <li>照片儲存於私有 VM local storage,僅以短期簽名連結推送</li>
           <li>CSRF 同源檢查、API 速率限制、稽核日誌</li>
           <li>LINE OAuth 第三方身分驗證,不儲存任何密碼</li>
           <li>來源 IP 末段匿名化處理</li>

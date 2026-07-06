@@ -66,7 +66,7 @@ export default function RecordPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearedCount, setClearedCount] = useState<number | null>(null);
   const [hasPairedElder, setHasPairedElder] = useState(false);
-  // photoPath = Supabase Storage path (private bucket, push 時才簽 signed URL)
+  // photoPath = VM local storage path (push 時才簽 signed URL)
   // photoPreviewUrl = client local blob URL,只給 <img> 預覽用
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);

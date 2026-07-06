@@ -5,7 +5,6 @@ import { checkSameOrigin } from "@/lib/origin-check";
 import { rateLimitAsync } from "@/lib/rate-limit";
 import { getPairingsByPaired } from "@/lib/pairing";
 import { insertPhotoMetadata } from "@/lib/record-photos";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
 import {
   deleteLocalPhoto,
   isLocalPhotoStorageEnabled,
@@ -32,14 +31,9 @@ vi.mock("@/lib/record-photos", () => ({
   insertPhotoMetadata: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  getSupabaseAdmin: vi.fn(),
-  isCloudEnabled: vi.fn(),
-}));
-
 vi.mock("@/lib/local-photo-storage", () => ({
   deleteLocalPhoto: vi.fn(),
-  isLocalPhotoStorageEnabled: vi.fn(() => false),
+  isLocalPhotoStorageEnabled: vi.fn(() => true),
   saveLocalPhoto: vi.fn(),
 }));
 
@@ -57,8 +51,6 @@ const checkSameOriginMock = vi.mocked(checkSameOrigin);
 const rateLimitAsyncMock = vi.mocked(rateLimitAsync);
 const getPairingsByPairedMock = vi.mocked(getPairingsByPaired);
 const insertPhotoMetadataMock = vi.mocked(insertPhotoMetadata);
-const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
 const deleteLocalPhotoMock = vi.mocked(deleteLocalPhoto);
 const isLocalPhotoStorageEnabledMock = vi.mocked(isLocalPhotoStorageEnabled);
 const saveLocalPhotoMock = vi.mocked(saveLocalPhoto);
@@ -95,19 +87,11 @@ describe("POST /api/photo/upload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     rateLimitAsyncMock.mockResolvedValue({ ok: true, remaining: 9, resetAt: Date.now() + 60_000 });
     insertPhotoMetadataMock.mockResolvedValue({ ok: true });
-    getSupabaseAdminMock.mockReturnValue({
-      storage: {
-        from: vi.fn(() => ({
-          upload: vi.fn().mockResolvedValue({ error: null }),
-          remove: vi.fn().mockResolvedValue({ error: null }),
-        })),
-      },
-    } as never);
-    isLocalPhotoStorageEnabledMock.mockReturnValue(false);
+    isLocalPhotoStorageEnabledMock.mockReturnValue(true);
+    saveLocalPhotoMock.mockResolvedValue();
   });
 
   it("rejects uploads for elders not paired to the signed-in caregiver before storage writes", async () => {
@@ -118,7 +102,7 @@ describe("POST /api/photo/upload", () => {
     expect(res.status).toBe(403);
     await expect(res.json()).resolves.toEqual({ error: "未配對此卡" });
     expect(insertPhotoMetadataMock).not.toHaveBeenCalled();
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
+    expect(saveLocalPhotoMock).not.toHaveBeenCalled();
   });
 
   it("records metadata for uploaded photos using the signed-in caregiver and requested elder", async () => {
@@ -129,6 +113,7 @@ describe("POST /api/photo/upload", () => {
 
     expect(res.status).toBe(200);
     expect(body.path).toMatch(/^[a-f0-9-]+\.png$/);
+    expect(saveLocalPhotoMock).toHaveBeenCalledWith(body.path, expect.any(Uint8Array));
     expect(insertPhotoMetadataMock).toHaveBeenCalledWith({
       path: body.path,
       uploaderLineUserId: "caregiver-1",
@@ -162,13 +147,13 @@ describe("POST /api/photo/upload", () => {
     expect(deleteLocalPhotoMock).toHaveBeenCalledWith(expect.stringMatching(/^[a-f0-9-]+\.png$/));
   });
 
-  it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+  it("returns 503 when local photo storage is not configured", async () => {
+    isLocalPhotoStorageEnabledMock.mockReturnValue(false);
 
     const res = await POST(formRequest("elder-1"));
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "照片儲存未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 
@@ -183,15 +168,9 @@ describe("POST /api/photo/upload", () => {
     expect(getPairingsByPairedMock).not.toHaveBeenCalled();
   });
 
-  it("returns a generic storage error when Supabase upload fails", async () => {
+  it("returns a generic storage error when local photo save fails", async () => {
     getPairingsByPairedMock.mockResolvedValue([{ elder_id: "elder-1" }] as never);
-    getSupabaseAdminMock.mockReturnValue({
-      storage: {
-        from: vi.fn(() => ({
-          upload: vi.fn().mockResolvedValue({ error: { message: "raw storage failure" } }),
-        })),
-      },
-    } as never);
+    saveLocalPhotoMock.mockRejectedValue(new Error("raw storage failure"));
 
     const res = await POST(formRequest("elder-1"));
 

@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { listExpensesForCard } from "@/lib/expense";
 import { isDatabaseEnabled } from "@/lib/db/client";
-import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
 import { hasPhotoMetadata } from "@/lib/record-photos";
@@ -48,13 +47,6 @@ export async function GET(req: Request) {
         });
         if (photoMeta) {
           photoUrl = createLocalSignedPhotoUrl(e.photo_path, 60 * 60);
-          if (!photoUrl) {
-            const sb = getSupabaseAdmin();
-            const { data } = sb
-              ? await sb.storage.from("record-photos").createSignedUrl(e.photo_path, 60 * 60)
-              : { data: null };
-            photoUrl = data?.signedUrl ?? null;
-          }
         }
       }
       return { ...e, photoUrl };

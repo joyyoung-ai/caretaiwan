@@ -3,10 +3,10 @@
 import { auth } from "@/auth";
 import { pushMessage, isLineBotEnabled } from "@/lib/line-bot";
 import { getPairingsByPaired } from "@/lib/pairing";
-import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { logAudit } from "@/lib/audit";
 import { verifyPhotoOwnership } from "@/lib/record-photos";
 import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
+import { query } from "@/lib/db/postgres";
 
 type RecordType =
   | "temp"
@@ -59,7 +59,7 @@ export async function pushRecordToFamily(input: {
   value?: string;
   note?: string;
   timestamp: number;
-  photoPath?: string; // Supabase Storage path (private bucket)
+  photoPath?: string; // VM local storage path
   alsoSendToGroup?: boolean; // 是否同時推播到家族 LINE 群組
 }): Promise<{ ok: boolean; reason?: string; groupSent?: boolean }> {
   if (!isLineBotEnabled()) return { ok: false, reason: "BOT_DISABLED" };
@@ -98,7 +98,7 @@ export async function pushRecordToFamily(input: {
     | { type: "image"; originalContentUrl: string; previewImageUrl: string }
   > = [{ type: "text", text: lines.join("\n") }];
 
-  // 照片:從 private bucket path 簽 1h signed URL,只給 LINE 平台這一次
+  // 照片:從 VM local storage path 簽 1h signed URL,只給 LINE 平台這一次
   // 1h 後 LINE CDN 已 cache 完訊息,signed URL 過期不影響家屬已收到的訊息
   // v55: 簽 URL 前先驗 metadata（uploader+elder+purpose 三者吻合）— codex HIGH-2
   // 無 metadata 或不符 → skip 照片，不擋整則 push
@@ -129,38 +129,30 @@ export async function pushRecordToFamily(input: {
         originalContentUrl: localSignedUrl,
         previewImageUrl: localSignedUrl,
       });
-    } else {
-      const sbAdmin = getSupabaseAdmin();
-      if (sbAdmin) {
-      const { data: signed, error: signErr } = await sbAdmin.storage
-        .from("record-photos")
-        .createSignedUrl(input.photoPath, 60 * 60);
-      if (!signErr && signed?.signedUrl) {
-        messages.push({
-          type: "image",
-          originalContentUrl: signed.signedUrl,
-          previewImageUrl: signed.signedUrl,
-        });
-      }
-      // 簽不出來就只送文字訊息,不要因為照片掛掉整則 push 失敗
-      }
     }
+    // 簽不出來就只送文字訊息,不要因為照片掛掉整則 push 失敗
   }
 
   const result = await pushMessage(target.owner_line_user_id, messages);
 
   // Audit log: only record type + status, never content (privacy)
-  const sb = getSupabaseAdmin();
-  if (sb) {
-    sb.from("push_logs")
-      .insert({
-        elder_id: input.elderId,
-        line_user_id: target.owner_line_user_id,
-        record_type: input.recordType,
-        status: result.ok ? "sent" : `error_${result.status}`,
-      })
-      .then(() => {});
-  }
+  query(
+    `
+      insert into push_logs (
+        elder_id,
+        line_user_id,
+        record_type,
+        status
+      )
+      values ($1, $2, $3, $4)
+    `,
+    [
+      input.elderId,
+      target.owner_line_user_id,
+      input.recordType,
+      result.ok ? "sent" : `error_${result.status}`,
+    ]
+  ).catch(() => {});
 
   logAudit({
     action: "PUSH_RECORD",
@@ -201,20 +193,6 @@ export async function pushRecordToFamily(input: {
           originalContentUrl: localSignedUrl,
           previewImageUrl: localSignedUrl,
         });
-      } else {
-        const sbAdmin = getSupabaseAdmin();
-        if (sbAdmin) {
-        const { data: signed, error: signErr } = await sbAdmin.storage
-          .from("record-photos")
-          .createSignedUrl(input.photoPath, 60 * 60);
-        if (!signErr && signed?.signedUrl) {
-          groupMessages.push({
-            type: "image",
-            originalContentUrl: signed.signedUrl,
-            previewImageUrl: signed.signedUrl,
-          });
-        }
-        }
       }
     }
 
@@ -224,16 +202,23 @@ export async function pushRecordToFamily(input: {
     );
     groupSent = groupResult.ok;
 
-    if (sb) {
-      sb.from("push_logs")
-        .insert({
-          elder_id: input.elderId,
-          line_user_id: targetWithGroup.notify_group_id,
-          record_type: input.recordType,
-          status: groupResult.ok ? "group_sent" : `group_error_${groupResult.status}`,
-        })
-        .then(() => {});
-    }
+    query(
+      `
+        insert into push_logs (
+          elder_id,
+          line_user_id,
+          record_type,
+          status
+        )
+        values ($1, $2, $3, $4)
+      `,
+      [
+        input.elderId,
+        targetWithGroup.notify_group_id,
+        input.recordType,
+        groupResult.ok ? "group_sent" : `group_error_${groupResult.status}`,
+      ]
+    ).catch(() => {});
 
     logAudit({
       action: "PUSH_GROUP",

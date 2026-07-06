@@ -32,9 +32,9 @@
 
 ## 4. Secrets and Token Rotation
 
-- [ ] 指定 `AUTH_SECRET`、`SUPABASE_SERVICE_ROLE_KEY`、LINE secrets、`CRON_SECRET`、`LOCAL_PHOTO_SIGNING_SECRET` 的 owner。
+- [ ] 指定 `AUTH_SECRET`、`DATABASE_URL` 對應 DB role、LINE secrets、`CRON_SECRET`、`LOCAL_PHOTO_SIGNING_SECRET` 的 owner。
 - [ ] 定義每種 secret 的輪替週期與緊急輪替流程。
-- [ ] 確認 service-role key、Bot access token、cron secret、photo signing secret 不會進 client bundle、log 或文件。
+- [ ] 確認 DB password、Bot access token、cron secret、photo signing secret 不會進 client bundle、log 或文件。
 - [ ] 建立 token rotation 後的驗證清單：登入、webhook、推播、cron、照片 signed URL。
 
 ## 5. Privacy, Legal, and Data Residency

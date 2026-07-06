@@ -15,7 +15,7 @@
 - 實際 log 路徑、查詢方式與保存天數。
 - 實際 database / storage backup 指令。
 - restore drill 指令與演練紀錄格式。
-- 依 ADR-0010 完成 data layer 改造，讓 server-side app 直接連 VM 自管 Postgres。Direct Postgres adapter、health route pilot、照護行程、看護請假、audit、pairing、expense、photo metadata、cloud backup、family paired 與 data-retention cron 已先搬移；photo file storage fallback 仍需另案決定，production 前不得帶著這個落差上線。
+- 依 ADR-0010 完成 data layer 改造，讓 server-side app 直接連 VM 自管 Postgres。Direct Postgres adapter、health route pilot、照護行程、看護請假、audit、pairing、expense、photo metadata、cloud backup、family paired 與 data-retention cron 已搬移。照片正式採 VM local storage；production 前必須確認 persistent volume、備份、restore drill 與容量監控。
 - incident contact、法務 / 隱私窗口與 escalation 時限。暫定對外窗口為 `services@joyyoung.com.tw`。
 - token rotation owner 與每種 secret 的輪替週期。
 
@@ -43,7 +43,7 @@
 
 ## Database Migration
 
-正式資料庫採 VM 自管 Postgres，但目前 app data layer 仍有部分 helper 使用 Supabase client。ADR-0010 已決定重構 `src/lib/supabase-server.ts` 與相關 data helpers，改為 server-side 直接連 self-managed Postgres。VM 內提供 Supabase-compatible API / PostgREST 不作為正式主路線。
+正式資料庫採 VM 自管 Postgres，app data layer 已改為 server-side 直接連 self-managed Postgres。VM 內提供 Supabase-compatible API / PostgREST 不作為正式主路線。
 
 不論採哪條路，migration SQL 先以 Postgres 為基準。以 Docker Compose 為例，套用 v1.1.0 migration 前先在 staging 或 disposable DB 執行：
 
@@ -167,7 +167,6 @@ SHA-256 驗證：
 
 - `AUTH_SECRET`
 - `DATABASE_URL` 對應的 DB app role 密碼。
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `LINE_BOT_CHANNEL_SECRET`
 - `LINE_BOT_CHANNEL_ACCESS_TOKEN`
 - `CRON_SECRET`

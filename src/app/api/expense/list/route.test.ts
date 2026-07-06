@@ -5,7 +5,6 @@ import { listExpensesForCard } from "@/lib/expense";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
 import { isDatabaseEnabled } from "@/lib/db/client";
-import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { hasPhotoMetadata } from "@/lib/record-photos";
 
 vi.mock("@/auth", () => ({
@@ -28,10 +27,6 @@ vi.mock("@/lib/db/client", () => ({
   isDatabaseEnabled: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  getSupabaseAdmin: vi.fn(),
-}));
-
 vi.mock("@/lib/record-photos", () => ({
   hasPhotoMetadata: vi.fn(),
 }));
@@ -41,26 +36,12 @@ const listExpensesForCardMock = vi.mocked(listExpensesForCard);
 const checkSameOriginGetMock = vi.mocked(checkSameOriginGet);
 const createLocalSignedPhotoUrlMock = vi.mocked(createLocalSignedPhotoUrl);
 const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
-const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
 const hasPhotoMetadataMock = vi.mocked(hasPhotoMetadata);
 
 function request(): Request {
   return new Request("https://care.example.test/api/expense/list?elderId=elder-1", {
     headers: { Origin: "https://care.example.test" },
   });
-}
-
-function supabaseStorageFallback() {
-  return {
-    storage: {
-      from: vi.fn(() => ({
-        createSignedUrl: vi.fn().mockResolvedValue({
-          data: { signedUrl: "https://storage.example.test/signed.jpg" },
-          error: null,
-        }),
-      })),
-    },
-  };
 }
 
 describe("GET /api/expense/list", () => {
@@ -109,15 +90,14 @@ describe("GET /api/expense/list", () => {
     expect(createLocalSignedPhotoUrlMock).toHaveBeenCalledWith("receipt.jpg", 60 * 60);
   });
 
-  it("falls back to Supabase Storage signing when local signing is disabled", async () => {
+  it("does not expose photo URLs when local signing is disabled", async () => {
     createLocalSignedPhotoUrlMock.mockReturnValue(null);
-    getSupabaseAdminMock.mockReturnValue(supabaseStorageFallback() as never);
 
     const res = await GET(request());
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.expenses[0].photoUrl).toBe("https://storage.example.test/signed.jpg");
+    expect(body.expenses[0].photoUrl).toBeNull();
   });
 
   it("returns a generic error when expense lookup fails", async () => {
@@ -127,7 +107,6 @@ describe("GET /api/expense/list", () => {
 
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toEqual({ error: "查詢失敗" });
-    expect(getSupabaseAdminMock).not.toHaveBeenCalled();
   });
 
   it("returns 503 when database services are disabled", async () => {

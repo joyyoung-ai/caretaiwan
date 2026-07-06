@@ -1,7 +1,5 @@
-// 看護端拍照上傳 - 寫到 Supabase Storage **私有** bucket,回 storage path
+// 看護端拍照上傳 - 寫到 VM local storage,回 storage path
 // 後端 push 時才簽 1h signed URL 給 LINE,降低 URL 外流風險
-//
-// 前置:Supabase Dashboard → Storage → bucket "record-photos" 必須 **Private**
 //
 // v55 變更（codex audit）:
 //   - rateLimit() 改 await rateLimitAsync() + IP+user 雙 key（HIGH-1）
@@ -11,7 +9,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { auth } from "@/auth";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { logAudit, getActorIp } from "@/lib/audit";
 import { rateLimitAsync } from "@/lib/rate-limit";
@@ -26,7 +23,6 @@ import {
 
 export const runtime = "nodejs";
 
-const BUCKET = "record-photos";
 const MAX_BYTES = 4 * 1024 * 1024; // 4MB,client resize 後通常遠小於此
 
 export async function POST(req: Request) {
@@ -36,8 +32,8 @@ export async function POST(req: Request) {
     logAudit({ action: "FORBIDDEN_ORIGIN", actorIp: ip, resourceType: "photo", status: "forbidden" });
     return csrf;
   }
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isLocalPhotoStorageEnabled()) {
+    return NextResponse.json({ error: "照片儲存未啟用" }, { status: 503 });
   }
   const session = await auth();
   const lineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;
@@ -136,43 +132,19 @@ export async function POST(req: Request) {
   const meta = IMAGE_FORMAT_META[detected];
   const fileName = `${crypto.randomUUID()}.${meta.ext}`;
 
-  if (isLocalPhotoStorageEnabled()) {
-    try {
-      await saveLocalPhoto(fileName, buffer);
-    } catch (e) {
-      console.error("[photo/upload/local]", e);
-      logAudit({
-        action: "PHOTO_UPLOAD",
-        actorLineUserId: lineUserId,
-        actorIp: ip,
-        resourceType: "photo",
-        status: "fail",
-        metadata: { reason: "LOCAL_SAVE_FAIL" },
-      });
-      return NextResponse.json({ error: "儲存失敗" }, { status: 500 });
-    }
-  } else {
-    const sb = getSupabaseAdmin()!;
-    const { error: uploadErr } = await sb.storage
-      .from(BUCKET)
-      .upload(fileName, buffer, {
-        contentType: meta.contentType,
-        cacheControl: "31536000", // 1 year
-        upsert: false,
-      });
-
-    if (uploadErr) {
-      console.error("[photo/upload]", uploadErr.message);
-      logAudit({
-        action: "PHOTO_UPLOAD",
-        actorLineUserId: lineUserId,
-        actorIp: ip,
-        resourceType: "photo",
-        status: "fail",
-        metadata: { reason: uploadErr.message.slice(0, 80) },
-      });
-      return NextResponse.json({ error: "儲存失敗" }, { status: 500 });
-    }
+  try {
+    await saveLocalPhoto(fileName, buffer);
+  } catch (e) {
+    console.error("[photo/upload/local]", e);
+    logAudit({
+      action: "PHOTO_UPLOAD",
+      actorLineUserId: lineUserId,
+      actorIp: ip,
+      resourceType: "photo",
+      status: "fail",
+      metadata: { reason: "LOCAL_SAVE_FAIL" },
+    });
+    return NextResponse.json({ error: "儲存失敗" }, { status: 500 });
   }
 
   // Insert metadata（v55, HIGH-2 修補）
@@ -185,11 +157,7 @@ export async function POST(req: Request) {
   });
   if (!metaResult.ok) {
     // 試圖刪除剛上傳的 object，避免 orphan
-    if (isLocalPhotoStorageEnabled()) {
-      await deleteLocalPhoto(fileName);
-    } else {
-      await getSupabaseAdmin()?.storage.from(BUCKET).remove([fileName]).catch(() => {});
-    }
+    await deleteLocalPhoto(fileName);
     logAudit({
       action: "PHOTO_UPLOAD",
       actorLineUserId: lineUserId,
