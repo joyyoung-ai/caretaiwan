@@ -91,7 +91,7 @@ LINE Developers 後台要設定：
 
 正式資料庫路線已決定採 VM 自管 Postgres，見 [../governance/DECISIONS.md](../governance/DECISIONS.md) 的 ADR-0009。Supabase managed service 只保留為原作者架構與 Postgres 相容參考，不作為 production 依賴。
 
-注意：direct Postgres data layer 已進入分批搬移。`/api/health`、照護行程與看護請假 helper 會使用 `DATABASE_URL`；pairing、audit、expense、photo metadata、cloud backup 與 data-retention cron 仍待從 Supabase client 搬移。在全部 helper 完成前，`NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 仍不可直接移除。這是 production 前置工作，不應在已有真實資料後臨時處理。
+注意：direct Postgres data layer 已進入分批搬移。`/api/health`、照護行程、看護請假與 audit helper 會使用 `DATABASE_URL`；pairing、expense、photo metadata、cloud backup 與 data-retention cron 仍待從 Supabase client 搬移。在全部 helper 完成前，`NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 仍不可直接移除。這是 production 前置工作，不應在已有真實資料後臨時處理。
 
 production 前需要先補：
 

@@ -32,7 +32,7 @@
 
 - [x] 5.1 Migrate `src/lib/care-calendar.ts` to the DB adapter with API contract tests unchanged.
 - [x] 5.2 Migrate `src/lib/caregiver-leave.ts` to the DB adapter with ownership tests unchanged.
-- [ ] 5.3 Migrate audit helper with redacted metadata tests.
+- [x] 5.3 Migrate audit helper with redacted metadata tests.
 - [ ] 5.4 Migrate pairing helper and all pairing route tests.
 - [ ] 5.5 Migrate expense and photo metadata helpers without changing photo file storage.
 - [ ] 5.6 Migrate cloud backup and data-retention cron after storage strategy is reviewed.

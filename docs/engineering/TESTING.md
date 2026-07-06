@@ -104,6 +104,7 @@
 - direct Postgres adapter 驗證 missing config、singleton pool、query、transaction rollback 與 public-safe DB error mapping。
 - health route 驗證 direct Postgres success、database disabled 與 redacted DB failure。
 - care calendar / caregiver leave data helper 驗證 direct Postgres 查詢、建立、列表、更新、ownership guard 與 disabled database path。
+- audit helper 驗證 direct Postgres 寫入、disabled database path、IP 匿名化與 metadata redaction。
 
 第二批 route handler 已涵蓋：
 

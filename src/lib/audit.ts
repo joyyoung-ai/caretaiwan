@@ -1,6 +1,7 @@
 // 稽核日誌：記錄誰、何時、做了什麼（不存內容）
 // 用於資安事件回溯與合規查詢
-import { getSupabaseAdmin } from "./supabase-server";
+import { isDatabaseEnabled } from "./db/client";
+import { query } from "./db/postgres";
 
 export type AuditAction =
   | "CLOUD_UPLOAD"
@@ -68,23 +69,36 @@ export function getActorIp(req: Request): string | null {
 
 /** Fire-and-forget audit log (does not throw, does not block) */
 export function logAudit(input: LogInput): void {
-  const sb = getSupabaseAdmin();
-  if (!sb) return;
+  if (!isDatabaseEnabled()) return;
   // Strip any keys that look like PII from metadata as defence in depth
   const cleanMeta = sanitizeMetadata(input.metadata);
-  sb.from("audit_logs")
-    .insert({
-      actor_line_user_id: input.actorLineUserId ?? null,
-      actor_ip: anonymizeIp(input.actorIp),
-      action: input.action,
-      resource_type: input.resourceType ?? null,
-      resource_id: input.resourceId ?? null,
-      status: input.status ?? "ok",
-      metadata: cleanMeta,
-    })
-    .then(({ error }) => {
-      if (error) console.error("[audit]", error.message);
-    });
+
+  query(
+    `insert into audit_logs (
+       actor_line_user_id,
+       actor_ip,
+       action,
+       resource_type,
+       resource_id,
+       status,
+       metadata
+     ) values ($1, $2, $3, $4, $5, $6, $7)`,
+    [
+      input.actorLineUserId ?? null,
+      anonymizeIp(input.actorIp),
+      input.action,
+      input.resourceType ?? null,
+      input.resourceId ?? null,
+      input.status ?? "ok",
+      cleanMeta,
+    ]
+  ).catch((error) => {
+    const code =
+      typeof error === "object" && error && "code" in error
+        ? String(error.code)
+        : "unknown";
+    console.error("[audit]", code);
+  });
 }
 
 const PII_KEYS = new Set([

@@ -32,6 +32,7 @@
 - 新增 OpenSpec change `v2-0-0-direct-postgres-data-layer` 與 Superpowers phase 1 實作計畫，先規劃 server-only Postgres adapter 與 health route pilot，尚未開始 runtime migration。
 - 新增 direct Postgres data layer foundation：`src/lib/db/*` adapter、public-safe DB error mapping、health route pilot 與相關測試；其他資料 helper 仍保留 Supabase client，後續分批搬移。
 - 將照護行程與看護請假 data helpers 改用 direct Postgres adapter，相關 API route 的服務開關也改看 `DATABASE_URL`；pairing、audit、expense、photo metadata、cloud backup 與 data-retention cron 仍待分批搬移。
+- 將 audit helper 改用 direct Postgres adapter，保留 fire-and-forget 行為、IP 匿名化與 metadata redaction；pairing、expense、photo metadata、cloud backup 與 data-retention cron 仍待分批搬移。
 - 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
 - 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已收到。
 - 看護端與家屬端首頁新增照護行程 / 請假紀錄最小流程：看護可切換 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程並標記請假紀錄已收到。
