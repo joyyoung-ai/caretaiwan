@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getPairingByElderAndOwner } from "@/lib/pairing";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import { checkSameOriginGet } from "@/lib/origin-check";
 
 export const runtime = "nodejs";
@@ -13,8 +13,8 @@ export async function GET(req: Request) {
   const csrf = checkSameOriginGet(req);
   if (csrf) return csrf;
 
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isDatabaseEnabled()) {
+    return NextResponse.json({ error: "資料庫服務未啟用" }, { status: 503 });
   }
   const session = await auth();
   const lineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;

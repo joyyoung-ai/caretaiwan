@@ -3,7 +3,7 @@ import { GET } from "./route";
 import { auth } from "@/auth";
 import { getPairingByElderAndOwner } from "@/lib/pairing";
 import { checkSameOriginGet } from "@/lib/origin-check";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -17,14 +17,14 @@ vi.mock("@/lib/origin-check", () => ({
   checkSameOriginGet: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  isCloudEnabled: vi.fn(),
+vi.mock("@/lib/db/client", () => ({
+  isDatabaseEnabled: vi.fn(),
 }));
 
 const authMock = vi.mocked(auth);
 const getPairingByElderAndOwnerMock = vi.mocked(getPairingByElderAndOwner);
 const checkSameOriginGetMock = vi.mocked(checkSameOriginGet);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 
 function request(): Request {
   return new Request("https://care.example.test/api/pairing/status?elderId=elder-1", {
@@ -36,7 +36,7 @@ describe("GET /api/pairing/status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginGetMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "family-1" } } as never);
   });
 
@@ -83,12 +83,12 @@ describe("GET /api/pairing/status", () => {
   });
 
   it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await GET(request());
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 

@@ -3,7 +3,8 @@
 //   owner_line_user_id = 家屬(資料擁有者,推播接收方)
 //   paired_line_user_id = 看護(配對加入者,記錄發送方)
 import crypto from "crypto";
-import { getSupabaseAdmin } from "./supabase-server";
+import { isDatabaseEnabled } from "./db/client";
+import { query } from "./db/postgres";
 
 // 6 位數英文+數字配對碼（去除易混淆的 0/O/1/I）
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -59,69 +60,73 @@ export async function ensurePairing(
   ownerLineUserId: string,
   displayName: string | null
 ): Promise<{ ok: boolean; code?: string; pairing?: Pairing; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  // Existing? — 必須同時驗 owner，防止 A 帶 B 的 elderId 拿到 B 的配對碼
-  const { data: existing } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .maybeSingle();
+  try {
+    // Existing? — 必須同時驗 owner，防止 A 帶 B 的 elderId 拿到 B 的配對碼
+    const [existing] = await query<Pairing>(
+      `select *
+       from elder_pairings
+       where elder_id = $1
+         and owner_line_user_id = $2
+       limit 1`,
+      [elderId, ownerLineUserId]
+    );
 
-  if (existing) {
-    // Already bound to a family member — return as-is (no re-bind)
-    if (existing.paired_line_user_id) {
+    if (existing) {
+      // Already bound to a family member — return as-is (no re-bind)
+      if (existing.paired_line_user_id) {
+        return { ok: true, code: existing.pairing_code, pairing: existing };
+      }
+      // Not bound yet: refresh code if expired
+      if (isPairingExpired(existing)) {
+        const newCode = await generateUniqueCode();
+        const [refreshed] = await query<Pairing>(
+          `update elder_pairings
+           set pairing_code = $3,
+               expires_at = $4
+           where elder_id = $1
+             and owner_line_user_id = $2
+           returning *`,
+          [elderId, ownerLineUserId, newCode, pairingExpiresAt()]
+        );
+        if (!refreshed) return { ok: false, error: "DB_ERROR" };
+        return { ok: true, code: newCode, pairing: refreshed };
+      }
       return { ok: true, code: existing.pairing_code, pairing: existing };
     }
-    // Not bound yet: refresh code if expired
-    if (isPairingExpired(existing)) {
-      const newCode = await generateUniqueCode(sb);
-      const { data: refreshed, error: refreshErr } = await sb
-        .from("elder_pairings")
-        .update({
-          pairing_code: newCode,
-          expires_at: pairingExpiresAt(),
-        })
-        .eq("elder_id", elderId)
-        .select()
-        .single();
-      if (refreshErr) return { ok: false, error: "DB_ERROR" };
-      return { ok: true, code: newCode, pairing: refreshed };
-    }
-    return { ok: true, code: existing.pairing_code, pairing: existing };
+
+    // New pairing
+    const code = await generateUniqueCode();
+    const [pairing] = await query<Pairing>(
+      `insert into elder_pairings (
+         elder_id,
+         pairing_code,
+         owner_line_user_id,
+         display_name,
+         expires_at
+       ) values ($1, $2, $3, $4, $5)
+       returning *`,
+      [elderId, code, ownerLineUserId, displayName, pairingExpiresAt()]
+    );
+
+    if (!pairing) return { ok: false, error: "DB_ERROR" };
+    return { ok: true, code, pairing };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
   }
-
-  // New pairing
-  const code = await generateUniqueCode(sb);
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .insert({
-      elder_id: elderId,
-      pairing_code: code,
-      owner_line_user_id: ownerLineUserId,
-      display_name: displayName,
-      expires_at: pairingExpiresAt(),
-    })
-    .select()
-    .single();
-
-  if (error) return { ok: false, error: "DB_ERROR" };
-  return { ok: true, code, pairing: data };
 }
 
-async function generateUniqueCode(
-  sb: ReturnType<typeof getSupabaseAdmin>
-): Promise<string> {
-  if (!sb) return generatePairingCode();
+async function generateUniqueCode(): Promise<string> {
   let code = generatePairingCode();
   for (let i = 0; i < 5; i++) {
-    const { data: collision } = await sb
-      .from("elder_pairings")
-      .select("elder_id")
-      .eq("pairing_code", code)
-      .maybeSingle();
+    const [collision] = await query<{ elder_id: string }>(
+      `select elder_id
+       from elder_pairings
+       where pairing_code = $1
+       limit 1`,
+      [code]
+    );
     if (!collision) break;
     code = generatePairingCode();
   }
@@ -130,16 +135,21 @@ async function generateUniqueCode(
 
 /** Look up pairing by code (used when family sends code via LINE Bot) */
 export async function findPairingByCode(code: string): Promise<Pairing | null> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return null;
-  const { data } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("pairing_code", code.toUpperCase().trim())
-    .maybeSingle();
-  if (!data) return null;
-  if (isPairingExpired(data)) return null;
-  return data;
+  if (!isDatabaseEnabled()) return null;
+  try {
+    const [pairing] = await query<Pairing>(
+      `select *
+       from elder_pairings
+       where pairing_code = $1
+       limit 1`,
+      [code.toUpperCase().trim()]
+    );
+    if (!pairing) return null;
+    if (isPairingExpired(pairing)) return null;
+    return pairing;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -150,8 +160,7 @@ export async function bindFamily(
   pairingCode: string,
   familyLineUserId: string
 ): Promise<{ ok: boolean; pairing?: Pairing; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
   const code = pairingCode.toUpperCase().trim();
   const existing = await findPairingByCode(code);
@@ -164,35 +173,41 @@ export async function bindFamily(
   }
 
   // Conditional update — Postgres-level guard so two concurrent requests can't both bind
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .update({
-      paired_line_user_id: familyLineUserId,
-      paired_at: new Date().toISOString(),
-    })
-    .eq("pairing_code", code)
-    .neq("owner_line_user_id", familyLineUserId) // 家屬不能用同一 LINE 帳號把自己綁成看護
-    .is("paired_line_user_id", null) // 防綁架：必須仍是未配對狀態
-    .gt("expires_at", new Date().toISOString()) // 過期不能配對
-    .select()
-    .maybeSingle();
+  try {
+    const [pairing] = await query<Pairing>(
+      `update elder_pairings
+       set paired_line_user_id = $2,
+           paired_at = $3
+       where pairing_code = $1
+         and owner_line_user_id <> $2
+         and paired_line_user_id is null
+         and expires_at > $4
+       returning *`,
+      [code, familyLineUserId, new Date().toISOString(), new Date().toISOString()]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "ALREADY_PAIRED_OR_EXPIRED" };
-  return { ok: true, pairing: data };
+    if (!pairing) return { ok: false, error: "ALREADY_PAIRED_OR_EXPIRED" };
+    return { ok: true, pairing };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 /** Get all pairings where this LINE user is the data owner (家屬端). */
 export async function getPairingsByOwner(
   ownerLineUserId: string
 ): Promise<Pairing[]> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return [];
-  const { data } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("owner_line_user_id", ownerLineUserId);
-  return data ?? [];
+  if (!isDatabaseEnabled()) return [];
+  try {
+    return await query<Pairing>(
+      `select *
+       from elder_pairings
+       where owner_line_user_id = $1`,
+      [ownerLineUserId]
+    );
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -204,38 +219,42 @@ export async function unbindCaregiver(
   elderId: string,
   ownerLineUserId: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .update({
-      paired_line_user_id: null,
-      paired_at: null,
-      // 同時刷新 pairing_code 和 expires_at,讓家屬重新「產生配對碼」時拿到新碼
-      expires_at: new Date(Date.now() - 1).toISOString(), // 立刻過期,觸發 ensurePairing 換新
-    })
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId) // 必須是 owner 本人
-    .select()
-    .maybeSingle();
+  try {
+    const [pairing] = await query<Pairing>(
+      `update elder_pairings
+       set paired_line_user_id = null,
+           paired_at = null,
+           expires_at = $3
+       where elder_id = $1
+         and owner_line_user_id = $2
+       returning *`,
+      [elderId, ownerLineUserId, new Date(Date.now() - 1).toISOString()]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
-  return { ok: true };
+    if (!pairing) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 /** Get all pairings where this LINE user is the joined party (看護端). */
 export async function getPairingsByPaired(
   pairedLineUserId: string
 ): Promise<Pairing[]> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return [];
-  const { data } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("paired_line_user_id", pairedLineUserId);
-  return data ?? [];
+  if (!isDatabaseEnabled()) return [];
+  try {
+    return await query<Pairing>(
+      `select *
+       from elder_pairings
+       where paired_line_user_id = $1`,
+      [pairedLineUserId]
+    );
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================
@@ -253,57 +272,62 @@ export async function ensureGroupPairingCode(
   elderId: string,
   ownerLineUserId: string
 ): Promise<{ ok: boolean; code?: string; alreadyBound?: boolean; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
 
-  const { data: existing, error: fetchErr } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .maybeSingle();
-  if (fetchErr) return { ok: false, error: "DB_ERROR" };
-  if (!existing) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
+  try {
+    const [existing] = await query<Pairing>(
+      `select *
+       from elder_pairings
+       where elder_id = $1
+         and owner_line_user_id = $2
+       limit 1`,
+      [elderId, ownerLineUserId]
+    );
+    if (!existing) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
 
-  // 已綁 → 直接回現狀(不換碼避免亂)
-  if (existing.notify_group_id) {
-    return { ok: true, alreadyBound: true };
+    // 已綁 → 直接回現狀(不換碼避免亂)
+    if (existing.notify_group_id) {
+      return { ok: true, alreadyBound: true };
+    }
+
+    // 未綁:產一個新的 6 字元碼(跟看護配對碼一樣的字母表,但獨立 namespace)
+    const code = await generateUniqueGroupCode();
+    const expiresAt = new Date(Date.now() + GROUP_PAIRING_TTL_MS).toISOString();
+
+    await query<Pairing>(
+      `update elder_pairings
+       set group_pairing_code = $3,
+           group_pairing_expires_at = $4
+       where elder_id = $1
+         and owner_line_user_id = $2
+       returning *`,
+      [elderId, ownerLineUserId, code, expiresAt]
+    );
+
+    return { ok: true, code };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
   }
-
-  // 未綁:產一個新的 6 字元碼(跟看護配對碼一樣的字母表,但獨立 namespace)
-  const code = await generateUniqueGroupCode(sb);
-  const expiresAt = new Date(Date.now() + GROUP_PAIRING_TTL_MS).toISOString();
-
-  const { error: updErr } = await sb
-    .from("elder_pairings")
-    .update({
-      group_pairing_code: code,
-      group_pairing_expires_at: expiresAt,
-    })
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId);
-
-  if (updErr) return { ok: false, error: "DB_ERROR" };
-  return { ok: true, code };
 }
 
-async function generateUniqueGroupCode(
-  sb: ReturnType<typeof getSupabaseAdmin>
-): Promise<string> {
-  if (!sb) return generatePairingCode();
+async function generateUniqueGroupCode(): Promise<string> {
   let code = generatePairingCode();
   for (let i = 0; i < 5; i++) {
     // 同時檢查 pairing_code 跟 group_pairing_code 兩個 column 都不能撞
-    const { data: collision1 } = await sb
-      .from("elder_pairings")
-      .select("elder_id")
-      .eq("pairing_code", code)
-      .maybeSingle();
-    const { data: collision2 } = await sb
-      .from("elder_pairings")
-      .select("elder_id")
-      .eq("group_pairing_code", code)
-      .maybeSingle();
+    const [collision1] = await query<{ elder_id: string }>(
+      `select elder_id
+       from elder_pairings
+       where pairing_code = $1
+       limit 1`,
+      [code]
+    );
+    const [collision2] = await query<{ elder_id: string }>(
+      `select elder_id
+       from elder_pairings
+       where group_pairing_code = $1
+       limit 1`,
+      [code]
+    );
     if (!collision1 && !collision2) break;
     code = generatePairingCode();
   }
@@ -318,28 +342,27 @@ export async function bindNotifyGroup(
   code: string,
   groupId: string
 ): Promise<{ ok: boolean; pairing?: Pairing; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
-
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
   const upperCode = code.toUpperCase().trim();
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .update({
-      notify_group_id: groupId,
-      notify_group_bound_at: new Date().toISOString(),
-      // 用過即作廢
-      group_pairing_code: null,
-      group_pairing_expires_at: null,
-    })
-    .eq("group_pairing_code", upperCode)
-    .is("notify_group_id", null)
-    .gt("group_pairing_expires_at", new Date().toISOString())
-    .select()
-    .maybeSingle();
+  try {
+    const [pairing] = await query<Pairing>(
+      `update elder_pairings
+       set notify_group_id = $2,
+           notify_group_bound_at = $3,
+           group_pairing_code = null,
+           group_pairing_expires_at = null
+       where group_pairing_code = $1
+         and notify_group_id is null
+         and group_pairing_expires_at > $4
+       returning *`,
+      [upperCode, groupId, new Date().toISOString(), new Date().toISOString()]
+    );
 
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "INVALID_OR_EXPIRED_OR_BOUND" };
-  return { ok: true, pairing: data };
+    if (!pairing) return { ok: false, error: "INVALID_OR_EXPIRED_OR_BOUND" };
+    return { ok: true, pairing };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 /**
@@ -349,23 +372,24 @@ export async function unbindNotifyGroup(
   elderId: string,
   ownerLineUserId: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .update({
-      notify_group_id: null,
-      notify_group_bound_at: null,
-      group_pairing_code: null,
-      group_pairing_expires_at: null,
-    })
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .select()
-    .maybeSingle();
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
-  return { ok: true };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
+  try {
+    const [pairing] = await query<Pairing>(
+      `update elder_pairings
+       set notify_group_id = null,
+           notify_group_bound_at = null,
+           group_pairing_code = null,
+           group_pairing_expires_at = null
+       where elder_id = $1
+         and owner_line_user_id = $2
+       returning *`,
+      [elderId, ownerLineUserId]
+    );
+    if (!pairing) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 /**
@@ -376,18 +400,21 @@ export async function setGroupPhotoEnabled(
   ownerLineUserId: string,
   enabled: boolean
 ): Promise<{ ok: boolean; error?: string }> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return { ok: false, error: "SERVICE_DISABLED" };
-  const { data, error } = await sb
-    .from("elder_pairings")
-    .update({ notify_group_photo: enabled })
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .select()
-    .maybeSingle();
-  if (error) return { ok: false, error: "DB_ERROR" };
-  if (!data) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
-  return { ok: true };
+  if (!isDatabaseEnabled()) return { ok: false, error: "SERVICE_DISABLED" };
+  try {
+    const [pairing] = await query<Pairing>(
+      `update elder_pairings
+       set notify_group_photo = $3
+       where elder_id = $1
+         and owner_line_user_id = $2
+       returning *`,
+      [elderId, ownerLineUserId, enabled]
+    );
+    if (!pairing) return { ok: false, error: "NOT_FOUND_OR_NOT_OWNER" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "DB_ERROR" };
+  }
 }
 
 /** 家屬端讀取自己卡的 pairing(含群組狀態) */
@@ -395,13 +422,18 @@ export async function getPairingByElderAndOwner(
   elderId: string,
   ownerLineUserId: string
 ): Promise<Pairing | null> {
-  const sb = getSupabaseAdmin();
-  if (!sb) return null;
-  const { data } = await sb
-    .from("elder_pairings")
-    .select("*")
-    .eq("elder_id", elderId)
-    .eq("owner_line_user_id", ownerLineUserId)
-    .maybeSingle();
-  return data ?? null;
+  if (!isDatabaseEnabled()) return null;
+  try {
+    const [pairing] = await query<Pairing>(
+      `select *
+       from elder_pairings
+       where elder_id = $1
+         and owner_line_user_id = $2
+       limit 1`,
+      [elderId, ownerLineUserId]
+    );
+    return pairing ?? null;
+  } catch {
+    return null;
+  }
 }

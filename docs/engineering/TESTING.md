@@ -105,6 +105,7 @@
 - health route 驗證 direct Postgres success、database disabled 與 redacted DB failure。
 - care calendar / caregiver leave data helper 驗證 direct Postgres 查詢、建立、列表、更新、ownership guard 與 disabled database path。
 - audit helper 驗證 direct Postgres 寫入、disabled database path、IP 匿名化與 metadata redaction。
+- pairing helper 驗證 direct Postgres 建立配對碼、conditional bind、防自己配對、owner / caregiver 查詢、解綁、群組配對、群組照片設定與 disabled database path。
 
 第二批 route handler 已涵蓋：
 

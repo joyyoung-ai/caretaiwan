@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { bindFamily } from "@/lib/pairing";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { rateLimitAsync } from "@/lib/rate-limit";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -22,8 +22,8 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimitAsync: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  isCloudEnabled: vi.fn(),
+vi.mock("@/lib/db/client", () => ({
+  isDatabaseEnabled: vi.fn(),
 }));
 
 vi.mock("@/lib/audit", () => ({
@@ -35,7 +35,7 @@ const authMock = vi.mocked(auth);
 const bindFamilyMock = vi.mocked(bindFamily);
 const checkSameOriginMock = vi.mocked(checkSameOrigin);
 const rateLimitAsyncMock = vi.mocked(rateLimitAsync);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 
 function jsonRequest(body: unknown): Request {
   return new Request("https://care.example.test/api/pairing/bind", {
@@ -52,7 +52,7 @@ describe("POST /api/pairing/bind", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     rateLimitAsyncMock.mockResolvedValue({ ok: true, remaining: 4, resetAt: Date.now() + 60_000 });
     bindFamilyMock.mockResolvedValue({
@@ -87,12 +87,12 @@ describe("POST /api/pairing/bind", () => {
   });
 
   it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await POST(jsonRequest({ code: "ABCD23" }));
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 
