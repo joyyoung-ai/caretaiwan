@@ -2,9 +2,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { listExpensesForCard } from "@/lib/expense";
-import { isCloudEnabled, getSupabaseAdmin } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
+import { hasPhotoMetadata } from "@/lib/record-photos";
 
 export const runtime = "nodejs";
 
@@ -13,8 +15,8 @@ export async function GET(req: Request) {
   const csrf = checkSameOriginGet(req);
   if (csrf) return csrf;
 
-  if (!isCloudEnabled()) {
-    return NextResponse.json({ error: "雲端服務未啟用" }, { status: 503 });
+  if (!isDatabaseEnabled()) {
+    return NextResponse.json({ error: "資料庫服務未啟用" }, { status: 503 });
   }
   const session = await auth();
   const lineUserId = (session?.user as { lineUserId?: string } | undefined)?.lineUserId;
@@ -35,24 +37,22 @@ export async function GET(req: Request) {
 
   // 若有 photo_path,先驗 record_photos metadata 確認 path 確實屬於此 elder + purpose=expense
   // 再簽 1h signed URL 給前端預覽（防 photo_path 被竄改或 legacy 混入）
-  const sb = getSupabaseAdmin();
   const expenses = await Promise.all(
     (result.expenses ?? []).map(async (e) => {
       let photoUrl: string | null = null;
-      if (e.photo_path && sb) {
-        const { data: photoMeta } = await sb
-          .from("record_photos")
-          .select("elder_id, purpose")
-          .eq("path", e.photo_path)
-          .eq("elder_id", elderId)
-          .eq("purpose", "expense")
-          .maybeSingle();
+      if (e.photo_path) {
+        const photoMeta = await hasPhotoMetadata({
+          path: e.photo_path,
+          elderId,
+          purpose: "expense",
+        });
         if (photoMeta) {
           photoUrl = createLocalSignedPhotoUrl(e.photo_path, 60 * 60);
           if (!photoUrl) {
-            const { data } = await sb.storage
-              .from("record-photos")
-              .createSignedUrl(e.photo_path, 60 * 60);
+            const sb = getSupabaseAdmin();
+            const { data } = sb
+              ? await sb.storage.from("record-photos").createSignedUrl(e.photo_path, 60 * 60)
+              : { data: null };
             photoUrl = data?.signedUrl ?? null;
           }
         }

@@ -34,7 +34,7 @@
 - [x] 5.2 Migrate `src/lib/caregiver-leave.ts` to the DB adapter with ownership tests unchanged.
 - [x] 5.3 Migrate audit helper with redacted metadata tests.
 - [x] 5.4 Migrate pairing helper and all pairing route tests.
-- [ ] 5.5 Migrate expense and photo metadata helpers without changing photo file storage.
+- [x] 5.5 Migrate expense and photo metadata helpers without changing photo file storage.
 - [ ] 5.6 Migrate cloud backup and data-retention cron after storage strategy is reviewed.
 - [ ] 5.7 Remove Supabase server client and env only after `rg "getSupabaseAdmin|SUPABASE_SERVICE_ROLE|NEXT_PUBLIC_SUPABASE"` confirms no runtime user remains.
 

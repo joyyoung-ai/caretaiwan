@@ -4,7 +4,9 @@ import { auth } from "@/auth";
 import { listExpensesForCard } from "@/lib/expense";
 import { checkSameOriginGet } from "@/lib/origin-check";
 import { createLocalSignedPhotoUrl } from "@/lib/local-photo-storage";
-import { getSupabaseAdmin, isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
+import { getSupabaseAdmin } from "@/lib/supabase-server";
+import { hasPhotoMetadata } from "@/lib/record-photos";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -22,17 +24,25 @@ vi.mock("@/lib/local-photo-storage", () => ({
   createLocalSignedPhotoUrl: vi.fn(),
 }));
 
+vi.mock("@/lib/db/client", () => ({
+  isDatabaseEnabled: vi.fn(),
+}));
+
 vi.mock("@/lib/supabase-server", () => ({
   getSupabaseAdmin: vi.fn(),
-  isCloudEnabled: vi.fn(),
+}));
+
+vi.mock("@/lib/record-photos", () => ({
+  hasPhotoMetadata: vi.fn(),
 }));
 
 const authMock = vi.mocked(auth);
 const listExpensesForCardMock = vi.mocked(listExpensesForCard);
 const checkSameOriginGetMock = vi.mocked(checkSameOriginGet);
 const createLocalSignedPhotoUrlMock = vi.mocked(createLocalSignedPhotoUrl);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 const getSupabaseAdminMock = vi.mocked(getSupabaseAdmin);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const hasPhotoMetadataMock = vi.mocked(hasPhotoMetadata);
 
 function request(): Request {
   return new Request("https://care.example.test/api/expense/list?elderId=elder-1", {
@@ -40,13 +50,8 @@ function request(): Request {
   });
 }
 
-function supabaseWithPhotoMetadata(data: unknown) {
+function supabaseStorageFallback() {
   return {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data, error: null }),
-    })),
     storage: {
       from: vi.fn(() => ({
         createSignedUrl: vi.fn().mockResolvedValue({
@@ -62,7 +67,7 @@ describe("GET /api/expense/list", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginGetMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "viewer-1" } } as never);
     listExpensesForCardMock.mockResolvedValue({
       ok: true,
@@ -76,10 +81,11 @@ describe("GET /api/expense/list", () => {
       ],
     } as never);
     createLocalSignedPhotoUrlMock.mockReturnValue("https://care.example.test/api/photo/signed/token");
+    hasPhotoMetadataMock.mockResolvedValue(true);
   });
 
   it("does not sign expense photo paths without matching metadata", async () => {
-    getSupabaseAdminMock.mockReturnValue(supabaseWithPhotoMetadata(null) as never);
+    hasPhotoMetadataMock.mockResolvedValue(false);
 
     const res = await GET(request());
     const body = await res.json();
@@ -90,16 +96,28 @@ describe("GET /api/expense/list", () => {
   });
 
   it("signs expense photo paths only after elder and purpose metadata match", async () => {
-    getSupabaseAdminMock.mockReturnValue(
-      supabaseWithPhotoMetadata({ elder_id: "elder-1", purpose: "expense" }) as never
-    );
-
     const res = await GET(request());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.expenses[0].photoUrl).toBe("https://care.example.test/api/photo/signed/token");
+    expect(hasPhotoMetadataMock).toHaveBeenCalledWith({
+      path: "receipt.jpg",
+      elderId: "elder-1",
+      purpose: "expense",
+    });
     expect(createLocalSignedPhotoUrlMock).toHaveBeenCalledWith("receipt.jpg", 60 * 60);
+  });
+
+  it("falls back to Supabase Storage signing when local signing is disabled", async () => {
+    createLocalSignedPhotoUrlMock.mockReturnValue(null);
+    getSupabaseAdminMock.mockReturnValue(supabaseStorageFallback() as never);
+
+    const res = await GET(request());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.expenses[0].photoUrl).toBe("https://storage.example.test/signed.jpg");
   });
 
   it("returns a generic error when expense lookup fails", async () => {
@@ -112,13 +130,13 @@ describe("GET /api/expense/list", () => {
     expect(getSupabaseAdminMock).not.toHaveBeenCalled();
   });
 
-  it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+  it("returns 503 when database services are disabled", async () => {
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await GET(request());
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 

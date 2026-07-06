@@ -5,7 +5,7 @@ import { createExpense } from "@/lib/expense";
 import { getPairingsByPaired } from "@/lib/pairing";
 import { checkSameOrigin } from "@/lib/origin-check";
 import { rateLimitAsync } from "@/lib/rate-limit";
-import { isCloudEnabled } from "@/lib/supabase-server";
+import { isDatabaseEnabled } from "@/lib/db/client";
 import { verifyPhotoOwnership } from "@/lib/record-photos";
 
 vi.mock("@/auth", () => ({
@@ -36,8 +36,8 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimitAsync: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase-server", () => ({
-  isCloudEnabled: vi.fn(),
+vi.mock("@/lib/db/client", () => ({
+  isDatabaseEnabled: vi.fn(),
 }));
 
 vi.mock("@/lib/record-photos", () => ({
@@ -58,7 +58,7 @@ const createExpenseMock = vi.mocked(createExpense);
 const getPairingsByPairedMock = vi.mocked(getPairingsByPaired);
 const checkSameOriginMock = vi.mocked(checkSameOrigin);
 const rateLimitAsyncMock = vi.mocked(rateLimitAsync);
-const isCloudEnabledMock = vi.mocked(isCloudEnabled);
+const isDatabaseEnabledMock = vi.mocked(isDatabaseEnabled);
 const verifyPhotoOwnershipMock = vi.mocked(verifyPhotoOwnership);
 
 function jsonRequest(body: unknown): Request {
@@ -76,7 +76,7 @@ describe("POST /api/expense/create", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     checkSameOriginMock.mockReturnValue(null);
-    isCloudEnabledMock.mockReturnValue(true);
+    isDatabaseEnabledMock.mockReturnValue(true);
     authMock.mockResolvedValue({ user: { lineUserId: "caregiver-1" } } as never);
     rateLimitAsyncMock.mockResolvedValue({ ok: true, remaining: 9, resetAt: Date.now() + 60_000 });
     getPairingsByPairedMock.mockResolvedValue([
@@ -130,13 +130,13 @@ describe("POST /api/expense/create", () => {
     expect(createExpenseMock).not.toHaveBeenCalled();
   });
 
-  it("returns 503 when cloud services are disabled", async () => {
-    isCloudEnabledMock.mockReturnValue(false);
+  it("returns 503 when database services are disabled", async () => {
+    isDatabaseEnabledMock.mockReturnValue(false);
 
     const res = await POST(jsonRequest({ elderId: "elder-1" }));
 
     expect(res.status).toBe(503);
-    await expect(res.json()).resolves.toEqual({ error: "雲端服務未啟用" });
+    await expect(res.json()).resolves.toEqual({ error: "資料庫服務未啟用" });
     expect(authMock).not.toHaveBeenCalled();
   });
 

@@ -53,7 +53,7 @@ Pilot 通過後再搬移 `care-calendar` / `caregiver-leave`，因為這兩個 h
 
 ### 4. Keep Supabase dependency until migration is complete
 
-`@supabase/supabase-js` 目前仍被 pairing、expense、photo metadata、cloud backup、audit 與 cron 使用。第一階段不能移除 dependency，也不能刪 `src/lib/supabase-server.ts`。每一批 migration 應在 tasks 中列出受影響 helper、route tests、redaction checks 與 rollback。
+`@supabase/supabase-js` 目前仍被 photo file storage fallback、cloud backup 與 cron 使用。第一階段不能移除 dependency，也不能刪 `src/lib/supabase-server.ts`。每一批 migration 應在 tasks 中列出受影響 helper、route tests、redaction checks 與 rollback。
 
 ### 5. Treat storage separately
 
@@ -76,7 +76,7 @@ Direct Postgres adapter 只處理 relational data。照片檔案或備份 payloa
 4. 將 health route 改用 adapter pilot，保留 redacted response。
 5. 在 disposable 或 staging Postgres 驗證 DB connectivity 與 health route。
 6. 第二批搬移 `care-calendar` / `caregiver-leave` helper，保持 API contract 不變。
-7. 第三批再搬移 audit、pairing、expense、photo metadata、cloud backup 與 cron。
+7. 第三批再搬移 audit、pairing、expense、photo metadata、cloud backup 與 cron；已完成的 relational helper 不代表 photo file storage 已定案。
 8. 所有 runtime user 搬完且 storage 策略另案決定後，才移除 Supabase server client 與相關 env。
 
 Rollback 原則：
