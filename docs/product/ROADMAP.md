@@ -119,6 +119,8 @@
 
 ## v2.0.0：企業維運與導入準備
 
+狀態：direct Postgres data layer 已建立 OpenSpec change `v2-0-0-direct-postgres-data-layer` 與第一階段實作計畫，尚未開始 runtime migration。
+
 目標：讓系統可以進入試辦或正式導入前的審查。
 
 - 完整 production migration series。

@@ -29,6 +29,7 @@
 - 將 `/privacy`、`/terms`、ConsentModal 與 about page 對外窗口切換為中揚資訊股份有限公司版本草案，並 bump consent version。
 - 新增 ADR-0010，決定 app data layer 逐步重構為 server-side 直接連 VM 自管 Postgres，不以 Supabase-compatible API / PostgREST 作為正式主路線。
 - 更新 `v1-2-0-care-reminders` OpenSpec，確認 reminder 第一版支援看護、家屬與已綁定 LINE 群組，retry 由系統參數控制，失敗原因只顯示粗分類，醫療相關文案採自然繁體中文。
+- 新增 OpenSpec change `v2-0-0-direct-postgres-data-layer` 與 Superpowers phase 1 實作計畫，先規劃 server-only Postgres adapter 與 health route pilot，尚未開始 runtime migration。
 - 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
 - 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已收到。
 - 看護端與家屬端首頁新增照護行程 / 請假紀錄最小流程：看護可切換 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程並標記請假紀錄已收到。
