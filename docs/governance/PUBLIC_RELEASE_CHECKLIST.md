@@ -63,6 +63,15 @@ git grep -I -n -E "(BEGIN (RSA|OPENSSH|EC|DSA|PRIVATE) KEY|DATABASE_URL=[^[:spac
 - high-risk pattern 命中集中在範例 Postgres URL、測試 fake LINE user ID、測試 signed URL 與 direct Postgres 歷史實作計畫。
 - 這次掃描未確認到需要立即 rotate 的真 secret；公開前仍要由 maintainer 複核完整輸出。
 
+2026-07-06 嚴格複查結果：
+
+- current tree 檔名掃描命中範例 env、schema / migration SQL 與 PWA icon，未命中 `.pem`、`.key`、`.p12`、`.crt`、`.log`、`.dump`、`.backup`、壓縮備份或使用者照片檔。
+- current tree high-risk pattern 命中集中在 `.env.example`、README / README.zh-TW local Postgres 範例、`docker/.env.production.example`、release checklist、測試用 signed photo URL、測試用 LINE user ID 與 DB error redaction 測試。
+- git history high-risk pattern 命中為上述範例 / 測試內容在不同 commit 的歷史版本；另有舊 Supabase service-role 文件與舊診斷 route 讀取 env 狀態的程式碼，未確認到實際 secret 值。
+- 嚴格 token 格式掃描未命中 private key、GitHub token、OpenAI key、AWS / GCP token 或 Slack token。
+- PII 粗掃命中多數為產品文案、法務文字、測試 LINE ID 與 `demo/index.html` 的合成示範長者資料。公開前若保留 demo，maintainer 需再人工確認 demo 內容確定是合成資料。
+- 本機未安裝 `gitleaks` 或 `trufflehog`；若公開前環境允許，建議再用其中一套工具跑一次 history scan 作為第二來源。
+
 ## Public Docs
 
 公開前確認：
