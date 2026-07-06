@@ -43,7 +43,7 @@ CareTaiwan 目前不提供：
 - `npm run lint` 可通過，已無 warning。
 - `supabase-schema.sql` 是 idempotent schema，不取代正式 migration series。
 - v1.1.0 照護行程與看護請假目前已有 production migration、API foundation 與首頁內的最小可用流程；正式資料庫已決定採 VM 自管 Postgres，下一步要在 disposable 或 staging Postgres 演練 forward / rollback。
-- 目前 app data layer 仍使用 Supabase client 與 Supabase-style URL / key。正式接上 VM 自管 Postgres 前，需提供 Supabase-compatible API / PostgREST，或重構資料存取層讓 app 直接連 Postgres。
+- 目前 app data layer 仍使用 Supabase client 與 Supabase-style URL / key。ADR-0010 已決定改為 server-side 直接連 VM 自管 Postgres，但重構尚未實作。
 - 照護行程與請假紀錄先採列表與表單，不提供完整日曆格、拖拉、週期性事件、批次編輯或跨日曆同步。
 - Supabase RLS 尚未完成，現階段仰賴 server-side service-role 與 application checks。
 - 正式 VM runbook 尚未完整落地。
@@ -55,7 +55,7 @@ CareTaiwan 目前不提供：
 - 使用者關閉通知、封鎖 Bot、網路不穩或 LINE 服務異常，都可能造成提醒失敗。
 - 回診、吃藥、拿藥、復健等提醒只能作為一般日程提醒，不代表醫療指示。
 - v1.1.0 的照護行程只保留 `remind_at` 欄位與 UI 說明，LINE reminder runtime 尚未啟用。
-- v1.2.0 reminder runtime 已建立 OpenSpec change，但尚未實作。實作前仍需確認提醒收件者、排程方式、claim / retry、失敗狀態、文案與 redaction。
+- v1.2.0 reminder runtime 已建立 OpenSpec change，但尚未實作。提醒收件者已決定支援看護、家屬與已綁定 LINE 群組；實作前仍需設計排程方式、claim / retry、失敗狀態、文案 helper 與 redaction。
 
 ## 資料刪除限制
 

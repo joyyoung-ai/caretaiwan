@@ -154,7 +154,7 @@
 - 正式 GitHub organization 與 team 尚未建立；CODEOWNERS 草案已存在，但公開前仍要確認實際 owner。
 - GitHub private vulnerability reporting 尚未確認啟用。
 - VM 實際環境尚未選定，runbook 目前只能先寫供應商中立版本。
-- 正式資料庫雖已決定採 VM 自管 Postgres，但 app data layer 仍使用 Supabase client。production 前需決定 VM 內 Supabase-compatible API / PostgREST，或重構資料存取層。
+- 正式資料庫雖已決定採 VM 自管 Postgres，但 app data layer 仍使用 Supabase client。ADR-0010 已決定重構為 server-side 直接連 Postgres；production 前需完成 adapter、測試與分階段遷移。
 - 法律文件尚未由專業人士審閱。
 - 第三方滲透測試尚未安排。
 

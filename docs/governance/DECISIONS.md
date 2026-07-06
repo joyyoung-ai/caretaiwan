@@ -135,6 +135,42 @@ CareTaiwan 正式環境已決定走 VM / Docker。資料庫原本保留兩條路
 - 其他 managed Postgres。可減少 DBA 負擔，但仍需確認資料區域、備份、刪除請求與合約。
 - 繼續延後決策。這會卡住 v1.1.0 production migration，不採用。
 
+## ADR-0010：App data layer 改為直接連 VM 自管 Postgres
+
+狀態：Accepted
+Owner：Technical Lead（待指定）
+Review date：2026-09-30
+
+背景：
+
+ADR-0009 已決定正式資料庫採 VM 自管 Postgres。現有程式仍使用 Supabase client 介面，例如 `.from().select().eq()`，也仍依賴 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`。若正式環境不使用 managed Supabase，還需要決定 app 要怎麼連到自管 Postgres。
+
+決策：
+
+App data layer 逐步重構為 server-side 直接連 VM 自管 Postgres。正式環境不在 VM 內另外維護 Supabase-compatible API / PostgREST 作為主要路線。前端 client component 仍不得直接連 DB；所有資料存取都必須經 server-side route、server action 或 server-only helper。
+
+理由：
+
+- 減少正式環境對 Supabase-compatible gateway 的依賴，VM 上要維護的元件比較少。
+- DB 帳號、權限、migration、backup、restore、監控與查詢行為可以集中在 Postgres runbook 管理。
+- 資料落地、刪除請求與 audit log 流程比較容易跟 VM 維運責任對齊。
+- 直接連 Postgres 後，可以用 transaction、row lock、`for update skip locked` 等能力處理 reminder claim、retry 與 migration 驗證。
+
+影響：
+
+- 需要新增 `src/lib/db/*` 或等效 server-only adapter，先包住 query、transaction、error redaction 與測試 mock。
+- 不能一次替換所有 Supabase client 呼叫。應先選一條低到中風險流程做代表，再逐步遷移 pairing、care calendar、expense、photo ownership、cloud backup 與 audit。
+- 照片與備份 storage 要另定策略。DB 直接連 Postgres 不會自動取代 Supabase Storage。
+- 現有 tests 要保留，並為新的 DB adapter 補 regression tests。
+- `.env.example`、Docker env、runbook 與 production readiness 需要新增 Postgres connection 設定與 secret owner。
+- RLS、database role、database RPC 或 application-level checks 的長期路線仍需另外評估。第一階段維持 application-level ownership checks。
+
+替代方案：
+
+- 在 VM 內提供 Supabase-compatible API / PostgREST。優點是現有程式改動少；缺點是正式環境要多維護 gateway、auth mapping、service role 行為與額外攻擊面。
+- 繼續使用 managed Supabase。這和 ADR-0009 的正式資料庫方向不一致。
+- 先用 raw SQL 到處替換。這會讓權限檢查、錯誤處理與測試 mock 分散，不採用。
+
 ## ADR 模板
 
 ```text

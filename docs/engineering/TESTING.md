@@ -119,7 +119,7 @@
 
 下一批再補：
 
-- v1.2.0 care reminder runtime tests：copy helper、medical disclaimer、note omission、due reminder claim、claim TTL、max attempts、cancelled event exclusion、provider error classification、cron secret gate、dry-run redaction、LINE client mock。
+- v1.2.0 care reminder runtime tests：copy helper、medical disclaimer、note omission、caregiver / family / group recipient targeting、due reminder claim、claim TTL、configurable max attempts、cancelled event exclusion、provider error classification、cron secret gate、dry-run redaction、LINE client mock。
 - 其餘 route 的 disabled cloud / unauthenticated / DB failure matrix。
 - 瀏覽器級 E2E 已引入 Playwright，第一批先保護不依賴 LINE OAuth 或 production Supabase 的公開頁與 shell rendering。
 

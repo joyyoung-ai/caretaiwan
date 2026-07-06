@@ -82,12 +82,15 @@
 - 提醒失敗時的清楚提示。
 - Server-side cron / worker runtime。
 - Claim / retry / coarse error code，避免重複推播與 raw provider error 外洩。
+- 第一版支援看護、家屬與已綁定 LINE 群組三種收件者，但不預設全發。
 
 完成標準：
 
 - 提醒狀態可追蹤。
 - 多語文案同步。
 - 醫療相關提醒包含一般日程提醒免責文案。
+- 重試次數、重試間隔與 claim TTL 可由系統參數設定。
+- 提醒失敗可讓使用者看見粗略原因，但不顯示 LINE ID、group ID、raw provider error 或自由文字備註。
 - public response、audit metadata 與長期 log 不輸出 raw LINE user ID、自由文字 note 或 raw provider error。
 - 沒有劑量、病情、分流或急迫性判斷。
 
@@ -119,6 +122,7 @@
 目標：讓系統可以進入試辦或正式導入前的審查。
 
 - 完整 production migration series。
+- App data layer 改為 server-side 直接連 VM 自管 Postgres。
 - CI/CD 測試閘門。
 - 正式 VM runbook。
 - 隱私權政策與服務條款切換為中揚資訊版本。

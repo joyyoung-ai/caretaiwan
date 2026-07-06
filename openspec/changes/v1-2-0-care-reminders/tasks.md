@@ -2,8 +2,8 @@
 
 - [x] 1.1 Confirm v1.2 only enables care event LINE reminders, not medical advice or scheduling.
 - [x] 1.2 Confirm reminder runtime must not promise delivery.
-- [ ] 1.3 Review reminder copy with product owner before implementation.
-- [ ] 1.4 Confirm whether reminders go to caregiver only, family owner only, bound LINE group, or a constrained first-version subset.
+- [x] 1.3 Review reminder copy with product owner before implementation.
+- [x] 1.4 Confirm whether reminders go to caregiver only, family owner only, bound LINE group, or a constrained first-version subset.
 
 ## 2. Data model and migration
 
@@ -11,13 +11,15 @@
 - [ ] 2.2 Add production migration with rollback, indexes, retention, deletion and right-to-erasure notes.
 - [ ] 2.3 Update `supabase-schema.sql` and `npm run migrations:check` for the new reminder schema.
 - [ ] 2.4 Verify forward / rollback in disposable or staging Postgres before production use.
+- [ ] 2.5 Add configurable `REMINDER_MAX_ATTEMPTS`, `REMINDER_RETRY_DELAY_MINUTES`, and `REMINDER_CLAIM_TTL_MINUTES` defaults to env examples and runbook.
 
 ## 3. Reminder helper tests and implementation
 
 - [ ] 3.1 Add failing tests for reminder copy, including medical-related disclaimer and no note leakage.
 - [ ] 3.2 Add failing tests for due reminder selection, claim TTL, max attempts and cancelled event exclusion.
 - [ ] 3.3 Add failing tests for provider error classification and redaction.
-- [ ] 3.4 Implement reminder helper functions with minimal data exposure.
+- [ ] 3.4 Add failing tests for caregiver, family owner, and LINE group recipient targeting with explicit selection.
+- [ ] 3.5 Implement reminder helper functions with minimal data exposure.
 
 ## 4. Cron / worker runtime and tests
 
@@ -33,6 +35,7 @@
 - [ ] 5.2 Implement constrained reminder message payload.
 - [ ] 5.3 Ensure medical-related reminders include approved non-medical copy.
 - [ ] 5.4 Ensure raw provider errors are not persisted or returned.
+- [ ] 5.5 Ensure group reminders require explicit group binding and confirmation.
 
 ## 6. UI and operations
 

@@ -23,10 +23,12 @@
 - 記錄 Superpowers 僅作為維護者本機或 Codex plugin 工作流，不作為 CareTaiwan runtime dependency。
 - 新增 v1.1.0 照護行程 schema draft，涵蓋 `care_events`、`caregiver_leave_requests`、retention 與 rollback notes。
 - 新增 v1.1.0 production migration series 與 `npm run migrations:check`，同步建立 forward / rollback SQL 與 idempotent schema 檢查。
-- 補 VM 自管 Postgres 的 migration、backup 與 restore drill runbook 模板，並記錄目前 app data layer 仍需 Supabase-compatible API 或資料存取層改造。
+- 補 VM 自管 Postgres 的 migration、backup 與 restore drill runbook 模板，並記錄目前 app data layer 仍需依 ADR-0010 重構為 server-side 直接連 Postgres。
 - 新增 OpenSpec change `v1-2-0-care-reminders`，先定義 LINE reminder runtime 的排程、claim、retry、失敗狀態、文案與 redaction 邊界，尚未啟用推播 runtime。
 - 新增 `docs/governance/RELEASE_PROCESS.md`，定義 release gate、tag、branch protection target 與 production image 規則。
 - 將 `/privacy`、`/terms`、ConsentModal 與 about page 對外窗口切換為中揚資訊股份有限公司版本草案，並 bump consent version。
+- 新增 ADR-0010，決定 app data layer 逐步重構為 server-side 直接連 VM 自管 Postgres，不以 Supabase-compatible API / PostgREST 作為正式主路線。
+- 更新 `v1-2-0-care-reminders` OpenSpec，確認 reminder 第一版支援看護、家屬與已綁定 LINE 群組，retry 由系統參數控制，失敗原因只顯示粗分類，醫療相關文案採自然繁體中文。
 - 新增照護行程 helper 與 API foundation：已配對家屬 / 看護可建立、查詢、更新與取消行程，並保留 inert `remind_at`。
 - 新增看護請假 helper 與 API foundation：看護可建立固定原因加自由文字備註的請假紀錄，家屬可查看並標記已收到。
 - 看護端與家屬端首頁新增照護行程 / 請假紀錄最小流程：看護可切換 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程並標記請假紀錄已收到。

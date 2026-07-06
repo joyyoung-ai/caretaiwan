@@ -158,4 +158,4 @@ OpenSpec change 已建立在 `openspec/changes/v1-1-0-care-calendar/`。目前�
 
 - v1.1.0 已先在看護端與家屬端首頁補上最小可用流程：看護可看 7 / 30 天行程並送出請假紀錄，家屬可新增、編輯、取消行程，也可查看並確認請假紀錄。它還不是完整日曆格、週期性事件或跨日曆同步。
 - 資料庫驗證與 rollback 操作要依 VM 自管 Postgres 路線補上。
-- LINE reminder runtime 已另開 OpenSpec change：`openspec/changes/v1-2-0-care-reminders/`。該 change 會先處理排程、claim、retry、失敗狀態、LINE 文案與 PII redaction，不直接做醫療判斷或保證送達。
+- LINE reminder runtime 已另開 OpenSpec change：`openspec/changes/v1-2-0-care-reminders/`。該 change 會先處理排程、claim、retry、失敗狀態、LINE 文案與 PII redaction，不直接做醫療判斷或保證送達。第一版支援看護、家屬與已綁定 LINE 群組三種收件者，但必須明確選擇，不預設全發。

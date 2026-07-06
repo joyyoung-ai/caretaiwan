@@ -15,7 +15,7 @@
 - 實際 log 路徑、查詢方式與保存天數。
 - 實際 database / storage backup 指令。
 - restore drill 指令與演練紀錄格式。
-- 自管 Postgres 要如何提供目前程式使用的 Supabase-compatible API，或改造資料存取層讓 app 直接連 Postgres。現有程式仍讀取 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`。
+- 依 ADR-0010 改造 data layer，讓 server-side app 直接連 VM 自管 Postgres。現有程式仍讀取 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`，production 前不得帶著這個落差上線。
 - incident contact、法務 / 隱私窗口與 escalation 時限。暫定對外窗口為 `services@joyyoung.com.tw`。
 - token rotation owner 與每種 secret 的輪替週期。
 
@@ -43,10 +43,7 @@
 
 ## Database Migration
 
-正式資料庫採 VM 自管 Postgres，但目前 app data layer 仍是 Supabase client。production 前需先完成其中一條路：
-
-- VM 內提供 Supabase-compatible API / PostgREST 與對應 auth / service-role 管控。
-- 或重構 `src/lib/supabase-server.ts` 與相關 data helpers，改為直接連 self-managed Postgres。
+正式資料庫採 VM 自管 Postgres，但目前 app data layer 仍是 Supabase client。ADR-0010 已決定重構 `src/lib/supabase-server.ts` 與相關 data helpers，改為 server-side 直接連 self-managed Postgres。VM 內提供 Supabase-compatible API / PostgREST 不作為正式主路線。
 
 不論採哪條路，migration SQL 先以 Postgres 為基準。以 Docker Compose 為例，套用 v1.1.0 migration 前先在 staging 或 disposable DB 執行：
 
@@ -189,6 +186,9 @@ SHA-256 驗證：
 - cron response 不輸出完整 LINE user ID。
 - 失敗時有 log，但不含未遮蔽 PII。
 - v1.1.0 照護行程的 `remind_at` 不應由 cron 或 LINE push 處理；v1.2.0 reminder runtime 已建立 OpenSpec change，實作前需補排程、claim、重試、失敗紀錄、dry-run、手動停用與使用者提示 runbook。
+- v1.2.0 reminder 已確認第一版支援看護、家屬與已綁定 LINE 群組三種收件者，但必須由使用者明確選擇，不預設全發。群組提醒需二次確認。
+- v1.2.0 reminder retry 由系統參數控制，建議預設 `REMINDER_MAX_ATTEMPTS=3`、`REMINDER_RETRY_DELAY_MINUTES=10`、`REMINDER_CLAIM_TTL_MINUTES=5`。
+- 使用者可見失敗原因只能顯示粗分類，例如通知設定或封鎖、LINE 暫時無法送出、系統設定尚未完成、提醒逾時或未知原因。
 
 ## User Data Deletion Request
 

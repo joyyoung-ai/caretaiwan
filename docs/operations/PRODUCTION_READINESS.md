@@ -26,7 +26,7 @@
 - [x] 建立 production migration series，不再只依賴 `supabase-schema.sql`。
 - [x] 每個新增資料表都要有 rollback strategy、保留期限、刪除流程、可讀寫角色與 right-to-erasure 說明。
 - [ ] 決定 Supabase RLS、scoped JWT、database RPC 或 application-level checks 的長期路線。
-- [ ] 決定 VM 自管 Postgres 要提供 Supabase-compatible API / PostgREST，或重構 app data layer 直接連 Postgres。
+- [x] 決定 app data layer 依 ADR-0010 重構為 server-side 直接連 VM 自管 Postgres。
 - [ ] migration 先套用到 disposable project 或 staging database，再進 production。
 - [ ] 建立資料匯出、restore drill 與測試資料清除流程。
 

@@ -9,9 +9,10 @@ v1.1.0 已有 `care_events`、`remind_at`、醫療相關旗標與首頁最小流
 **Goals:**
 
 - 讓 server-side runtime 能送出到期的照護行程 LINE reminder。
+- 第一版支援看護、家屬與已綁定 LINE 群組三種收件者，但收件對象必須明確選擇。
 - 避免同一筆 reminder 被重複 worker 送出。
 - 記錄送達狀態、嘗試次數、最後嘗試時間與去識別化錯誤類型。
-- 對醫療相關行程固定加入非醫療指示文案。
+- 對醫療相關行程固定加入自然、直接的非醫療指示文案。
 - 保持 cron response、audit metadata 與 logs 不輸出 raw LINE user ID、自由文字 note、raw provider error 或無關長者資料。
 - 以 tests 保護 claim、retry、redaction、copy 與 disabled / unauthenticated / invalid secret paths。
 
@@ -50,12 +51,48 @@ Reminder message 只放必要資訊：
 - 行程標題。
 - 日期時間。
 - 地點若存在可放，但不要放長篇 note。
-- 醫療相關行程附上「此為一般日程提醒，非醫療指示。」
-- 加上「LINE 提醒可能因通知設定或網路狀況延遲或未送達」類似語氣，避免保證送達。
+- 醫療相關行程附上自然版提醒文案，例如：「這是一般日程提醒，不是醫療指示。實際照護或用藥請依醫師、護理師或藥師說明。」
+- 一般提醒附上不保證送達的語氣，例如：「LINE 通知可能因網路或使用者設定延遲，請仍以實際安排為準。」
 
 自由文字 note 預設不推播。若後續要推播 note，要另開產品與資安審查。
 
-### 5. Runtime is server-only
+### 5. Recipient targeting is explicit
+
+第一版支援三種收件者：
+
+- 看護：送到已配對看護的 LINE user ID。
+- 家屬：送到 owner LINE user ID。
+- LINE 群組：送到已綁定的 `notify_group_id`。
+
+建立或更新提醒時必須保存收件者類型。系統不得因為三種收件者都存在就預設全發。群組提醒需要二次確認，因為群組內所有現有與未來成員都可能看到提醒。
+
+### 6. Retry behavior is configurable
+
+重試次數與時間由系統參數控制。第一版建議預設：
+
+- `REMINDER_MAX_ATTEMPTS=3`
+- `REMINDER_RETRY_DELAY_MINUTES=10`
+- `REMINDER_CLAIM_TTL_MINUTES=5`
+
+參數缺漏時 runtime 應使用保守預設值，並在 server log 只記錄設定缺漏類型，不輸出 secret 或完整 payload。
+
+### 7. User-visible failure reasons are coarse
+
+提醒失敗要讓使用者看見，但只能顯示大概原因。建議分類：
+
+- `blocked_or_disabled`：通知設定、封鎖或收件端狀態造成無法送達。
+- `line_unavailable`：LINE 服務或網路暫時無法送出。
+- `config_missing`：系統提醒設定尚未完成。
+- `expired`：提醒逾時，系統未再重送。
+- `unknown`：暫時無法判斷原因。
+
+UI 文案範例：
+
+> 這筆提醒沒有成功送出。可能是 LINE 通知設定、封鎖、網路或系統設定造成。系統不會顯示完整錯誤內容，以避免洩漏個資。
+
+不得顯示 LINE user ID、group ID、raw provider error、token 狀態、完整 note 或 provider response body。
+
+### 8. Runtime is server-only
 
 Reminder runtime 只能由 cron secret 驗證後的 server endpoint、worker 或 scheduler 觸發。Client UI 只管理 `remind_at` 與顯示狀態，不直接呼叫 LINE push。
 
@@ -63,15 +100,16 @@ Reminder runtime 只能由 cron secret 驗證後的 server endpoint、worker 或
 
 - LINE 失敗可能被誤解成系統失職 → UI 與文件要說提醒是輔助，delivery status 不能寫成保證。
 - 醫療相關提醒容易越界 → copy helper 與 tests 要固定禁止醫療建議語氣。
+- 群組提醒隱私風險高 → 群組收件者必須二次確認，不預設啟用。
 - 重複推播會造成使用者困擾 → claim / lock 與 idempotency 是第一版必要條件。
 - 保存 delivery log 會新增敏感資料面 → 欄位最小化，保留期限跟照護紀錄或更短，刪除請求要涵蓋 reminder logs。
-- 現有 app 仍依賴 Supabase client → schema migration 可以先定義，但 production runtime 還要配合自管 Postgres data layer 決策。
+- 現有 app 仍依賴 Supabase client → schema migration 可以先定義，但 production runtime 還要配合 ADR-0010 的直接連 Postgres data layer 重構。
 
 ## Migration Plan
 
 1. 先新增 OpenSpec capability 與 tasks，不直接啟用 runtime。
 2. 建立 reminder delivery state migration，包含 rollback、retention 與 redaction 說明。
-3. 以 TDD 實作 copy helper、claim helper、retry classification helper。
+3. 以 TDD 實作 copy helper、recipient target helper、claim helper、retry classification helper。
 4. 實作 server-only cron / worker endpoint，沿用 cron secret 與 redacted response 模式。
 5. 接 LINE client mock tests，再接實際 LINE push wrapper。
 6. 更新 UI 顯示 reminder status，但不做大型 calendar grid。

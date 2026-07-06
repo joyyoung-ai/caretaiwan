@@ -89,7 +89,7 @@ LINE Developers 後台要設定：
 
 正式資料庫路線已決定採 VM 自管 Postgres，見 [../governance/DECISIONS.md](../governance/DECISIONS.md) 的 ADR-0009。Supabase managed service 只保留為原作者架構與 Postgres 相容參考，不作為 production 依賴。
 
-注意：目前程式仍使用 Supabase client 與 `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`。正式接上 VM 自管 Postgres 前，必須先決定 VM 內提供 Supabase-compatible API / PostgREST，或改造資料存取層讓 app 直接連 Postgres。這是 production 前置工作，不應在已有真實資料後臨時處理。
+注意：目前程式仍使用 Supabase client 與 `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`。正式接上 VM 自管 Postgres 前，會依 [ADR-0010](../governance/DECISIONS.md) 重構 data layer，讓 server-side app 直接連 Postgres。這是 production 前置工作，不應在已有真實資料後臨時處理。
 
 production 前需要先補：
 
