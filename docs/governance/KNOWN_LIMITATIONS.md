@@ -1,6 +1,6 @@
 # 已知限制
 
-日期：2026-07-03
+日期：2026-10-20
 
 這份文件整理目前已知限制。列在這裡的項目不一定是 bug。有些是刻意不做，有些是還沒到實作階段，有些需要法律、資安或醫療專業先補齊。
 
@@ -64,9 +64,9 @@ CareTaiwan 目前不提供：
 ## 開發流程限制
 
 - 目前採單一維護者模式，責任人見 [MAINTAINERS.md](./MAINTAINERS.md)。GitHub team 尚未建立，CODEOWNERS 保留註解範本；第一版公開不要求先建立團隊。
-- 資安通報入口為 `services@joyyoung.com.tw`。GitHub private vulnerability reporting 是公開儲存庫功能，安排在公開切換後立即啟用，目前沒有把它標成已啟用。
+- GitHub 私人漏洞通報已啟用，漏洞細節請優先透過儲存庫安全公告頁私下回報；備用聯絡信箱為 `services@joyyoung.com.tw`。
 - Release 流程尚未自動化。
-- CI/CD 測試閘門已建立於 `.github/workflows/ci.yml`，會執行 dependency audit、lint、docs check、Vitest、build、production smoke 與 Playwright E2E。Branch protection 尚未設定前，仍要靠維護者確認 PR 必須通過 CI 才能合併。
-- 目前私人儲存庫的方案尚不支援分支保護。已備妥 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md) 與主分支設定檔，公開切換後立即套用並讀回確認。
+- 持續整合測試閘門已建立於 `.github/workflows/ci.yml`，會執行相依套件稽核、程式碼與文件檢查、Vitest、建置、正式模式基本測試與 Playwright 瀏覽器測試。`main` 分支保護已要求 GitHub Actions 的 `Test Gate` 通過、分支保持最新，並解決討論後才能合併。
+- 儲存庫已公開，主分支保護已套用並讀回確認；管理員同樣受限，禁止強制推送與刪除。單一維護者模式的必要核准人數為 0，設定來源見 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md) 與主分支設定檔。
 
-這些是治理待辦，不是產品功能。
+這些項目描述開發與發布流程，不是產品功能。
