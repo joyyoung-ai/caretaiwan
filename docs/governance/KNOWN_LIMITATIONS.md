@@ -63,10 +63,10 @@ CareTaiwan 目前不提供：
 
 ## 開發流程限制
 
-- GitHub team 尚未正式建立；CODEOWNERS 目前是草案，正式公開前仍要確認實際 owner。
-- Security contact 已指定為 `services@joyyoung.com.tw`，但 GitHub private vulnerability reporting 尚未確認啟用。
+- 目前採單一維護者模式，責任人見 [MAINTAINERS.md](./MAINTAINERS.md)。GitHub team 尚未建立，CODEOWNERS 保留註解範本；第一版公開不要求先建立團隊。
+- 資安通報入口為 `services@joyyoung.com.tw`。GitHub private vulnerability reporting 是公開儲存庫功能，安排在公開切換後立即啟用，目前沒有把它標成已啟用。
 - Release 流程尚未自動化。
 - CI/CD 測試閘門已建立於 `.github/workflows/ci.yml`，會執行 dependency audit、lint、docs check、Vitest、build、production smoke 與 Playwright E2E。Branch protection 尚未設定前，仍要靠維護者確認 PR 必須通過 CI 才能合併。
-- Branch protection 尚未設定。
+- 目前私人儲存庫的方案尚不支援分支保護。已備妥 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md) 與主分支設定檔，公開切換後立即套用並讀回確認。
 
 這些是治理待辦，不是產品功能。

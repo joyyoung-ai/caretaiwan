@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   bindFamily,
   bindNotifyGroup,
@@ -43,9 +43,15 @@ const pairingRow = {
 
 describe("pairing helpers", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-01T00:00:00.000Z"));
     isDatabaseEnabledMock.mockReturnValue(true);
     queryMock.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("generates readable 6-character pairing codes by default", () => {
@@ -127,6 +133,17 @@ describe("pairing helpers", () => {
     await expect(bindFamily("ABCD23", "family-1")).resolves.toEqual({
       ok: false,
       error: "SELF_PAIRING_NOT_ALLOWED",
+    });
+    expect(queryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an expired pairing without attempting a write", async () => {
+    vi.setSystemTime(new Date("2026-08-01T00:00:00.001Z"));
+    queryMock.mockResolvedValueOnce([pairingRow]);
+
+    await expect(bindFamily("ABCD23", "caregiver-1")).resolves.toEqual({
+      ok: false,
+      error: "ALREADY_PAIRED_OR_EXPIRED",
     });
     expect(queryMock).toHaveBeenCalledTimes(1);
   });

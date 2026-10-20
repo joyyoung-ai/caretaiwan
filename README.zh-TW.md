@@ -299,12 +299,15 @@ iOS PWA 的 Web Push 在使用者把圖示加到主畫面之前都不可靠，�
 
 這段只給本機開發使用。請使用假資料、測試 LINE channel 與本機 Postgres。不要把 production token、正式備份、真實照護紀錄、真照片或真 LINE ID 複製到個人工作站。
 
+請使用 Node.js 22.12 以上的 22.x 或 24.x 版本，以及 npm 11.21.1。本機、持續整合與 Docker 使用同一個 npm 版本。
+
 ```bash
 # 複製
-git clone <this-repo>
-cd caregiver-app
+git clone https://github.com/joyyoung-ai/caretaiwan.git
+cd caretaiwan
 
 # 安裝
+npm install --global npm@11.21.1
 npm ci
 
 # 啟動本機開發用 Postgres
@@ -312,7 +315,7 @@ docker run -d --name caretaiwan-local-postgres \
   -e POSTGRES_USER=caretaiwan \
   -e POSTGRES_PASSWORD=caretaiwan \
   -e POSTGRES_DB=caretaiwan \
-  -p 5432:5432 \
+  -p 127.0.0.1:5432:5432 \
   postgres:16-alpine
 
 # 環境變數
