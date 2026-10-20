@@ -2,7 +2,7 @@
 
 日期：2026-10-20
 
-這份文件定義 CareTaiwan 分支的 release 流程。目前維持單一維護者模式。GitHub 的主分支保護與私人漏洞通報，依 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md) 在公開切換時設定；不要求先建立不存在的團隊。
+這份文件定義 CareTaiwan 分支的 release 流程。目前維持單一維護者模式。GitHub 的主分支保護與私人漏洞通報已啟用，設定與驗證方式見 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md)；不要求先建立不存在的團隊。
 
 ## Release types
 
@@ -66,16 +66,16 @@ git push origin v1.1.0
 
 若 release 後發現阻斷問題，先停止部署或回滾 image，再開 follow-up issue / PR。不要直接修改已發布 tag。
 
-## Branch protection target
+## Branch protection
 
-GitHub branch protection 尚未設定前，維護者需人工確認 PR 通過 CI 才能合併。正式公開前建議設定：
+目前已啟用的主分支保護如下：
 
 - `main` 只能透過拉取請求合併，並要求 GitHub Actions 的 `Test Gate` 通過；檢查來源固定為 GitHub Actions，不能由其他來源代填狀態。
 - 單一維護者模式不要求維護者批准自己的拉取請求，但仍要求狀態檢查及討論處理完成。
 - 禁止強制推送與刪除主分支，規則也套用到管理員。
 - 之後若增加第二位審查者或正式團隊，再提高必要批准數量，並啟用實際 CODEOWNERS。
 
-可直接套用的設定在 [public-branch-protection.json](./public-branch-protection.json)。目前私人儲存庫的方案不支援此功能，公開切換與設定順序見公開檢查清單；不得把尚未套用的設定寫成已啟用。
+已套用的設定來源在 [public-branch-protection.json](./public-branch-protection.json)。儲存庫已公開，並已讀回確認保護規則；若需重新設定或調整，依公開檢查清單驗證實際狀態。
 
 ## Production image rule
 

@@ -6,8 +6,14 @@
 
 ## Unreleased
 
+## v1.1.0 - 2026-10-20
+
+中揚資訊維護分支的首次公開版本。發布內容為程式碼與文件；正式導入仍須完成部署環境、備份還原、監控與資料保護確認，產品邊界與未完成項目見 [已知限制](../governance/KNOWN_LIMITATIONS.md)。
+
 ### Added
 
+- 公開儲存庫 `joyyoung-ai/caretaiwan`，保留原作者署名與 MIT 授權條款（麻省理工學院授權條款），提供本機安裝、部署與貢獻指南。
+- 已啟用 `main` 分支保護與 GitHub 私人漏洞通報。主分支變更須經拉取請求，並通過 GitHub Actions 的 `Test Gate`；規則套用到管理員，禁止強制推送與刪除。
 - `docs/engineering/AI_AGENT_WORKFLOW.md`：說明 OpenSpec、Superpowers 與 Codex 的文件化協作流程。
 - `docs/governance/DECISIONS.md` 新增 ADR-0008，記錄短期保留 CareTaiwan 作為開源專案名稱。
 - 新增 route handler regression tests：cloud upload / download / delete ownership、data-retention cron response redaction、photo upload pairing guard、photo signed token route、family paired ownership query、pairing bind / ensure / unbind、group-code / group-photo / group-unbind、pairing status owner query、expense list photo signed URL metadata gate、expense verify validation。
