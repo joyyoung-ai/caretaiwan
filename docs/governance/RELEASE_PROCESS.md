@@ -1,8 +1,8 @@
 # Release Process
 
-日期：2026-07-06
+日期：2026-10-20
 
-這份文件定義 CareTaiwan 分支的 release 流程。它先把 repository 內可執行的規則固定下來；GitHub organization、team、branch protection 與 private vulnerability reporting 還需要在 GitHub 後台設定。
+這份文件定義 CareTaiwan 分支的 release 流程。目前維持單一維護者模式。GitHub 的主分支保護與私人漏洞通報，依 [公開檢查清單](./PUBLIC_RELEASE_CHECKLIST.md) 在公開切換時設定；不要求先建立不存在的團隊。
 
 ## Release types
 
@@ -17,6 +17,7 @@
 Release 前至少要通過：
 
 ```bash
+npm run lockfile:check
 npm run audit
 npm run lint
 npm run docs:check
@@ -69,11 +70,12 @@ git push origin v1.1.0
 
 GitHub branch protection 尚未設定前，維護者需人工確認 PR 通過 CI 才能合併。正式公開前建議設定：
 
-- `main` 需要 pull request review。
-- `main` 需要通過 CI workflow。
-- 禁止直接 push 到 `main`，除非是受控 emergency fix。
-- 要求 conversation resolved。
-- CODEOWNERS 啟用後，要求對應 owner review。
+- `main` 只能透過拉取請求合併，並要求 GitHub Actions 的 `Test Gate` 通過；檢查來源固定為 GitHub Actions，不能由其他來源代填狀態。
+- 單一維護者模式不要求維護者批准自己的拉取請求，但仍要求狀態檢查及討論處理完成。
+- 禁止強制推送與刪除主分支，規則也套用到管理員。
+- 之後若增加第二位審查者或正式團隊，再提高必要批准數量，並啟用實際 CODEOWNERS。
+
+可直接套用的設定在 [public-branch-protection.json](./public-branch-protection.json)。目前私人儲存庫的方案不支援此功能，公開切換與設定順序見公開檢查清單；不得把尚未套用的設定寫成已啟用。
 
 ## Production image rule
 

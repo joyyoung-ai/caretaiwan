@@ -45,6 +45,8 @@
 
 ### Changed
 
+- 2026-10-20：本機、持續整合與 Docker 統一使用 npm 11.21.1，Node.js 最低版本改為 22.12；Docker 範例從 Node.js 20 改為 22，移除繞過鎖定檔的額外平台套件安裝。
+- README 補上可執行的專案複製與安裝步驟，本機 Postgres 範例只綁定回送介面。公開檢查清單區分技術準備與需要核准的公開切換，並附單一維護者模式的主分支保護設定。
 - `AGENTS.md` 增加 OpenSpec / Superpowers 使用邊界，避免把協作工具當成 runtime dependency。
 - `docs/README.md` 在 Engineering 區塊加入 AI agent workflow 文件連結。
 - 確認 v1.0.1 第一批 helper tests 已覆蓋 pairing code TTL、禁止自己配對、origin checks 與 cron security helper；`npm run lint` 目前維持無 warning。
@@ -53,9 +55,16 @@
 
 ### Security
 
+- 2026-10-20：更新 Next.js 至 16.4.2、Auth.js 至 5.0.0-beta.32、React 至 19.2.9、Vitest 至 4.1.12，重建完整鎖定檔並將套件稽核由 19 個漏洞項目降為 0。
+- Next.js lint 外掛的 glob 相依局部換為 tinyglobby，移除尚無修補版的 braces 相依；保留完整檢查規則與原本漏洞門檻，新增 5 個實際消費端的相容性測試。
+- 持續整合加入核對校驗碼的 Gitleaks 8.30.1 完整歷史掃描，GitHub 官方 Actions 固定至已查核的提交。Docker 建置排除環境檔、私鑰、本機筆記與測試產物。
 - 資料保留 cron response 改由 helper 統一輸出去識別化的 `lineUserRef`，warn / delete / dry-run sample 不回傳完整 LINE user ID。
 - 資料保留 cron delete stage 明確維持先刪 `cloud_backups`、成功後才刪相關 `elder_pairings`；pairing 刪除失敗時以去識別化 partial failure 回報，不輸出 raw DB error。
 - cron bearer token parser 收緊為只接受單一 Bearer token，並保留固定長度 digest 搭配 timing-safe compare 的驗證方式。
+
+### Fixed
+
+- 配對測試固定時鐘、重設各案例的模擬資料，排除 2026 年 8 月後出現的三個測試失敗；補上過期配對不寫入的檢查。199 個單元與介面測試、8 個瀏覽器測試及完整建置閘門均已通過。本輪沒有變更正式配對行為或資料庫結構。
 
 ## v1.0.0 - 2026-07-01
 

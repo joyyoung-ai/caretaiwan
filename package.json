@@ -4,10 +4,10 @@
   "private": true,
   "license": "MIT",
   "author": "GUOPEICHI (YuriCrystal)",
-  "packageManager": "npm@10.9.8",
+  "packageManager": "npm@11.21.1",
   "engines": {
-    "node": ">=22 <25",
-    "npm": "10.9.8"
+    "node": ">=22.12.0 <25",
+    "npm": "11.21.1"
   },
   "scripts": {
     "dev": "next dev",
@@ -26,11 +26,11 @@
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",
     "lucide-react": "^1.11.0",
-    "next": "^16.2.10",
-    "next-auth": "^5.0.0-beta.31",
+    "next": "^16.4.2",
+    "next-auth": "5.0.0-beta.32",
     "pg": "^8.22.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -40,12 +40,16 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "^16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.9"
+    "vite": "^7.3.7",
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "postcss": "^8.5.16"
+    "postcss": "^8.5.31",
+    "@next/eslint-plugin-next": {
+      "fast-glob": "npm:tinyglobby@0.2.17"
+    }
   }
 }

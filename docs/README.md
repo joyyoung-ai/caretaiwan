@@ -38,6 +38,7 @@
 ## Security
 
 - [security/SECURITY.md](./security/SECURITY.md)：接手後的資安基準、威脅模型與事件處理。
+- [security/DEPENDENCY_POLICY.md](./security/DEPENDENCY_POLICY.md)：套件安全更新、npm 版本與 lint 相依替換的相容性檢查。
 - [security/SECURITY_AUDIT.md](./security/SECURITY_AUDIT.md)：原作者階段的資安審計紀錄。
 
 ## Releases

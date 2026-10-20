@@ -299,12 +299,15 @@ If I were starting over, knowing what I know now:
 
 This setup is for local development only. Use fake data, test LINE channels, and a local Postgres database. Do not copy production tokens, production backups, real care records, real photos, or real LINE identifiers into your workstation.
 
+Use Node.js 22.12 or later within the 22.x / 24.x lines and npm 11.21.1. The same npm version is pinned in CI and Docker.
+
 ```bash
 # Clone
-git clone <this-repo>
-cd caregiver-app
+git clone https://github.com/joyyoung-ai/caretaiwan.git
+cd caretaiwan
 
 # Install
+npm install --global npm@11.21.1
 npm ci
 
 # Start local Postgres for development
@@ -312,7 +315,7 @@ docker run -d --name caretaiwan-local-postgres \
   -e POSTGRES_USER=caretaiwan \
   -e POSTGRES_PASSWORD=caretaiwan \
   -e POSTGRES_DB=caretaiwan \
-  -p 5432:5432 \
+  -p 127.0.0.1:5432:5432 \
   postgres:16-alpine
 
 # Env

@@ -10,8 +10,8 @@
 
 - [x] 2.1 Run a current tree scan for secrets, private keys, database URLs, LINE tokens, LINE IDs, signed URLs, logs and real personal data.
 - [x] 2.2 Run a git history scan for the same categories before repository visibility changes.
-- [ ] 2.3 If any secret appears in history, rotate or revoke it before cleanup.
-- [ ] 2.4 Redact or remove any real care records, names, phone numbers, addresses, photos, screenshots or logs.
+- [x] 2.3 If any secret appears in history, rotate or revoke it before cleanup. Not applicable after the 2026-10-20 Gitleaks and manual review: no real credential was confirmed, so no rotation or history rewrite was needed.
+- [x] 2.4 Review and redact any real care data before publication. The embedded demo declares synthetic fixtures; the three tracked PNGs were visually checked as app icons. No real care records or user photos were found in this review.
 - [x] 2.5 Document scan commands and final results in the release checklist without publishing sensitive findings.
 
 ## 3. Public documentation
@@ -46,3 +46,12 @@
 - [x] 6.2 Run `git diff --check`.
 - [x] 6.3 Run broader test / lint / build gates once docs and templates are implemented.
 - [x] 6.4 Push the readiness change after verification.
+
+## 7. 2026-10-20 release gate remediation
+
+- [x] 7.1 Update vulnerable dependencies within the existing Next.js 16, React 19 and Auth.js v5 lines; use npm 11.21.1 locally, in CI and in Docker. Full audit: zero findings. Preserve Next.js lint rules and verify its scoped glob replacement through five consumer tests.
+- [x] 7.2 Make pairing tests independent of the wall clock and clear queued mock responses between cases, while retaining expiry and ownership guards.
+- [x] 7.3 Align the Docker example with the declared Node.js / npm toolchain without changing the deployment architecture.
+- [x] 7.4 Re-scan the current tree and reachable Git history with Gitleaks 8.30.1; review synthetic demo data and app icons without introducing real care records.
+- [x] 7.5 Pass the complete local release gate: 199 tests, eight browser tests, audit, lint, docs, lockfile, migration check, build and smoke. Docker build/runtime and isolated Postgres forward/rollback/reapply also passed.
+- [x] 7.6 Correct the public cutover checklist for GitHub plan restrictions and prepare branch protection policy. Visibility remains private; actual publication still requires maintainer approval and immediate cutover configuration.
